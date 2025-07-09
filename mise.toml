@@ -1,0 +1,8 @@
+[tasks.clean-example]
+run = "rm -rf dest"
+dir = "example"
+
+[tasks.example]
+depends = ["clean-example"]
+run = "rm -rf foo && go run ../../cmd/agent-def/main.go build"
+dir = "example/agent-def"

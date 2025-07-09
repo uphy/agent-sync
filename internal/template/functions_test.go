@@ -212,23 +212,67 @@ func TestMCPFunc_WithValidAgent(t *testing.T) {
 	}
 }
 
-func TestResolveRelativePath(t *testing.T) {
+func TestResolveTemplatePath(t *testing.T) {
+	// Create a test engine
+	basePath := "/base/path"
 	engine := &Engine{
-		BasePath: "/base/path",
+		BasePath: basePath,
 	}
 
-	// Test with relative path
-	result := engine.resolveRelativePath("relative/file.md")
-	expected := filepath.Join("/base/path", "relative/file.md")
-	if result != expected {
-		t.Errorf("expected %q, got %q", expected, result)
+	// Test cases
+	testCases := []struct {
+		name            string
+		path            string
+		currentFilePath string
+		expected        string
+	}{
+		{
+			name:            "Windows-style absolute path",
+			path:            "C:\\absolute\\path", // Only works on Windows but test is valid everywhere
+			currentFilePath: "/current/file/path",
+			expected:        "C:\\absolute\\path", // Should be preserved as-is
+		},
+		{
+			name:            "Slash-prefixed path",
+			path:            "/relative/to/base",
+			currentFilePath: "/current/file/path",
+			expected:        filepath.Join(basePath, "relative/to/base"),
+		},
+		{
+			name:            "Dot-prefixed path (with current file)",
+			path:            "./relative/to/current",
+			currentFilePath: "/current/file/path",
+			expected:        filepath.Join("/current/file", "relative/to/current"),
+		},
+		{
+			name:            "Parent path (with current file)",
+			path:            "../sibling/directory",
+			currentFilePath: "/current/file/path",
+			expected:        filepath.Join("/current", "sibling/directory"),
+		},
+		{
+			name:            "Plain relative path (no ./ or ../)",
+			path:            "relative/to/base",
+			currentFilePath: "/current/file/path",
+			expected:        filepath.Join(basePath, "relative/to/base"), // Should be relative to BasePath
+		},
+		{
+			name:            "Plain relative path (without current file)",
+			path:            "relative/to/base",
+			currentFilePath: "",
+			expected:        filepath.Join(basePath, "relative/to/base"),
+		},
 	}
 
-	// Test with absolute path
-	absPath := "/absolute/file.md"
-	result = engine.resolveRelativePath(absPath)
-	if result != absPath {
-		t.Errorf("expected %q, got %q", absPath, result)
+	// Run test cases
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			engine.CurrentFilePath = tc.currentFilePath
+			result := engine.resolveTemplatePath(tc.path)
+			if result != tc.expected {
+				t.Errorf("Expected %q, got %q", tc.expected, result)
+			}
+		})
 	}
 }
 

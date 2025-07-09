@@ -1,0 +1,93 @@
+package processor
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/user/agent-def/internal/config"
+	"github.com/user/agent-def/internal/util"
+)
+
+// Manager orchestrates task execution based on loaded configuration.
+type Manager struct {
+	cfg *config.Config
+}
+
+// NewManager creates a new Manager by loading configuration from the given path.
+func NewManager(cfgPath string) (*Manager, error) {
+	cfg, err := config.LoadConfig(cfgPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+	if cfg.ConfigVersion == "" {
+		return nil, &util.ErrInvalidConfig{Reason: "configVersion is required"}
+	}
+	return &Manager{cfg: cfg}, nil
+}
+
+// Build executes the build pipeline for the specified projects or user scope.
+func (m *Manager) Build(projects []string, userOnly, watch, dryRun bool) error {
+	// Process project-level tasks unless userOnly is set
+	if !userOnly {
+		for name, proj := range m.cfg.Projects {
+			if len(projects) > 0 && !contains(projects, name) {
+				continue
+			}
+			// determine project root
+			root := proj.Root
+			if root == "" {
+				if cwd, err := os.Getwd(); err == nil {
+					root = cwd
+				}
+			}
+			for _, task := range proj.Tasks {
+				pipeline := NewPipeline(task, root, proj.Destinations, false)
+				if err := pipeline.Execute(); err != nil {
+					return fmt.Errorf("project %s task execution failed: %w", name, err)
+				}
+			}
+		}
+	}
+
+	// Process user-level tasks
+	for _, task := range m.cfg.User.Tasks {
+		// Use User.Home setting when specified, otherwise fallback to system home directory
+		var home string
+		if m.cfg.User.Home != "" {
+			home = m.cfg.User.Home
+		} else {
+			var err error
+			home, err = os.UserHomeDir()
+			if err != nil {
+				home = ""
+			}
+		}
+		root := ""
+		if cwd, err := os.Getwd(); err == nil {
+			root = cwd
+		}
+		pipeline := NewPipeline(task, root, []string{home}, true)
+		if err := pipeline.Execute(); err != nil {
+			return fmt.Errorf("user task execution failed: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// Validate checks the configuration for correctness.
+func (m *Manager) Validate() error {
+	// TODO: implement full schema and semantic validation
+	fmt.Println("Manager.Validate invoked")
+	return nil
+}
+
+// contains returns true if str is in list.
+func contains(list []string, str string) bool {
+	for _, v := range list {
+		if v == str {
+			return true
+		}
+	}
+	return false
+}

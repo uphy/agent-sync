@@ -90,6 +90,19 @@ func (e *ErrInvalidOutputFormat) FormattedError() string {
 	return fmt.Sprintf("Invalid output format: '%s'. Supported formats are 'json', 'yaml', and 'text'.", e.Format)
 }
 
+// ErrInvalidConfig represents an invalid configuration error
+type ErrInvalidConfig struct {
+	Reason string
+}
+
+func (e *ErrInvalidConfig) Error() string {
+	return fmt.Sprintf("invalid configuration: %s", e.Reason)
+}
+
+func (e *ErrInvalidConfig) FormattedError() string {
+	return fmt.Sprintf("Configuration error: %s", e.Reason)
+}
+
 // WrapError wraps an error with additional context
 func WrapError(err error, message string) error {
 	return fmt.Errorf("%s: %w", message, err)

@@ -35,6 +35,9 @@ type Engine struct {
 	// BasePath is the base path for resolving relative paths
 	BasePath string
 
+	// CurrentFilePath is the path of the file currently being processed
+	CurrentFilePath string
+
 	// AgentRegistry provides access to registered agents
 	AgentRegistry *agent.Registry
 }
@@ -47,6 +50,18 @@ func NewEngine(fileResolver FileResolver, agentType, basePath string, agentRegis
 		AgentType:     agentType,
 		BasePath:      basePath,
 		AgentRegistry: agentRegistry,
+	}
+}
+
+// NewEngineWithFilePath creates a new template engine with the current file path
+func NewEngineWithFilePath(fileResolver FileResolver, agentType, basePath, currentFilePath string, agentRegistry *agent.Registry) *Engine {
+	return &Engine{
+		FileResolver:    fileResolver,
+		References:      make(map[string]string),
+		AgentType:       agentType,
+		BasePath:        basePath,
+		CurrentFilePath: currentFilePath,
+		AgentRegistry:   agentRegistry,
 	}
 }
 
@@ -89,6 +104,31 @@ func (e *Engine) Execute(content string, data interface{}) (string, error) {
 	return result, nil
 }
 
+// ExecuteFile processes a template file with the given data
+func (e *Engine) ExecuteFile(filePath string, data interface{}) (string, error) {
+	// Save previous current file path
+	previousPath := e.CurrentFilePath
+
+	// Set current file path to the file being processed
+	e.CurrentFilePath = filePath
+
+	// Read the file
+	content, err := e.FileResolver.Read(filePath)
+	if err != nil {
+		// Restore previous path before returning error
+		e.CurrentFilePath = previousPath
+		return "", &util.ErrFileNotFound{Path: filePath}
+	}
+
+	// Execute the template
+	result, err := e.Execute(string(content), data)
+
+	// Restore previous current file path before returning
+	e.CurrentFilePath = previousPath
+
+	return result, err
+}
+
 // Process implements the model.TemplateProcessor interface
 func (e *Engine) Process(content string) (string, error) {
 	return e.Execute(content, nil)
@@ -107,34 +147,58 @@ func (e *Engine) RegisterHelperFunctions(t *template.Template) *template.Templat
 
 // processInclude processes an included file recursively
 func (e *Engine) processInclude(path string) (string, error) {
+	// Save previous current file path
+	previousPath := e.CurrentFilePath
+
+	// Set current file path to the file being included
+	e.CurrentFilePath = path
+
 	// Read the file
 	content, err := e.FileResolver.Read(path)
 	if err != nil {
+		// Restore previous path before returning error
+		e.CurrentFilePath = previousPath
 		return "", &util.ErrFileNotFound{Path: path}
 	}
 
 	// Process the content as a template recursively
 	processed, err := e.Execute(string(content), nil)
 	if err != nil {
+		// Restore previous path before returning error
+		e.CurrentFilePath = previousPath
 		return "", &util.ErrTemplateExecution{
 			Template: path,
 			Cause:    err,
 		}
 	}
 
+	// Restore previous current file path before returning
+	e.CurrentFilePath = previousPath
+
 	return processed, nil
 }
 
 // processReference adds a reference to be appended at the end
 func (e *Engine) processReference(path string) (string, error) {
+	// Save previous current file path
+	previousPath := e.CurrentFilePath
+
+	// Set current file path to the file being referenced
+	e.CurrentFilePath = path
+
 	// Process the file content recursively
 	content, err := e.processInclude(path)
 	if err != nil {
+		// Restore previous path before returning error
+		e.CurrentFilePath = previousPath
 		return "", err
 	}
 
 	// Store the content to be appended at the end
 	e.References[path] = content
+
+	// Restore previous current file path before returning
+	e.CurrentFilePath = previousPath
 
 	// Return a reference marker
 	return fmt.Sprintf("[参考: %s]", path), nil

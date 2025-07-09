@@ -1,0 +1,77 @@
+# agent-def.yml
+# AI Agent Definition 設定ファイル (デモ用)
+
+# 設定ファイルのスキーマバージョン
+configVersion: "1.0"
+
+# --- プロジェクト固有の設定 ---
+# 複数のプロジェクトをここに定義していきます
+projects:
+  # "my-awesome-app" はこの設定ブロックを識別するための任意の名前です
+  my-awesome-app:
+    # [重要] 生成されたファイルの配置先となる、実際のプロジェクトのルートディレクトリ。
+    # 必ずご自身の環境に合わせて絶対パスに書き換えてください。
+    # git worktree を利用している場合は、複数のパスを列挙できます。
+    destinations:
+      - ../dest/my-awesome-app # 例: /Users/your-name/src/my-awesome-app
+
+    # このプロジェクトで実行される生成タスクのリスト
+    tasks:
+      # --- プロジェクト固有の定義 ---
+      # 1. プロジェクト固有のコンテキスト情報 (アーキテクチャなど)
+      - name: "Project Memory (my-awesome-app)"
+        type: memory
+        sources:
+          - ./projects/my-awesome-app/memories/rule.md # このディレクトリ内の.mdファイルが対象
+        targets:
+          - agent: claude # CLAUDE.md に出力
+          - agent: roo # .roo/rules/context.md に出力
+
+      # 2. プロジェクト固有のコマンド (デプロイコマンドなど)
+      - name: "Project Commands (my-awesome-app)"
+        type: command
+        sources:
+          - ./projects/my-awesome-app/commands/ # このディレクトリ内の.mdファイルが対象
+        targets:
+          - agent: claude # .claude/commands/ 以下にコマンドごとに出力
+          - agent: roo # .roomodes ファイルにyamlとして出力
+
+      # 4. 複数のプロジェクトで共有する共通コマンド (lint, testなど)
+      - name: "Common Commands (lint, test)"
+        type: command
+        sources:
+          - ./common/commands/
+        targets:
+          - agent: claude
+          - agent: roo
+
+# --- OSユーザー全体で共通のグローバル設定 ---
+# プロジェクトに依存しない、あなた個人の設定を定義します
+user:
+  # テスト用。homeディレクトリのファイルを上書きしたくないので。
+  home: ../dest/home
+  tasks:
+    # 1. グローバルなコンテキスト (一般的な指示やルールなど)
+    - name: "User Global Memory"
+      type: memory
+      sources:
+        - ./user/memories/
+      targets:
+        # claudeのデフォルトは ~/.claude/CLAUDE.md
+        - agent: claude
+          # 出力先を明示的に指定。~ はホームディレクトリを表す
+          #target: "~/.claude_global_context.md"
+        # rooのデフォルトは ~/.roo/rules/rules.md
+        - agent: roo
+          # target: "~/.config/roo/rules/global.md"
+    # 2. グローバルなコマンド (簡単なメモなど)
+    - name: "User Global Commands"
+      type: command
+      sources:
+        - ./user/commands/
+      targets:
+        - agent: claude
+          # target: "~/.config/claude/commands/"
+        # rooのデフォルトは ~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml
+        - agent: roo
+          # target: "~/.config/roo/modes/"

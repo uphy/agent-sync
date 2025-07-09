@@ -21,4 +21,10 @@ type Agent interface {
 
 	// FormatCommand processes a command definition for this agent
 	FormatCommand(commands []model.Command) (string, error)
+
+	// DefaultMemoryPath determines the default output path for memory tasks
+	DefaultMemoryPath(outputBaseDir string, userScope bool, fileName string) (string, error)
+
+	// DefaultCommandPath determines the default output path for command tasks
+	DefaultCommandPath(outputBaseDir string, userScope bool, fileName string) (string, error)
 }

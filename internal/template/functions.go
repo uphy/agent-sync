@@ -25,7 +25,7 @@ func (e *Engine) FileFunc() interface{} {
 func (e *Engine) IncludeFunc() interface{} {
 	return func(path string) (string, error) {
 		// Resolve path relative to the base path
-		fullPath := e.resolveRelativePath(path)
+		fullPath := e.resolveTemplatePath(path)
 
 		// Check if file exists
 		if !e.FileResolver.Exists(fullPath) {
@@ -41,7 +41,7 @@ func (e *Engine) IncludeFunc() interface{} {
 func (e *Engine) ReferenceFunc() interface{} {
 	return func(path string) (string, error) {
 		// Resolve path relative to the base path
-		fullPath := e.resolveRelativePath(path)
+		fullPath := e.resolveTemplatePath(path)
 
 		// Check if file exists
 		if !e.FileResolver.Exists(fullPath) {
@@ -67,14 +67,34 @@ func (e *Engine) MCPFunc() interface{} {
 	}
 }
 
-// resolveRelativePath resolves a path relative to the base path
-func (e *Engine) resolveRelativePath(path string) string {
-	// If path is absolute, return as is
-	if filepath.IsAbs(path) {
+// resolveTemplatePath resolves paths for template includes and references
+// using the special template path resolution rules:
+// 1. Paths starting with "/" are relative to agent-def.yml's directory (BasePath) with the leading slash removed
+// 2. Paths starting with "./" or "../" are relative to the including file's directory
+// 3. Other paths (without "./" or "../" prefix) are relative to agent-def.yml's directory (BasePath)
+// 4. OS-absolute paths (like C:\ on Windows) are preserved as-is
+func (e *Engine) resolveTemplatePath(path string) string {
+	// 1. Handle "/"-prefixed paths as relative to BasePath
+	if strings.HasPrefix(path, "/") {
+		trimmed := strings.TrimPrefix(path, "/")
+		return filepath.Join(e.BasePath, trimmed)
+	}
+
+	// 2. Handle Windows-style absolute paths
+	// This is specifically for Windows where C:\ style paths are absolute
+	// On Unix, this should never trigger because / paths are handled above
+	if filepath.IsAbs(path) && path[0] != '/' {
 		return path
 	}
 
-	// Otherwise, join with base path
+	// 3. Handle explicitly relative paths (./ or ../) relative to current file
+	if strings.HasPrefix(path, "./") || strings.HasPrefix(path, "../") {
+		if e.CurrentFilePath != "" {
+			return filepath.Join(filepath.Dir(e.CurrentFilePath), path)
+		}
+	}
+
+	// 4. All other paths are relative to BasePath
 	return filepath.Join(e.BasePath, path)
 }
 

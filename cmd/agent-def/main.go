@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/user/agent-def/internal/agent"
-	"github.com/user/agent-def/internal/command"
+	"github.com/user/agent-def/internal/cli"
 	"github.com/user/agent-def/internal/util"
 )
 
@@ -51,9 +51,10 @@ and listing available agents.`,
 
 	// Register commands with the registry passed in
 	rootCmd.AddCommand(
-		command.NewMemoryCommand(registry),
-		command.NewCommandCommand(registry),
-		command.NewListCommand(registry),
+		cli.NewBuildCommand(),
+		cli.NewValidateCommand(),
+		cli.NewListCommand(),
+		cli.NewInitCommand(),
 	)
 
 	// Execute the root command with improved error handling

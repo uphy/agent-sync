@@ -1,11 +1,12 @@
 package agent
 
 import (
-	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/user/agent-def/internal/model"
+	"gopkg.in/yaml.v3"
 )
 
 // Roo implements the Roo-specific conversion logic
@@ -41,33 +42,104 @@ func (r *Roo) FormatMemory(content string) (string, error) {
 
 // FormatCommand processes command definitions for Roo agent
 func (r *Roo) FormatCommand(commands []model.Command) (string, error) {
-	// Convert commands to JSON format for .roo/custom_modes.json
-	type RooMode struct {
-		Slug           string   `json:"slug"`
-		Name           string   `json:"name"`
-		RoleDefinition string   `json:"roleDefinition"`
-		WhenToUse      string   `json:"whenToUse"`
-		Groups         []string `json:"groups"`
-		Content        string   `json:"content"`
+	// Define structs that match our desired YAML output structure
+	type CustomMode struct {
+		Slug               string   `yaml:"slug"`
+		Name               string   `yaml:"name"`
+		RoleDefinition     string   `yaml:"roleDefinition"`
+		WhenToUse          string   `yaml:"whenToUse"`
+		Groups             []string `yaml:"groups"`
+		CustomInstructions string   `yaml:"customInstructions"`
 	}
 
-	var rooModes []RooMode
-	for _, cmd := range commands {
-		rooModes = append(rooModes, RooMode{
-			Slug:           cmd.Slug,
-			Name:           cmd.Name,
-			RoleDefinition: cmd.RoleDefinition,
-			WhenToUse:      cmd.WhenToUse,
-			Groups:         cmd.Groups,
-			Content:        cmd.Content,
-		})
+	type RooConfig struct {
+		CustomModes []CustomMode `yaml:"customModes"`
 	}
 
-	// Convert to JSON
-	jsonBytes, err := json.MarshalIndent(rooModes, "", "  ")
+	// Clean leading newlines if present
+	cleanContent := func(s string) string {
+		if s != "" && s[0] == '\n' {
+			return s[1:]
+		}
+		return s
+	}
+
+	// Create and populate the config struct
+	config := RooConfig{
+		CustomModes: make([]CustomMode, len(commands)),
+	}
+
+	for i, cmd := range commands {
+		config.CustomModes[i] = CustomMode{
+			Slug:               cmd.Slug,
+			Name:               cmd.Name,
+			RoleDefinition:     cleanContent(cmd.RoleDefinition),
+			WhenToUse:          cleanContent(cmd.WhenToUse),
+			Groups:             cmd.Groups,
+			CustomInstructions: cleanContent(cmd.Content),
+		}
+	}
+
+	// Encode to yaml.Node first
+	var node yaml.Node
+	err := node.Encode(config)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal Roo commands to JSON: %w", err)
+		return "", fmt.Errorf("failed to encode Roo commands to YAML node: %w", err)
 	}
 
-	return string(jsonBytes), nil
+	// Find all customInstructions fields and set them to literal style
+	// The document node contains a single mapping node at Content[0]
+	for _, rootMap := range node.Content {
+		// Find the customModes sequence node
+		for i := 0; i < len(rootMap.Content); i += 2 {
+			if rootMap.Content[i].Value == "customModes" {
+				customModes := rootMap.Content[i+1]
+
+				// For each mode in customModes
+				for _, modeNode := range customModes.Content {
+					// Each mode node is a mapping node with key-value pairs
+					for j := 0; j < len(modeNode.Content); j += 2 {
+						if modeNode.Content[j].Value == "customInstructions" {
+							// Set literal style for customInstructions values
+							valueNode := modeNode.Content[j+1]
+							if strings.Contains(valueNode.Value, "\n") {
+								valueNode.Style = yaml.LiteralStyle
+							}
+						}
+					}
+				}
+				break
+			}
+		}
+	}
+
+	// Marshal the modified node to YAML
+	var buf strings.Builder
+	encoder := yaml.NewEncoder(&buf)
+	encoder.SetIndent(2)
+
+	if err := encoder.Encode(&node); err != nil {
+		return "", fmt.Errorf("failed to marshal Roo commands to YAML: %w", err)
+	}
+	encoder.Close()
+
+	return buf.String(), nil
+}
+
+// DefaultMemoryPath determines the output path for Roo agent memory files
+func (r *Roo) DefaultMemoryPath(outputBaseDir string, userScope bool, fileName string) (string, error) {
+	ext := ".md"
+	name := strings.TrimSuffix(fileName, ext)
+
+	return filepath.Join(outputBaseDir, ".roo", "rules", name+ext), nil
+}
+
+// DefaultCommandPath determines the output path for Roo agent command files
+func (r *Roo) DefaultCommandPath(outputBaseDir string, userScope bool, fileName string) (string, error) {
+	if userScope {
+		return filepath.Join(outputBaseDir, "Library", "Application Support", "Code", "User", "globalStorage", "rooveterinaryinc.roo-cline", "settings", "custom_modes.yaml"), nil
+	}
+
+	// Project scope
+	return filepath.Join(outputBaseDir, ".roo", ".roomodes"), nil
 }
