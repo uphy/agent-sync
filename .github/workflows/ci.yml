@@ -1,0 +1,64 @@
+# .github/workflows/ci.yml
+name: CI
+
+# Trigger the workflow on push to main and all pull requests
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel in-progress runs for the same workflow and branch/PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: [1.21.x] # Based on go.mod
+        # Add more Go versions if needed for compatibility testing
+
+    steps:
+      # Check out the repository code
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch all history for proper testing
+
+      # Set up Go environment
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache: true # Cache Go modules
+
+      # Verify Go modules are tidy
+      - name: Verify Go modules
+        run: go mod tidy && git diff --exit-code go.mod go.sum
+
+      # Run static code analysis with golangci-lint
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: --timeout=5m
+
+      # Run tests with race detection and code coverage
+      - name: Run tests
+        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+      # Upload coverage data to Codecov
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.txt
+          fail_ci_if_error: false
+          verbose: true
+
+      # Verify that the code builds without errors
+      - name: Verify build
+        run: go build -v ./cmd/agent-def

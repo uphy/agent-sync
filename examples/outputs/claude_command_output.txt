@@ -1,0 +1,23 @@
+## Example Command (example-command)
+
+**Role:** Executes a sample command for demonstration
+
+**When to use:** When testing the agent-def tool
+
+**Groups:** admin, user
+
+# Example Command
+
+This is an example command file demonstrating the command syntax and frontmatter.
+
+## Usage
+
+```
+example-command --userId <value> [--verbose]
+```
+
+## Examples
+
+```
+example-command --userId 123
+example-command --userId 123 --verbose

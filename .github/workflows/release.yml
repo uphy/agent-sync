@@ -1,0 +1,93 @@
+# .github/workflows/release.yml
+name: Release
+
+# Trigger the workflow when a new tag with semver format is pushed
+on:
+  push:
+    tags:
+      - "v*.*.*" # Semantic versioning tag format
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the repository code
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch all history for release notes generation
+
+      # Set up Go environment
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21.x # Based on go.mod
+          cache: true # Cache Go modules
+
+      # Get version from the tag
+      - name: Get version
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building release $VERSION"
+
+      # Build binaries for all supported platforms
+      - name: Build release binaries
+        run: |
+          mkdir -p dist
+          LDFLAGS="-s -w -X 'github.com/user/agent-def.Version=${{ steps.get_version.outputs.VERSION }}' -X 'github.com/user/agent-def.Commit=$(git rev-parse HEAD)' -X 'github.com/user/agent-def.BuildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+
+          # Linux AMD64
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="$LDFLAGS" -o dist/agent-def-linux-amd64 ./cmd/agent-def
+          # Linux ARM64
+          GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -ldflags="$LDFLAGS" -o dist/agent-def-linux-arm64 ./cmd/agent-def
+          # macOS AMD64
+          GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="$LDFLAGS" -o dist/agent-def-darwin-amd64 ./cmd/agent-def
+          # macOS ARM64
+          GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -ldflags="$LDFLAGS" -o dist/agent-def-darwin-arm64 ./cmd/agent-def
+          # Windows AMD64
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="$LDFLAGS" -o dist/agent-def-windows-amd64.exe ./cmd/agent-def
+
+          # Add executable permissions
+          chmod +x dist/agent-def-linux-* dist/agent-def-darwin-*
+
+      # Compress binaries
+      - name: Compress binaries
+        run: |
+          cd dist
+          for file in agent-def-linux-* agent-def-darwin-*; do
+            tar -czf "$file.tar.gz" "$file"
+          done
+          for file in agent-def-windows-*.exe; do
+            zip "${file%.exe}.zip" "$file"
+          done
+
+      # Generate release notes using Release Drafter
+      - name: Generate release notes
+        id: release_notes
+        uses: release-drafter/release-drafter@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          config-name: release-drafter.yml
+          name: ${{ steps.get_version.outputs.VERSION }}
+          tag: ${{ steps.get_version.outputs.VERSION }}
+          publish: false
+
+      # Create GitHub Release and upload artifacts
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: ${{ steps.get_version.outputs.VERSION }}
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          body: ${{ steps.release_notes.outputs.body }}
+          draft: false
+          prerelease: false
+          files: |
+            dist/*.tar.gz
+            dist/*.zip
