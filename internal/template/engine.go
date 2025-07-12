@@ -42,6 +42,10 @@ type Engine struct {
 	AgentRegistry *agent.Registry
 }
 
+type TemplateContext struct {
+	Agent string
+}
+
 // NewEngine creates a new template engine
 func NewEngine(fileResolver FileResolver, agentType, basePath string, agentRegistry *agent.Registry) *Engine {
 	return &Engine{
@@ -141,6 +145,7 @@ func (e *Engine) RegisterHelperFunctions(t *template.Template) *template.Templat
 		"include":   e.IncludeFunc(),
 		"reference": e.ReferenceFunc(),
 		"mcp":       e.MCPFunc(),
+		"agent":     e.Agent,
 	}
 	return t.Funcs(funcMap)
 }

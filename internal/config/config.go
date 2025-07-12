@@ -13,8 +13,10 @@ type Config struct {
 // Project represents a project-specific configuration block
 type Project struct {
 	// Root is the base path for sources relative to agent-def.yml location
+	// Supports tilde (~) expansion for home directory.
 	Root string `yaml:"root,omitempty"`
 	// Destinations are the output directories for generated files
+	// Supports tilde (~) expansion for home directory.
 	Destinations []string `yaml:"destinations"`
 	// Tasks is the list of generation tasks for this project
 	Tasks []Task `yaml:"tasks"`
@@ -35,6 +37,7 @@ type Task struct {
 	// Type is either "command" or "memory"
 	Type string `yaml:"type"`
 	// Sources are file or directory paths relative to Root
+	// Supports tilde (~) expansion for home directory.
 	Sources []string `yaml:"sources"`
 	// Concat indicates whether to concatenate sources into one output
 	Concat *bool `yaml:"concat,omitempty"`
@@ -47,5 +50,6 @@ type Target struct {
 	// Agent is the target AI agent (e.g., "roo", "claude")
 	Agent string `yaml:"agent"`
 	// Target is an optional custom output path
+	// Supports tilde (~) expansion for home directory.
 	Target string `yaml:"target,omitempty"`
 }

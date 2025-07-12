@@ -134,7 +134,7 @@ func (p *Pipeline) Execute() error {
 			var rendered []string
 			for _, rel := range grp {
 				full := filepath.Join(p.SourceRoot, rel)
-				engine := template.NewEngine(&fsAdapter{p.fs}, t.Type, p.SourceRoot, p.registry)
+				engine := template.NewEngine(&fsAdapter{p.fs}, tgt.Agent, p.SourceRoot, p.registry)
 				out, err := engine.ExecuteFile(full, nil)
 				if err != nil {
 					return fmt.Errorf("template execute %s: %w", rel, err)

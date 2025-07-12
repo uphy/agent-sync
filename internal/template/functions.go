@@ -67,6 +67,10 @@ func (e *Engine) MCPFunc() interface{} {
 	}
 }
 
+func (e *Engine) Agent() string {
+	return e.AgentType
+}
+
 // resolveTemplatePath resolves paths for template includes and references
 // using the special template path resolution rules:
 // 1. Paths starting with "/" are relative to agent-def.yml's directory (BasePath) with the leading slash removed

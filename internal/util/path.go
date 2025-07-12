@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -65,4 +66,31 @@ func EnsureDirectory(path string) error {
 		return WrapError(err, "failed to create directory")
 	}
 	return nil
+}
+
+// ExpandTilde replaces a leading tilde (~) in a path with the user's home directory.
+// If the path doesn't start with a tilde, it is returned unchanged.
+// Returns an error if the home directory cannot be determined.
+func ExpandTilde(path string) (string, error) {
+	// Return unchanged if the path is empty or doesn't start with ~
+	if path == "" || path[0] != '~' {
+		return path, nil
+	}
+
+	// Get the user's home directory
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to get user home directory: %w", err)
+	}
+
+	// Replace ~ with the home directory
+	if len(path) == 1 {
+		// Just ~ by itself
+		return homeDir, nil
+	} else if path[1] == filepath.Separator {
+		// ~/something - path with separator
+		return filepath.Join(homeDir, path[2:]), nil
+	}
+	// ~something - path without separator (less common)
+	return filepath.Join(homeDir, path[1:]), nil
 }

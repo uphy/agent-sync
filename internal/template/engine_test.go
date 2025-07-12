@@ -24,8 +24,7 @@ func TestExecute_ReturnsRawContent(t *testing.T) {
 func TestExecute_WithTemplateVariable(t *testing.T) {
 	engine := &Engine{}
 	templateContent := "hello {{.Name}}"
-	data := map[string]interface{}{"Name": "World"}
-	output, err := engine.Execute(templateContent, data)
+	output, err := engine.Execute(templateContent)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
