@@ -168,7 +168,11 @@ func (p *Pipeline) Execute() error {
 				}
 
 				if p.DryRun {
-					fmt.Printf("[DRY RUN] Would write output to %s\n", outPath)
+					message := fmt.Sprintf("[DRY RUN] Would write output to %s", outPath)
+					if p.fs.FileExists(outPath) {
+						message += " (Will overwrite)"
+					}
+					fmt.Println(message)
 				} else {
 					if err := p.fs.WriteFile(outPath, []byte(formatted)); err != nil {
 						return fmt.Errorf("write output %s: %w", outPath, err)
