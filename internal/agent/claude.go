@@ -1,7 +1,6 @@
 package agent
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -28,7 +27,7 @@ func (c *Claude) FormatFile(path string) string {
 
 // FormatMCP formats an MCP command for Claude agent
 func (c *Claude) FormatMCP(agent, command string, args ...string) string {
-	return fmt.Sprintf("MCP tool (MCP Server: %s, Tool: %s, Arguments: %s)", agent, command, strings.Join(args, " "))
+	return formatMCP(agent, command, args...)
 }
 
 // FormatMemory processes a memory context for Claude agent

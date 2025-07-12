@@ -1,0 +1,3 @@
+-- include_test.md --
+- agent: {{ agent }}
+-- end of include_test.md --

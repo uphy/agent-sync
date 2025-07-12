@@ -7,6 +7,8 @@ import (
 
 	"github.com/user/agent-def/internal/agent"
 	"github.com/user/agent-def/internal/util"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // FileResolver resolves and reads files
@@ -28,6 +30,9 @@ type Engine struct {
 
 	// References stores reference content to be appended at the end
 	References map[string]string
+
+	// OriginalPaths maps absolute paths to their original relative paths
+	OriginalPaths map[string]string
 
 	// AgentType determines the output format
 	AgentType string
@@ -147,6 +152,13 @@ func (e *Engine) RegisterHelperFunctions(t *template.Template) *template.Templat
 		"mcp":       e.MCPFunc(),
 		"agent":     e.Agent,
 	}
+	caser := cases.Title(language.English)
+	for _, agent := range e.AgentRegistry.List() {
+		funcName := fmt.Sprintf("is%s", caser.String(agent.ID()))
+		funcMap[funcName] = func() bool {
+			return agent.ID() == e.AgentType
+		}
+	}
 	return t.Funcs(funcMap)
 }
 
@@ -184,15 +196,15 @@ func (e *Engine) processInclude(path string) (string, error) {
 }
 
 // processReference adds a reference to be appended at the end
-func (e *Engine) processReference(path string) (string, error) {
+func (e *Engine) processReference(originalPath, fullPath string) (string, error) {
 	// Save previous current file path
 	previousPath := e.CurrentFilePath
 
 	// Set current file path to the file being referenced
-	e.CurrentFilePath = path
+	e.CurrentFilePath = fullPath
 
 	// Process the file content recursively
-	content, err := e.processInclude(path)
+	content, err := e.processInclude(fullPath)
 	if err != nil {
 		// Restore previous path before returning error
 		e.CurrentFilePath = previousPath
@@ -200,11 +212,11 @@ func (e *Engine) processReference(path string) (string, error) {
 	}
 
 	// Store the content to be appended at the end
-	e.References[path] = content
+	e.References[originalPath] = content
 
 	// Restore previous current file path before returning
 	e.CurrentFilePath = previousPath
 
-	// Return a reference marker
-	return fmt.Sprintf("[参考: %s]", path), nil
+	// Return a reference marker with original relative path
+	return fmt.Sprintf("[参考: %s]", originalPath), nil
 }

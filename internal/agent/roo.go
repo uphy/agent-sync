@@ -24,12 +24,15 @@ func (r *Roo) Name() string {
 
 // FormatFile converts a path to Roo's file reference format
 func (r *Roo) FormatFile(path string) string {
+	if filepath.IsAbs(path) {
+		return path
+	}
 	return "@/" + path
 }
 
 // FormatMCP formats an MCP command for Roo agent
 func (r *Roo) FormatMCP(agent, command string, args ...string) string {
-	return fmt.Sprintf("MCP tool (MCP Server: %s, Tool: %s, Arguments: %s)", agent, command, strings.Join(args, " "))
+	return formatMCP(agent, command, args...)
 }
 
 // FormatMemory processes a memory context for Roo agent

@@ -49,7 +49,7 @@ func (e *Engine) ReferenceFunc() interface{} {
 		}
 
 		// Process the reference
-		return e.processReference(fullPath)
+		return e.processReference(path, fullPath)
 	}
 }
 
