@@ -24,7 +24,7 @@ type Command struct {
 	WhenToUse string `yaml:"whenToUse"`
 
 	// Groups are permission groups for the command
-	Groups []string `yaml:"groups"`
+	Groups any `yaml:"groups"`
 
 	// Content is the main content of the command
 	Content string
@@ -103,11 +103,7 @@ func ParseCommand(path string, content []byte) (Command, error) {
 		cmd.WhenToUse = when
 	}
 	if groups, ok := frontmatter["groups"].([]interface{}); ok {
-		for _, g := range groups {
-			if group, ok := g.(string); ok {
-				cmd.Groups = append(cmd.Groups, group)
-			}
-		}
+		cmd.Groups = groups
 	}
 
 	// Fill in defaults for missing fields

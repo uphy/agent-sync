@@ -6,3 +6,11 @@ dir = "example"
 depends = ["clean-example"]
 run = "go run ../../cmd/agent-def/main.go build -f"
 dir = "example/agent-def"
+
+[tasks.integration-test]
+run = "go test -timeout 30s -run ^TestAgentDef$"
+dir = "internal/cli"
+alias = ["it"]
+
+[tasks.install]
+run = "go install ./cmd/agent-def"

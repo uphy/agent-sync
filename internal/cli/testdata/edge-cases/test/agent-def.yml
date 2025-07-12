@@ -1,0 +1,19 @@
+# This is an invalid configuration missing the required configVersion field
+projects:
+  projectA:
+    root: .
+    destinations:
+      - projectA
+    tasks:
+      - name: memories
+        type: memory
+        # Missing sources field
+        targets:
+          - agent: claude
+          - agent: roo
+      - name: commands
+        type: command
+        sources:
+          - non-existent-directory
+        targets:
+          - agent: unknown-agent

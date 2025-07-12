@@ -44,12 +44,12 @@ func (r *Roo) FormatMemory(content string) (string, error) {
 func (r *Roo) FormatCommand(commands []model.Command) (string, error) {
 	// Define structs that match our desired YAML output structure
 	type CustomMode struct {
-		Slug               string   `yaml:"slug"`
-		Name               string   `yaml:"name"`
-		RoleDefinition     string   `yaml:"roleDefinition"`
-		WhenToUse          string   `yaml:"whenToUse"`
-		Groups             []string `yaml:"groups"`
-		CustomInstructions string   `yaml:"customInstructions"`
+		Slug               string `yaml:"slug"`
+		Name               string `yaml:"name"`
+		RoleDefinition     string `yaml:"roleDefinition"`
+		WhenToUse          string `yaml:"whenToUse"`
+		Groups             any    `yaml:"groups"`
+		CustomInstructions string `yaml:"customInstructions"`
 	}
 
 	type RooConfig struct {
@@ -70,7 +70,7 @@ func (r *Roo) FormatCommand(commands []model.Command) (string, error) {
 	}
 
 	for i, cmd := range commands {
-		config.CustomModes[i] = CustomMode{
+		customMode := CustomMode{
 			Slug:               cmd.Slug,
 			Name:               cmd.Name,
 			RoleDefinition:     cleanContent(cmd.RoleDefinition),
@@ -78,6 +78,10 @@ func (r *Roo) FormatCommand(commands []model.Command) (string, error) {
 			Groups:             cmd.Groups,
 			CustomInstructions: cleanContent(cmd.Content),
 		}
+		if customMode.Groups == nil {
+			customMode.Groups = []string{}
+		}
+		config.CustomModes[i] = customMode
 	}
 
 	// Encode to yaml.Node first
@@ -128,5 +132,5 @@ func (r *Roo) DefaultCommandPath(outputBaseDir string, userScope bool, fileName 
 	}
 
 	// Project scope
-	return filepath.Join(outputBaseDir, ".roo", ".roomodes"), nil
+	return filepath.Join(outputBaseDir, ".roomodes"), nil
 }

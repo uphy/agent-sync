@@ -6,6 +6,8 @@ import (
 
 	"github.com/user/agent-def/internal/model"
 	"github.com/user/agent-def/internal/util"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // ExtractMarkdownContent extracts the content of a markdown file without frontmatter
@@ -39,6 +41,7 @@ func ParseCommand(fs util.FileSystem, path string) (model.Command, error) {
 	if err != nil {
 		return model.Command{}, util.WrapError(err, "failed to parse frontmatter")
 	}
+	content = strings.Trim(content, "\n\t ")
 
 	// Create command model
 	cmd := model.Command{
@@ -60,11 +63,7 @@ func ParseCommand(fs util.FileSystem, path string) (model.Command, error) {
 		cmd.WhenToUse = when
 	}
 	if groups, ok := frontmatter["groups"].([]interface{}); ok {
-		for _, g := range groups {
-			if group, ok := g.(string); ok {
-				cmd.Groups = append(cmd.Groups, group)
-			}
-		}
+		cmd.Groups = groups
 	}
 
 	// Validate required fields
@@ -72,7 +71,8 @@ func ParseCommand(fs util.FileSystem, path string) (model.Command, error) {
 		cmd.Slug = strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 	}
 	if cmd.Name == "" {
-		cmd.Name = strings.Title(cmd.Slug)
+		cmd.Name = cases.Title(language.Und).String(cmd.Slug)
+
 	}
 
 	return cmd, nil

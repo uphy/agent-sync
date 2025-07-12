@@ -1,0 +1,18 @@
+configVersion: "1.0"
+user:
+  home: "home" # Use the relative "home" directory for testing instead of actual user home
+  tasks:
+    - name: general-rules
+      type: memory
+      sources:
+        - memories
+      targets:
+        - agent: claude
+        - agent: roo
+    - name: quick-note
+      type: command
+      sources:
+        - commands
+      targets:
+        - agent: claude
+        - agent: roo

@@ -1,0 +1,21 @@
+configVersion: "1.0"
+projects:
+  projectA:
+    root: .
+    destinations:
+      - projectA
+    tasks:
+      - name: memories
+        type: memory
+        sources:
+          - projectA/memories
+        targets:
+          - agent: claude
+          - agent: roo
+      - name: commands
+        type: command
+        sources:
+          - projectA/commands
+        targets:
+          - agent: claude
+          - agent: roo

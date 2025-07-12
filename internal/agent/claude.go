@@ -42,23 +42,21 @@ func (c *Claude) FormatMemory(content string) (string, error) {
 // FormatCommand processes command definitions for Claude agent
 func (c *Claude) FormatCommand(commands []model.Command) (string, error) {
 	// Format commands according to Claude's requirements
-	var formattedCommands strings.Builder
-
-	for _, cmd := range commands {
-		formattedCommands.WriteString(fmt.Sprintf("## %s (%s)\n\n", cmd.Name, cmd.Slug))
-		formattedCommands.WriteString(fmt.Sprintf("**Role:** %s\n\n", cmd.RoleDefinition))
-		formattedCommands.WriteString(fmt.Sprintf("**When to use:** %s\n\n", cmd.WhenToUse))
-		formattedCommands.WriteString(fmt.Sprintf("**Groups:** %s\n\n", strings.Join(cmd.Groups, ", ")))
-		formattedCommands.WriteString(cmd.Content)
-		formattedCommands.WriteString("\n\n---\n\n")
+	commandContents := make([]string, len(commands))
+	for i, cmd := range commands {
+		commandContents[i] = cmd.Content
 	}
 
-	return formattedCommands.String(), nil
+	return strings.Join(commandContents, "\n\n---\n\n"), nil
 }
 
 // DefaultMemoryPath determines the output path for Claude agent memory files
 func (c *Claude) DefaultMemoryPath(outputBaseDir string, userScope bool, fileName string) (string, error) {
-	return filepath.Join(outputBaseDir, ".claude", "CLAUDE.md"), nil
+	if userScope {
+		return filepath.Join(outputBaseDir, ".claude", "CLAUDE.md"), nil
+	} else {
+		return filepath.Join(outputBaseDir, "CLAUDE.md"), nil
+	}
 }
 
 // DefaultCommandPath determines the output path for Claude agent command files

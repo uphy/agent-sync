@@ -33,7 +33,7 @@ func TestParseCommand_DefaultFieldsEmpty(t *testing.T) {
 	if cmd.WhenToUse != "" {
 		t.Errorf("expected WhenToUse empty, got %q", cmd.WhenToUse)
 	}
-	if len(cmd.Groups) != 0 {
+	if cmd.Groups != nil {
 		t.Errorf("expected Groups empty, got %v", cmd.Groups)
 	}
 }

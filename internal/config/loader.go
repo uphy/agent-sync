@@ -10,14 +10,17 @@ import (
 
 // LoadConfig reads and parses the agent-def YAML configuration from the given path.
 // If the provided path is a directory, it looks for "agent-def.yml" or "agent-def.yaml" in that directory.
-func LoadConfig(path string) (*Config, error) {
+func LoadConfig(path string) (*Config, string, error) {
 	cfgPath := path
+	var cfgDir string
+
 	info, err := os.Stat(path)
 	if err != nil {
-		return nil, fmt.Errorf("cannot stat path %q: %w", path, err)
+		return nil, "", fmt.Errorf("cannot stat path %q: %w", path, err)
 	}
 
 	if info.IsDir() {
+		cfgDir = path
 		// search for agent-def.yml or agent-def.yaml
 		for _, name := range []string{"agent-def.yml", "agent-def.yaml"} {
 			p := filepath.Join(path, name)
@@ -26,17 +29,20 @@ func LoadConfig(path string) (*Config, error) {
 				break
 			}
 		}
+	} else {
+		// If path points directly to a file, get its directory
+		cfgDir = filepath.Dir(path)
 	}
 
 	data, err := os.ReadFile(cfgPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read config file %q: %w", cfgPath, err)
+		return nil, "", fmt.Errorf("failed to read config file %q: %w", cfgPath, err)
 	}
 
 	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("failed to parse YAML in %q: %w", cfgPath, err)
+		return nil, "", fmt.Errorf("failed to parse YAML in %q: %w", cfgPath, err)
 	}
 
-	return &cfg, nil
+	return &cfg, cfgDir, nil
 }

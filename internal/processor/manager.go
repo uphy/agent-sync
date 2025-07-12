@@ -3,6 +3,7 @@ package processor
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/user/agent-def/internal/config"
 	"github.com/user/agent-def/internal/util"
@@ -10,20 +11,21 @@ import (
 
 // Manager orchestrates task execution based on loaded configuration.
 type Manager struct {
-	cfg   *config.Config
-	force bool
+	cfg       *config.Config
+	configDir string
+	force     bool
 }
 
 // NewManager creates a new Manager by loading configuration from the given path.
 func NewManager(cfgPath string) (*Manager, error) {
-	cfg, err := config.LoadConfig(cfgPath)
+	cfg, configDir, err := config.LoadConfig(cfgPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
 	if cfg.ConfigVersion == "" {
 		return nil, &util.ErrInvalidConfig{Reason: "configVersion is required"}
 	}
-	return &Manager{cfg: cfg, force: false}, nil
+	return &Manager{cfg: cfg, configDir: configDir, force: false}, nil
 }
 
 // Build executes the build pipeline for the specified projects or user scope.
@@ -38,9 +40,11 @@ func (m *Manager) Build(projects []string, userOnly, watch, dryRun, force bool) 
 			// determine project root
 			root := proj.Root
 			if root == "" {
-				if cwd, err := os.Getwd(); err == nil {
-					root = cwd
-				}
+				// If no root is specified, use config directory
+				root = m.configDir
+			} else if !filepath.IsAbs(root) {
+				// If root is relative, make it relative to config directory
+				root = filepath.Join(m.configDir, root)
 			}
 			for _, task := range proj.Tasks {
 				pipeline := NewPipeline(task, root, proj.Destinations, false, dryRun, m.force)
@@ -64,10 +68,8 @@ func (m *Manager) Build(projects []string, userOnly, watch, dryRun, force bool) 
 				home = ""
 			}
 		}
-		root := ""
-		if cwd, err := os.Getwd(); err == nil {
-			root = cwd
-		}
+		// Use the config directory for resolving user task sources
+		root := m.configDir
 		pipeline := NewPipeline(task, root, []string{home}, true, dryRun, m.force)
 		if err := pipeline.Execute(); err != nil {
 			return fmt.Errorf("user task execution failed: %w", err)
