@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/goccy/go-yaml"
 	"github.com/user/agent-def/internal/util"
-	"gopkg.in/yaml.v3"
 )
 
 // Command represents a command definition

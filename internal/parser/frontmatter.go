@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/goccy/go-yaml"
 	"github.com/user/agent-def/internal/util"
-	"gopkg.in/yaml.v3"
 )
 
 // ParseFrontmatter parses YAML frontmatter from a markdown file

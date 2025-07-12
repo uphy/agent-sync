@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/goccy/go-yaml"
 	"github.com/user/agent-def/internal/model"
-	"gopkg.in/yaml.v3"
 )
 
 // Roo implements the Roo-specific conversion logic
@@ -81,47 +81,34 @@ func (r *Roo) FormatCommand(commands []model.Command) (string, error) {
 	}
 
 	// Encode to yaml.Node first
-	var node yaml.Node
-	err := node.Encode(config)
+	// Marshal the struct to YAML
+	yamlData, err := yaml.Marshal(config)
 	if err != nil {
-		return "", fmt.Errorf("failed to encode Roo commands to YAML node: %w", err)
+		return "", fmt.Errorf("failed to marshal Roo commands to YAML: %w", err)
 	}
 
-	// Find all customInstructions fields and set them to literal style
-	// The document node contains a single mapping node at Content[0]
-	for _, rootMap := range node.Content {
-		// Find the customModes sequence node
-		for i := 0; i < len(rootMap.Content); i += 2 {
-			if rootMap.Content[i].Value == "customModes" {
-				customModes := rootMap.Content[i+1]
+	// Since go-yaml doesn't have the same node manipulation capabilities as yaml.v3,
+	// we'll use a different approach to preserve multi-line strings properly
 
-				// For each mode in customModes
-				for _, modeNode := range customModes.Content {
-					// Each mode node is a mapping node with key-value pairs
-					for j := 0; j < len(modeNode.Content); j += 2 {
-						if modeNode.Content[j].Value == "customInstructions" {
-							// Set literal style for customInstructions values
-							valueNode := modeNode.Content[j+1]
-							if strings.Contains(valueNode.Value, "\n") {
-								valueNode.Style = yaml.LiteralStyle
-							}
-						}
-					}
-				}
-				break
-			}
-		}
+	// Parse the YAML into a map for manipulation
+	var parsedYaml map[string]interface{}
+	if err := yaml.Unmarshal(yamlData, &parsedYaml); err != nil {
+		return "", fmt.Errorf("failed to parse YAML for formatting: %w", err)
 	}
 
 	// Marshal the modified node to YAML
+	// Re-marshal with proper formatting options
 	var buf strings.Builder
-	encoder := yaml.NewEncoder(&buf)
-	encoder.SetIndent(2)
+	encoder := yaml.NewEncoder(
+		&buf,
+		yaml.Indent(2),
+		yaml.UseSingleQuote(false),
+		yaml.UseLiteralStyleIfMultiline(true), // This ensures multi-line strings use literal style (|)
+	)
 
-	if err := encoder.Encode(&node); err != nil {
+	if err := encoder.Encode(parsedYaml); err != nil {
 		return "", fmt.Errorf("failed to marshal Roo commands to YAML: %w", err)
 	}
-	encoder.Close()
 
 	return buf.String(), nil
 }
