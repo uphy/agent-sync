@@ -4,5 +4,5 @@ dir = "example"
 
 [tasks.example]
 depends = ["clean-example"]
-run = "rm -rf foo && go run ../../cmd/agent-def/main.go build"
+run = "rm -rf foo && go run ../../cmd/agent-def/main.go build --dry-run"
 dir = "example/agent-def"

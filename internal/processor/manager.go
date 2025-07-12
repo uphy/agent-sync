@@ -41,7 +41,7 @@ func (m *Manager) Build(projects []string, userOnly, watch, dryRun bool) error {
 				}
 			}
 			for _, task := range proj.Tasks {
-				pipeline := NewPipeline(task, root, proj.Destinations, false)
+				pipeline := NewPipeline(task, root, proj.Destinations, false, dryRun)
 				if err := pipeline.Execute(); err != nil {
 					return fmt.Errorf("project %s task execution failed: %w", name, err)
 				}
@@ -66,7 +66,7 @@ func (m *Manager) Build(projects []string, userOnly, watch, dryRun bool) error {
 		if cwd, err := os.Getwd(); err == nil {
 			root = cwd
 		}
-		pipeline := NewPipeline(task, root, []string{home}, true)
+		pipeline := NewPipeline(task, root, []string{home}, true, dryRun)
 		if err := pipeline.Execute(); err != nil {
 			return fmt.Errorf("user task execution failed: %w", err)
 		}

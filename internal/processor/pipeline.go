@@ -32,6 +32,10 @@ type Pipeline struct {
 	// scope (false). This affects output path resolution and file organization.
 	UserScope bool
 
+	// DryRun indicates whether the pipeline should actually write files to disk.
+	// When true, the pipeline will simulate file operations but not actually write files.
+	DryRun bool
+
 	// fs is the file system interface used for all file operations,
 	// such as reading source files and writing output files.
 	fs util.FileSystem
@@ -59,12 +63,13 @@ func (a *fsAdapter) ResolvePath(path string) string {
 }
 
 // NewPipeline creates a new Pipeline with context and registers built-in agents.
-func NewPipeline(task config.Task, sourceRoot string, destinations []string, userScope bool) *Pipeline {
+func NewPipeline(task config.Task, sourceRoot string, destinations []string, userScope bool, dryRun bool) *Pipeline {
 	p := &Pipeline{
 		Task:         task,
 		SourceRoot:   sourceRoot,
 		Destinations: destinations,
 		UserScope:    userScope,
+		DryRun:       dryRun,
 		fs:           &util.RealFileSystem{},
 		registry:     agent.NewRegistry(),
 	}
@@ -161,10 +166,15 @@ func (p *Pipeline) Execute() error {
 				if err != nil {
 					return fmt.Errorf("determine output path: %w", err)
 				}
-				if err := p.fs.WriteFile(outPath, []byte(formatted)); err != nil {
-					return fmt.Errorf("write output %s: %w", outPath, err)
+
+				if p.DryRun {
+					fmt.Printf("[DRY RUN] Would write output to %s\n", outPath)
+				} else {
+					if err := p.fs.WriteFile(outPath, []byte(formatted)); err != nil {
+						return fmt.Errorf("write output %s: %w", outPath, err)
+					}
+					fmt.Printf("Wrote output to %s\n", outPath)
 				}
-				fmt.Printf("Wrote output to %s\n", outPath)
 			}
 		}
 	}
