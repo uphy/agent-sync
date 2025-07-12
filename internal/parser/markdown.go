@@ -29,13 +29,8 @@ func ParseMarkdownFile(fs util.FileSystem, path string) (string, error) {
 	return ExtractMarkdownContent(content)
 }
 
-// ParseCommand parses a command definition from a file
-func ParseCommand(fs util.FileSystem, path string) (model.Command, error) {
-	contentBytes, err := fs.ReadFile(path)
-	if err != nil {
-		return model.Command{}, util.WrapError(err, "failed to read command file")
-	}
-
+// ParseCommandFromContent parses a command definition from provided content
+func ParseCommandFromContent(path string, contentBytes []byte) (model.Command, error) {
 	// Parse frontmatter
 	frontmatter, content, err := ParseFrontmatter(contentBytes)
 	if err != nil {
@@ -72,10 +67,19 @@ func ParseCommand(fs util.FileSystem, path string) (model.Command, error) {
 	}
 	if cmd.Name == "" {
 		cmd.Name = cases.Title(language.Und).String(cmd.Slug)
-
 	}
 
 	return cmd, nil
+}
+
+// ParseCommand parses a command definition from a file
+func ParseCommand(fs util.FileSystem, path string) (model.Command, error) {
+	contentBytes, err := fs.ReadFile(path)
+	if err != nil {
+		return model.Command{}, util.WrapError(err, "failed to read command file")
+	}
+
+	return ParseCommandFromContent(path, contentBytes)
 }
 
 // ParseCommands parses all command files in a directory

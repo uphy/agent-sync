@@ -150,9 +150,14 @@ func (p *Pipeline) Execute() error {
 				formatted, err = agent.FormatMemory(content)
 			case "command":
 				var cmds []model.Command
-				for _, rel := range grp {
+				for i, rel := range grp {
 					full := filepath.Join(p.SourceRoot, rel)
-					cmd, err2 := parser.ParseCommand(p.fs, full)
+
+					// Use the already templated content instead of re-reading the file
+					templatedContent := rendered[i]
+
+					// Parse the command from the templated content
+					cmd, err2 := parser.ParseCommandFromContent(full, []byte(templatedContent))
 					if err2 != nil {
 						return fmt.Errorf("parse command %s: %w", rel, err2)
 					}
