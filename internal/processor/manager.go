@@ -10,7 +10,8 @@ import (
 
 // Manager orchestrates task execution based on loaded configuration.
 type Manager struct {
-	cfg *config.Config
+	cfg   *config.Config
+	force bool
 }
 
 // NewManager creates a new Manager by loading configuration from the given path.
@@ -22,11 +23,12 @@ func NewManager(cfgPath string) (*Manager, error) {
 	if cfg.ConfigVersion == "" {
 		return nil, &util.ErrInvalidConfig{Reason: "configVersion is required"}
 	}
-	return &Manager{cfg: cfg}, nil
+	return &Manager{cfg: cfg, force: false}, nil
 }
 
 // Build executes the build pipeline for the specified projects or user scope.
-func (m *Manager) Build(projects []string, userOnly, watch, dryRun bool) error {
+func (m *Manager) Build(projects []string, userOnly, watch, dryRun, force bool) error {
+	m.force = force
 	// Process project-level tasks unless userOnly is set
 	if !userOnly {
 		for name, proj := range m.cfg.Projects {
@@ -41,7 +43,7 @@ func (m *Manager) Build(projects []string, userOnly, watch, dryRun bool) error {
 				}
 			}
 			for _, task := range proj.Tasks {
-				pipeline := NewPipeline(task, root, proj.Destinations, false, dryRun)
+				pipeline := NewPipeline(task, root, proj.Destinations, false, dryRun, m.force)
 				if err := pipeline.Execute(); err != nil {
 					return fmt.Errorf("project %s task execution failed: %w", name, err)
 				}
@@ -66,7 +68,7 @@ func (m *Manager) Build(projects []string, userOnly, watch, dryRun bool) error {
 		if cwd, err := os.Getwd(); err == nil {
 			root = cwd
 		}
-		pipeline := NewPipeline(task, root, []string{home}, true, dryRun)
+		pipeline := NewPipeline(task, root, []string{home}, true, dryRun, m.force)
 		if err := pipeline.Execute(); err != nil {
 			return fmt.Errorf("user task execution failed: %w", err)
 		}

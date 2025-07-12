@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -36,6 +37,10 @@ type Pipeline struct {
 	// When true, the pipeline will simulate file operations but not actually write files.
 	DryRun bool
 
+	// Force indicates whether to overwrite files without confirmation.
+	// When true, existing files will be overwritten without prompting.
+	Force bool
+
 	// fs is the file system interface used for all file operations,
 	// such as reading source files and writing output files.
 	fs util.FileSystem
@@ -63,13 +68,14 @@ func (a *fsAdapter) ResolvePath(path string) string {
 }
 
 // NewPipeline creates a new Pipeline with context and registers built-in agents.
-func NewPipeline(task config.Task, sourceRoot string, destinations []string, userScope bool, dryRun bool) *Pipeline {
+func NewPipeline(task config.Task, sourceRoot string, destinations []string, userScope bool, dryRun bool, force bool) *Pipeline {
 	p := &Pipeline{
 		Task:         task,
 		SourceRoot:   sourceRoot,
 		Destinations: destinations,
 		UserScope:    userScope,
 		DryRun:       dryRun,
+		Force:        force,
 		fs:           &util.RealFileSystem{},
 		registry:     agent.NewRegistry(),
 	}
@@ -174,10 +180,27 @@ func (p *Pipeline) Execute() error {
 					}
 					fmt.Println(message)
 				} else {
-					if err := p.fs.WriteFile(outPath, []byte(formatted)); err != nil {
-						return fmt.Errorf("write output %s: %w", outPath, err)
+					// Check if file exists and handle confirmation if needed
+					fileExists := p.fs.FileExists(outPath)
+					shouldWrite := true
+
+					if fileExists && !p.Force {
+						// Prompt for confirmation
+						fmt.Printf("File already exists: %s. Overwrite? [y/N]: ", outPath)
+						reader := bufio.NewReader(os.Stdin)
+						response, _ := reader.ReadString('\n')
+						response = strings.TrimSpace(strings.ToLower(response))
+						shouldWrite = response == "y" || response == "yes"
 					}
-					fmt.Printf("Wrote output to %s\n", outPath)
+
+					if shouldWrite {
+						if err := p.fs.WriteFile(outPath, []byte(formatted)); err != nil {
+							return fmt.Errorf("write output %s: %w", outPath, err)
+						}
+						fmt.Printf("Wrote output to %s\n", outPath)
+					} else {
+						fmt.Printf("Skipped writing to %s\n", outPath)
+					}
 				}
 			}
 		}

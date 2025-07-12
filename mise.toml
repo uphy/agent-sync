@@ -3,6 +3,6 @@ run = "rm -rf dest"
 dir = "example"
 
 [tasks.example]
-# depends = ["clean-example"]
-run = "go run ../../cmd/agent-def/main.go build --dry-run"
+depends = ["clean-example"]
+run = "go run ../../cmd/agent-def/main.go build -f"
 dir = "example/agent-def"
