@@ -17,8 +17,8 @@
 
 ## MCP Function Tests
 
-- `mcp(basic)`: MCP tool (Server: `test-server`, Tool: `get-data`)
-- `mcp(with args)`: MCP tool (Server: `test-server`, Tool: `get-data`, Arguments: `arg1, arg2`)
+- `mcp(basic)`: MCP tool `test-server.get-data`
+- `mcp(with args)`: MCP tool `test-server.get-data(arg1, arg2)`
 
 ## Claude Only
 
