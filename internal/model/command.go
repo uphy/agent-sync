@@ -19,6 +19,9 @@ type Command struct {
 	// Claude contains Claude-specific properties from frontmatter
 	Claude Claude `yaml:"claude"`
 
+	// Copilot contains Copilot-specific properties from frontmatter
+	Copilot Copilot `yaml:"copilot"`
+
 	// Content is the main content of the command (not in frontmatter)
 	Content string `yaml:"-"`
 
@@ -51,6 +54,21 @@ type Claude struct {
 
 	// AllowedTools lists tools the command can use
 	AllowedTools string `yaml:"allowed-tools"`
+}
+
+// Copilot contains the Copilot-specific properties from frontmatter
+type Copilot struct {
+	// Mode is the chat mode (ask, edit, agent)
+	Mode string `yaml:"mode,omitempty"`
+
+	// Model is the AI model to use
+	Model string `yaml:"model,omitempty"`
+
+	// Tools are the available tools
+	Tools []string `yaml:"tools,omitempty"`
+
+	// Description is the prompt description
+	Description string `yaml:"description,omitempty"`
 }
 
 // ParseCommand parses a command definition from file content

@@ -50,6 +50,9 @@ func LoadConfig(path string) (*Config, string, error) {
 		return nil, "", fmt.Errorf("failed to expand tildes in paths: %w", err)
 	}
 
+	// Set default names for tasks that don't have names specified
+	cfg.SetDefaultNames()
+
 	return &cfg, cfgDir, nil
 }
 

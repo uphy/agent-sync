@@ -20,6 +20,7 @@ func (r *Registry) RegisterDefaults() {
 	r.Register(&Roo{})
 	r.Register(&Claude{})
 	r.Register(&Cline{})
+	r.Register(&Copilot{}) // Register Copilot agent
 }
 
 // Register registers an agent
