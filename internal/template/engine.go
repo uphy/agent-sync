@@ -154,9 +154,26 @@ func (e *Engine) RegisterHelperFunctions(t *template.Template) *template.Templat
 	}
 	caser := cases.Title(language.English)
 	for _, agent := range e.AgentRegistry.List() {
-		funcName := fmt.Sprintf("is%s", caser.String(agent.ID()))
-		funcMap[funcName] = func() bool {
+		name := caser.String(agent.ID())
+		funcMap["is"+name] = func() bool {
 			return agent.ID() == e.AgentType
+		}
+		funcMap["if"+name] = func(args ...string) string {
+			ifStr := args[0]
+			elseStr := ""
+			switch len(args) {
+			case 1:
+				// No else part
+			case 2:
+				elseStr = args[1]
+			default:
+				return fmt.Sprintf("if%s: too many arguments", name)
+			}
+
+			if agent.ID() == e.AgentType {
+				return ifStr
+			}
+			return elseStr
 		}
 	}
 	return t.Funcs(funcMap)
