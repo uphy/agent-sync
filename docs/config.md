@@ -95,6 +95,21 @@ Provides custom command definitions for AI agents. This creates shortcuts for pe
 - Claude: Default is `~/.claude/commands/` or `.claude/commands/` within the project
 - Roo: Default is `~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml` or `.roomodes` within the project
 
+#### Agent-specific Command Frontmatter
+
+Each agent may support specific frontmatter attributes for commands:
+
+**Claude Code Frontmatter:**
+- `claude.description`: Brief description of the command shown in the help menu
+- `claude.allowed-tools`: List of tools the command is permitted to use
+
+**Roo Frontmatter:**
+- `roo.slug`: Command identifier
+- `roo.name`: Display name of the command
+- `roo.roleDefinition`: Description of what the command does
+- `roo.whenToUse`: Description of when to use the command
+- `roo.groups`: Permission groups for the command
+
 ### Default Concatenation Behavior
 
 If not explicitly set via `concat` option, the following default concatenation behaviors apply:

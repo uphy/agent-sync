@@ -16,6 +16,9 @@ type Command struct {
 	// Roo contains the command properties from frontmatter
 	Roo Roo `yaml:"roo"`
 
+	// Claude contains Claude-specific properties from frontmatter
+	Claude Claude `yaml:"claude"`
+
 	// Content is the main content of the command (not in frontmatter)
 	Content string `yaml:"-"`
 
@@ -39,6 +42,15 @@ type Roo struct {
 
 	// Groups are permission groups for the command
 	Groups any `yaml:"groups"`
+}
+
+// Claude contains the Claude-specific properties from frontmatter
+type Claude struct {
+	// Description is a brief description of the command
+	Description string `yaml:"description"`
+
+	// AllowedTools lists tools the command can use
+	AllowedTools string `yaml:"allowed-tools"`
 }
 
 // ParseCommand parses a command definition from file content

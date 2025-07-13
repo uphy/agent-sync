@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -41,12 +42,35 @@ func (c *Claude) FormatMemory(content string) (string, error) {
 // FormatCommand processes command definitions for Claude agent
 func (c *Claude) FormatCommand(commands []model.Command) (string, error) {
 	// Format commands according to Claude's requirements
-	commandContents := make([]string, len(commands))
-	for i, cmd := range commands {
-		commandContents[i] = cmd.Content
+	var formattedCommands []string
+
+	for _, cmd := range commands {
+		var formattedCmd string
+
+		// Include frontmatter if Claude-specific attributes exist
+		hasFrontmatter := cmd.Claude.Description != "" || cmd.Claude.AllowedTools != ""
+
+		if hasFrontmatter {
+			formattedCmd = "---\n"
+
+			if cmd.Claude.Description != "" {
+				formattedCmd += fmt.Sprintf("description: %s\n", cmd.Claude.Description)
+			}
+
+			if cmd.Claude.AllowedTools != "" {
+				formattedCmd += fmt.Sprintf("allowed-tools: %s\n", cmd.Claude.AllowedTools)
+			}
+
+			formattedCmd += "---\n\n"
+		}
+
+		// Add the main content
+		formattedCmd += cmd.Content
+
+		formattedCommands = append(formattedCommands, formattedCmd)
 	}
 
-	return strings.Join(commandContents, "\n\n---\n\n"), nil
+	return strings.Join(formattedCommands, "\n\n---\n\n"), nil
 }
 
 // DefaultMemoryPath determines the output path for Claude agent memory files
