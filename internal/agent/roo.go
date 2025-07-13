@@ -120,3 +120,8 @@ func (r *Roo) DefaultCommandPath(outputBaseDir string, userScope bool, fileName 
 	// Project scope
 	return filepath.Join(outputBaseDir, ".roomodes"), nil
 }
+
+// ShouldConcatenate determines if content should be concatenated for Roo agent
+func (r *Roo) ShouldConcatenate(taskType string) bool {
+	return taskType == "command"
+}

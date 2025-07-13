@@ -27,4 +27,8 @@ type Agent interface {
 
 	// DefaultCommandPath determines the default output path for command tasks
 	DefaultCommandPath(outputBaseDir string, userScope bool, fileName string) (string, error)
+
+	// ShouldConcatenate determines whether content should be concatenated
+	// for this agent based on the task type (memory or command)
+	ShouldConcatenate(taskType string) bool
 }

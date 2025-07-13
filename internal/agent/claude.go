@@ -65,3 +65,8 @@ func (c *Claude) DefaultCommandPath(outputBaseDir string, userScope bool, fileNa
 
 	return filepath.Join(outputBaseDir, ".claude", "commands", name+ext), nil
 }
+
+// ShouldConcatenate determines if content should be concatenated for Claude agent
+func (c *Claude) ShouldConcatenate(taskType string) bool {
+	return taskType == "memory"
+}

@@ -9,7 +9,13 @@ import (
 )
 
 func TestFileFunc_NotNil(t *testing.T) {
-	engine := &Engine{}
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	engine := &Engine{
+		AgentRegistry: registry,
+	}
 	fn := engine.FileFunc()
 	if fn == nil {
 		t.Fatal("expected FileFunc to return a function, got nil")
@@ -17,7 +23,13 @@ func TestFileFunc_NotNil(t *testing.T) {
 }
 
 func TestIncludeFunc_NotNil(t *testing.T) {
-	engine := &Engine{}
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	engine := &Engine{
+		AgentRegistry: registry,
+	}
 	fn := engine.IncludeFunc()
 	if fn == nil {
 		t.Fatal("expected IncludeFunc to return a function, got nil")
@@ -25,7 +37,13 @@ func TestIncludeFunc_NotNil(t *testing.T) {
 }
 
 func TestReferenceFunc_NotNil(t *testing.T) {
-	engine := &Engine{}
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	engine := &Engine{
+		AgentRegistry: registry,
+	}
 	fn := engine.ReferenceFunc()
 	if fn == nil {
 		t.Fatal("expected ReferenceFunc to return a function, got nil")
@@ -33,7 +51,13 @@ func TestReferenceFunc_NotNil(t *testing.T) {
 }
 
 func TestMCPFunc_NotNil(t *testing.T) {
-	engine := &Engine{}
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	engine := &Engine{
+		AgentRegistry: registry,
+	}
 	fn := engine.MCPFunc()
 	if fn == nil {
 		t.Fatal("expected MCPFunc to return a function, got nil")
@@ -41,7 +65,13 @@ func TestMCPFunc_NotNil(t *testing.T) {
 }
 
 func TestFileFunc_ErrorOnInvalidUsage(t *testing.T) {
-	engine := &Engine{}
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	engine := &Engine{
+		AgentRegistry: registry,
+	}
 	fn := engine.FileFunc().(func(string) (string, error))
 	_, err := fn("path/to/file")
 	if err == nil {
@@ -50,7 +80,21 @@ func TestFileFunc_ErrorOnInvalidUsage(t *testing.T) {
 }
 
 func TestIncludeFunc_ErrorOnInvalidUsage(t *testing.T) {
-	engine := &Engine{}
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	// モックファイルリゾルバーを作成 - 存在しないファイルのテスト用
+	mockResolver := &MockFileResolver{
+		files: map[string]string{},
+		base:  "/base",
+	}
+
+	engine := &Engine{
+		AgentRegistry: registry,
+		FileResolver:  mockResolver,
+		BasePath:      "/base",
+	}
 	fn := engine.IncludeFunc().(func(string) (string, error))
 	_, err := fn("path")
 	if err == nil {
@@ -59,7 +103,22 @@ func TestIncludeFunc_ErrorOnInvalidUsage(t *testing.T) {
 }
 
 func TestReferenceFunc_ErrorOnInvalidUsage(t *testing.T) {
-	engine := &Engine{}
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	// モックファイルリゾルバーを作成 - 存在しないファイルのテスト用
+	mockResolver := &MockFileResolver{
+		files: map[string]string{},
+		base:  "/base",
+	}
+
+	engine := &Engine{
+		AgentRegistry: registry,
+		FileResolver:  mockResolver,
+		BasePath:      "/base",
+		References:    make(map[string]string),
+	}
 	fn := engine.ReferenceFunc().(func(string) (string, error))
 	_, err := fn("path")
 	if err == nil {
@@ -68,7 +127,13 @@ func TestReferenceFunc_ErrorOnInvalidUsage(t *testing.T) {
 }
 
 func TestMCPFunc_ErrorOnInvalidUsage(t *testing.T) {
-	engine := &Engine{}
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	engine := &Engine{
+		AgentRegistry: registry,
+	}
 	fn := engine.MCPFunc().(func(string, string, ...string) (string, error))
 	_, err := fn("agent", "command")
 	if err == nil {
@@ -82,6 +147,7 @@ func TestFileFunc_ValidUsage(t *testing.T) {
 	// Setup
 	registry := agent.NewRegistry()
 	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
 		AgentType:     "claude",
@@ -112,9 +178,14 @@ func TestIncludeFunc_WithMockFileResolver(t *testing.T) {
 		base: "/base",
 	}
 
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
 	engine := &Engine{
-		FileResolver: mockResolver,
-		BasePath:     "/base",
+		FileResolver:  mockResolver,
+		BasePath:      "/base",
+		AgentRegistry: registry,
 	}
 
 	// Test with existing file
@@ -146,10 +217,15 @@ func TestReferenceFunc_WithMockFileResolver(t *testing.T) {
 		base: "/base",
 	}
 
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
 	engine := &Engine{
-		FileResolver: mockResolver,
-		References:   make(map[string]string),
-		BasePath:     "/base",
+		FileResolver:  mockResolver,
+		References:    make(map[string]string),
+		BasePath:      "/base",
+		AgentRegistry: registry,
 	}
 
 	// Test with existing file

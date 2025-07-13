@@ -10,7 +10,13 @@ import (
 )
 
 func TestExecute_ReturnsRawContent(t *testing.T) {
-	engine := &Engine{}
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	engine := &Engine{
+		AgentRegistry: registry,
+	}
 	input := "plain text content"
 	output, err := engine.Execute(input, nil)
 	if err != nil {
@@ -22,7 +28,13 @@ func TestExecute_ReturnsRawContent(t *testing.T) {
 }
 
 func TestExecute_WithTemplateVariable(t *testing.T) {
-	engine := &Engine{}
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	engine := &Engine{
+		AgentRegistry: registry,
+	}
 	templateContent := "hello {{.Name}}"
 	data := map[string]interface{}{"Name": "World"}
 	output, err := engine.Execute(templateContent, data)
@@ -86,6 +98,7 @@ func TestIncludeFunc(t *testing.T) {
 
 	registry := agent.NewRegistry()
 	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
 		FileResolver:  mockResolver,
@@ -117,6 +130,7 @@ func TestReferenceFunc(t *testing.T) {
 
 	registry := agent.NewRegistry()
 	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
 		FileResolver:  mockResolver,
@@ -153,6 +167,8 @@ func TestFileFunc(t *testing.T) {
 	// Setup
 	registry := agent.NewRegistry()
 	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
 		AgentType:     "claude",
@@ -211,6 +227,7 @@ func TestRecursiveTemplateProcessing(t *testing.T) {
 
 	registry := agent.NewRegistry()
 	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
 		FileResolver:  mockResolver,
@@ -245,6 +262,7 @@ func TestReferenceCollection(t *testing.T) {
 
 	registry := agent.NewRegistry()
 	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
 		FileResolver:  mockResolver,
@@ -286,6 +304,7 @@ func TestExecute_ErrorHandling(t *testing.T) {
 
 	registry := agent.NewRegistry()
 	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
 		FileResolver:  mockResolver,
