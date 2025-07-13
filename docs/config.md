@@ -83,17 +83,31 @@ agent-def supports the following two task types:
 
 Defines context information for AI agents. This serves as the agent's "memory" and can include general rules, architecture information, coding style, etc.
 
-**Example output destinations:**
-- Claude: Default is `~/.claude/CLAUDE.md` or `CLAUDE.md` within the project
-- Roo: Default is `~/.roo/rules/rules.md` or `.roo/rules/context.md` within the project
+**Default output destinations:**
+
+| Agent | Scope | Default Path | Description |
+|-------|-------|-------------|-------------|
+| Claude | User | `~/.claude/CLAUDE.md` | User's global Claude memory file |
+| Claude | Project | `CLAUDE.md` | Project-specific Claude memory file (in project root) |
+| Roo | User | `~/.roo/rules/{filename}.md` | User's global Roo memory file |
+| Roo | Project | `.roo/rules/{filename}.md` | Project-specific Roo memory file |
+
+Note: For Roo, `{filename}` is derived from the source file name.
 
 ### 2. Command (`type: command`)
 
 Provides custom command definitions for AI agents. This creates shortcuts for performing specific tasks.
 
-**Example output destinations:**
-- Claude: Default is `~/.claude/commands/` or `.claude/commands/` within the project
-- Roo: Default is `~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml` or `.roomodes` within the project
+**Default output destinations:**
+
+| Agent | Scope | Default Path | Description |
+|-------|-------|-------------|-------------|
+| Claude | User | `~/.claude/commands/{filename}.md` | User's global Claude command file |
+| Claude | Project | `.claude/commands/{filename}.md` | Project-specific Claude command file |
+| Roo | User | `~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml` | VSCode global settings for Roo custom modes |
+| Roo | Project | `.roomodes` | Project-specific Roo custom modes file (in project root) |
+
+Note: For Claude, `{filename}` is derived from the source file name.
 
 #### Agent-specific Command Frontmatter
 
@@ -113,9 +127,13 @@ Each agent may support specific frontmatter attributes for commands:
 ### Default Concatenation Behavior
 
 If not explicitly set via `concat` option, the following default concatenation behaviors apply:
-- Claude memory tasks: sources are concatenated (concat = true)
-- Roo command tasks: sources are concatenated (concat = true)
-- All other combinations: sources are processed individually (concat = false)
+
+| Agent | Task Type | Default Concatenation |
+|-------|-----------|----------------------|
+| Claude | memory | Yes (concat = true) |
+| Claude | command | No (concat = false) |
+| Roo | memory | No (concat = false) |
+| Roo | command | Yes (concat = true) |
 
 ## Path Resolution
 

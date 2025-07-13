@@ -29,7 +29,7 @@ func NewManager(cfgPath string) (*Manager, error) {
 }
 
 // Build executes the build pipeline for the specified projects or user scope.
-func (m *Manager) Build(projects []string, userOnly, watch, dryRun, force bool) error {
+func (m *Manager) Build(projects []string, userOnly, dryRun, force bool) error {
 	m.force = force
 	// Process project-level tasks unless userOnly is set
 	if !userOnly {

@@ -52,8 +52,6 @@ and listing available agents.`,
 	// Register commands with the registry passed in
 	rootCmd.AddCommand(
 		cli.NewBuildCommand(),
-		cli.NewValidateCommand(),
-		cli.NewListCommand(),
 		cli.NewInitCommand(),
 	)
 
