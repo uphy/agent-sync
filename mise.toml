@@ -1,12 +1,3 @@
-[tasks.clean-example]
-run = "rm -rf dest"
-dir = "example"
-
-[tasks.example]
-depends = ["clean-example"]
-run = "go run ../../cmd/agent-def/main.go build -f"
-dir = "example/agent-def"
-
 [tasks.integration-test]
 run = "go test -timeout 30s -run ^TestAgentDef$"
 dir = "internal/cli"
@@ -20,3 +11,7 @@ alias = "itr"
 [tasks.install]
 run = "go install ./cmd/agent-def"
 alias = "deploy"
+
+[tasks.agent-def]
+run = "agent-def build -f"
+dir = ".agent-def"

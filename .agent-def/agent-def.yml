@@ -1,0 +1,20 @@
+configVersion: "1.0"
+projects:
+  agent-def:
+    destinations:
+      - ..
+    tasks:
+      - name: commands
+        type: command
+        sources:
+          - commands
+        targets:
+          - agent: roo
+          - agent: claude
+      - name: memories
+        type: memory
+        sources:
+          - memories
+        targets:
+          - agent: roo
+          - agent: claude

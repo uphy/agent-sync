@@ -111,7 +111,7 @@ func (p *Pipeline) Execute() error {
 			concat = *t.Concat
 		} else {
 			// Default concat behavior based on agent type.
-			if tgt.Agent == "roo" && p.Task.Type == "command" {
+			if (tgt.Agent == "roo" && p.Task.Type == "command") || (tgt.Agent == "claude" && p.Task.Type == "memory") {
 				concat = true
 			}
 		}
