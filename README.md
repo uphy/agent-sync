@@ -20,6 +20,22 @@ Or download a release from GitHub Releases.
 
 ## Usage
 
+### Init Command
+
+Initialize a new agent-def project:
+
+```
+agent-def init
+```
+
+Example:
+
+```
+mkdir my-new-project
+cd my-new-project
+agent-def init
+```
+
 ### Memory Command
 
 Process a memory context file:
@@ -82,6 +98,21 @@ Flags:
 
 - `-a, --agent string` Target agent type (default `claude`)
 - `-b, --base string` Base path for resolving relative paths (defaults to input file/directory)
+
+### init
+
+Initialize a new agent-def project with sample configuration and directory structure:
+
+```
+agent-def init
+```
+
+This command:
+- Creates an `agent-def.yml` configuration file
+- Sets up the `context/` and `commands/` directories
+- Adds sample template files to help you get started
+
+No flags required.
 
 ### list
 

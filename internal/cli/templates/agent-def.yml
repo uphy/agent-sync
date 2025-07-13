@@ -1,0 +1,25 @@
+configVersion: "1.0"
+
+projects:
+  my-project:
+    destinations:
+      - ./dest # Example destination
+    tasks:
+      - name: "Project Memory"
+        type: memory
+        sources:
+          - ./memories/
+        targets:
+          - agent: claude
+          - agent: roo
+
+      - name: "Project Commands"
+        type: command
+        sources:
+          - ./commands/
+        targets:
+          - agent: claude
+          - agent: roo
+
+user:
+  tasks: []
