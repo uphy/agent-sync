@@ -19,21 +19,23 @@ func TestParseCommand_SetsPathAndContent(t *testing.T) {
 	}
 }
 
-func TestParseCommand_DefaultFieldsEmpty(t *testing.T) {
+func TestParseCommand_DefaultFieldsFromPath(t *testing.T) {
 	cmd, _ := ParseCommand("p", []byte{})
-	if cmd.Slug != "" {
-		t.Errorf("expected Slug empty, got %q", cmd.Slug)
+
+	// Now Slug is set from path and Name from Slug
+	if cmd.Roo.Slug != "p" {
+		t.Errorf("expected Slug to be 'p', got %q", cmd.Roo.Slug)
 	}
-	if cmd.Name != "" {
-		t.Errorf("expected Name empty, got %q", cmd.Name)
+	if cmd.Roo.Name != "P" {
+		t.Errorf("expected Name to be 'P', got %q", cmd.Roo.Name)
 	}
-	if cmd.RoleDefinition != "" {
-		t.Errorf("expected RoleDefinition empty, got %q", cmd.RoleDefinition)
+	if cmd.Roo.RoleDefinition != "" {
+		t.Errorf("expected RoleDefinition empty, got %q", cmd.Roo.RoleDefinition)
 	}
-	if cmd.WhenToUse != "" {
-		t.Errorf("expected WhenToUse empty, got %q", cmd.WhenToUse)
+	if cmd.Roo.WhenToUse != "" {
+		t.Errorf("expected WhenToUse empty, got %q", cmd.Roo.WhenToUse)
 	}
-	if cmd.Groups != nil {
-		t.Errorf("expected Groups empty, got %v", cmd.Groups)
+	if cmd.Roo.Groups != nil {
+		t.Errorf("expected Groups empty, got %v", cmd.Roo.Groups)
 	}
 }

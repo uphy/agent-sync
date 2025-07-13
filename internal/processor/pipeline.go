@@ -161,7 +161,7 @@ func (p *Pipeline) Execute() error {
 					if err2 != nil {
 						return fmt.Errorf("parse command %s: %w", rel, err2)
 					}
-					cmds = append(cmds, cmd)
+					cmds = append(cmds, *cmd)
 				}
 				formatted, err = agent.FormatCommand(cmds)
 			default:

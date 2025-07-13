@@ -13,12 +13,14 @@ func TestRooFormatCommandWithLiteralBlock(t *testing.T) {
 
 	// Create a test command with multiline content
 	testCmd := model.Command{
-		Slug:           "test-command",
-		Name:           "Test Command",
-		RoleDefinition: "Test role definition",
-		WhenToUse:      "Use this for testing",
-		Groups:         []string{"test", "example"},
-		Content:        "# Test\n\nThis is a multiline\ntest content\nwith multiple paragraphs.\n\n## Section\n\n```bash\necho \"test\"\n```\n",
+		Roo: model.Roo{
+			Slug:           "test-command",
+			Name:           "Test Command",
+			RoleDefinition: "Test role definition",
+			WhenToUse:      "Use this for testing",
+			Groups:         []string{"test", "example"},
+		},
+		Content: "# Test\n\nThis is a multiline\ntest content\nwith multiple paragraphs.\n\n## Section\n\n```bash\necho \"test\"\n```\n",
 	}
 
 	// Format the command

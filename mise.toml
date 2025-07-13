@@ -10,7 +10,13 @@ dir = "example/agent-def"
 [tasks.integration-test]
 run = "go test -timeout 30s -run ^TestAgentDef$"
 dir = "internal/cli"
-alias = ["it"]
+alias = "it"
+
+[tasks.integration-test-replace]
+run = "AGENT_DEF_REPLACE=true go test -timeout 30s -run ^TestAgentDef$"
+dir = "internal/cli"
+alias = "itr"
 
 [tasks.install]
 run = "go install ./cmd/agent-def"
+alias = "deploy"

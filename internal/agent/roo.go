@@ -74,11 +74,11 @@ func (r *Roo) FormatCommand(commands []model.Command) (string, error) {
 
 	for i, cmd := range commands {
 		customMode := CustomMode{
-			Slug:               cmd.Slug,
-			Name:               cmd.Name,
-			RoleDefinition:     cleanContent(cmd.RoleDefinition),
-			WhenToUse:          cleanContent(cmd.WhenToUse),
-			Groups:             cmd.Groups,
+			Slug:               cmd.Roo.Slug,
+			Name:               cmd.Roo.Name,
+			RoleDefinition:     cleanContent(cmd.Roo.RoleDefinition),
+			WhenToUse:          cleanContent(cmd.Roo.WhenToUse),
+			Groups:             cmd.Roo.Groups,
 			CustomInstructions: cleanContent(cmd.Content),
 		}
 		if customMode.Groups == nil {
@@ -89,34 +89,17 @@ func (r *Roo) FormatCommand(commands []model.Command) (string, error) {
 
 	// Encode to yaml.Node first
 	// Marshal the struct to YAML
-	yamlData, err := yaml.Marshal(config)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal Roo commands to YAML: %w", err)
-	}
-
-	// Since go-yaml doesn't have the same node manipulation capabilities as yaml.v3,
-	// we'll use a different approach to preserve multi-line strings properly
-
-	// Parse the YAML into a map for manipulation
-	var parsedYaml map[string]interface{}
-	if err := yaml.Unmarshal(yamlData, &parsedYaml); err != nil {
-		return "", fmt.Errorf("failed to parse YAML for formatting: %w", err)
-	}
-
-	// Marshal the modified node to YAML
-	// Re-marshal with proper formatting options
 	var buf strings.Builder
 	encoder := yaml.NewEncoder(
 		&buf,
 		yaml.Indent(2),
 		yaml.UseSingleQuote(false),
+		yaml.IndentSequence(true),
 		yaml.UseLiteralStyleIfMultiline(true), // This ensures multi-line strings use literal style (|)
 	)
-
-	if err := encoder.Encode(parsedYaml); err != nil {
+	if err := encoder.Encode(config); err != nil {
 		return "", fmt.Errorf("failed to marshal Roo commands to YAML: %w", err)
 	}
-
 	return buf.String(), nil
 }
 
