@@ -81,6 +81,7 @@ func NewPipeline(task config.Task, sourceRoot string, destinations []string, use
 	}
 	p.registry.Register(&agent.Roo{})
 	p.registry.Register(&agent.Claude{})
+	p.registry.Register(&agent.Cline{})
 	return p
 }
 

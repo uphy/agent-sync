@@ -7,9 +7,19 @@ type Registry struct {
 
 // NewRegistry creates a new agent registry
 func NewRegistry() *Registry {
-	return &Registry{
+	r := &Registry{
 		agents: make(map[string]Agent),
 	}
+	// Register default agents
+	r.RegisterDefaults()
+	return r
+}
+
+// RegisterDefaults registers all default agents
+func (r *Registry) RegisterDefaults() {
+	r.Register(&Roo{})
+	r.Register(&Claude{})
+	r.Register(&Cline{})
 }
 
 // Register registers an agent

@@ -12,6 +12,7 @@ projects:
         targets:
           - agent: claude
           - agent: roo
+          - agent: cline
       - name: commands
         type: command
         sources:
@@ -19,3 +20,4 @@ projects:
         targets:
           - agent: claude
           - agent: roo
+          - agent: cline

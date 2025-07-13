@@ -9,6 +9,7 @@ user:
       targets:
         - agent: claude
         - agent: roo
+        - agent: cline
     - name: quick-note
       type: command
       sources:
@@ -16,3 +17,4 @@ user:
       targets:
         - agent: claude
         - agent: roo
+        - agent: cline

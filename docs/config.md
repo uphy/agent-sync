@@ -72,7 +72,7 @@ Options for each target:
 
 | Setting | Type | Required | Description |
 |---------|------|----------|-------------|
-| `agent` | String | Yes | Target AI agent (e.g., "roo", "claude") |
+| `agent` | String | Yes | Target AI agent (e.g., "roo", "claude", "cline") |
 | `target` | String | No | Optional custom output path. If not specified, the agent's default path is used. Supports tilde (~) expansion for home directory |
 
 ## Task Types
@@ -91,8 +91,10 @@ Defines context information for AI agents. This serves as the agent's "memory" a
 | Claude | Project | `CLAUDE.md` | Project-specific Claude memory file (in project root) |
 | Roo | User | `~/.roo/rules/{filename}.md` | User's global Roo memory file |
 | Roo | Project | `.roo/rules/{filename}.md` | Project-specific Roo memory file |
+| Cline | User | `~/Documents/Cline/Rules/{filename}.md` | User's global Cline memory file |
+| Cline | Project | `.clinerules/{filename}.md` | Project-specific Cline memory file |
 
-Note: For Roo, `{filename}` is derived from the source file name.
+Note: For Roo and Cline, `{filename}` is derived from the source file name.
 
 ### 2. Command (`type: command`)
 
@@ -106,6 +108,8 @@ Provides custom command definitions for AI agents. This creates shortcuts for pe
 | Claude | Project | `.claude/commands/{filename}.md` | Project-specific Claude command file |
 | Roo | User | `~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml` | VSCode global settings for Roo custom modes |
 | Roo | Project | `.roomodes` | Project-specific Roo custom modes file (in project root) |
+| Cline | User | `~/Documents/Cline/Workflows/{filename}.md` | User's global Cline workflow file |
+| Cline | Project | `.clinerules/workflows/{filename}.md` | Project-specific Cline workflow file |
 
 Note: For Claude, `{filename}` is derived from the source file name.
 
@@ -134,6 +138,8 @@ If not explicitly set via `concat` option, the following default concatenation b
 | Claude | command | No (concat = false) |
 | Roo | memory | No (concat = false) |
 | Roo | command | Yes (concat = true) |
+| Cline | memory | No (concat = false) |
+| Cline | command | No (concat = false) |
 
 ## Path Resolution
 

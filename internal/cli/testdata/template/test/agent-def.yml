@@ -12,3 +12,4 @@ projects:
         targets:
           - agent: claude
           - agent: roo
+          - agent: cline
