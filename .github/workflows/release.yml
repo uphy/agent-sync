@@ -1,93 +1,44 @@
-# .github/workflows/release.yml
 name: Release
 
-# Trigger the workflow when a new tag with semver format is pushed
 on:
   push:
     tags:
-      - "v*.*.*" # Semantic versioning tag format
+      - "v*.*.*"
+
+permissions:
+  contents: write # Required for creating releases
+  packages: write # Required for pushing to GitHub Packages if needed
 
 jobs:
-  release:
-    name: Create Release
+  goreleaser:
     runs-on: ubuntu-latest
-
     steps:
-      # Check out the repository code
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all history for release notes generation
+          fetch-depth: 0 # Required for GoReleaser to generate proper changelogs
 
-      # Set up Go environment
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: 1.21.x # Based on go.mod
-          cache: true # Cache Go modules
+          go-version: ">=1.21.0"
+          cache: true
 
-      # Get version from the tag
-      - name: Get version
-        id: get_version
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/}
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Building release $VERSION"
-
-      # Build binaries for all supported platforms
-      - name: Build release binaries
-        run: |
-          mkdir -p dist
-          LDFLAGS="-s -w -X 'github.com/user/agent-def.Version=${{ steps.get_version.outputs.VERSION }}' -X 'github.com/user/agent-def.Commit=$(git rev-parse HEAD)' -X 'github.com/user/agent-def.BuildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
-
-          # Linux AMD64
-          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="$LDFLAGS" -o dist/agent-def-linux-amd64 ./cmd/agent-def
-          # Linux ARM64
-          GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -ldflags="$LDFLAGS" -o dist/agent-def-linux-arm64 ./cmd/agent-def
-          # macOS AMD64
-          GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="$LDFLAGS" -o dist/agent-def-darwin-amd64 ./cmd/agent-def
-          # macOS ARM64
-          GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -ldflags="$LDFLAGS" -o dist/agent-def-darwin-arm64 ./cmd/agent-def
-          # Windows AMD64
-          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="$LDFLAGS" -o dist/agent-def-windows-amd64.exe ./cmd/agent-def
-
-          # Add executable permissions
-          chmod +x dist/agent-def-linux-* dist/agent-def-darwin-*
-
-      # Compress binaries
-      - name: Compress binaries
-        run: |
-          cd dist
-          for file in agent-def-linux-* agent-def-darwin-*; do
-            tar -czf "$file.tar.gz" "$file"
-          done
-          for file in agent-def-windows-*.exe; do
-            zip "${file%.exe}.zip" "$file"
-          done
-
-      # Generate release notes using Release Drafter
-      - name: Generate release notes
-        id: release_notes
-        uses: release-drafter/release-drafter@v5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5
         with:
-          config-name: release-drafter.yml
-          name: ${{ steps.get_version.outputs.VERSION }}
-          tag: ${{ steps.get_version.outputs.VERSION }}
-          publish: false
-
-      # Create GitHub Release and upload artifacts
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+          distribution: goreleaser
+          version: latest
+          args: release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # This token is automatically provided by GitHub Actions
+          # It needs to have permissions to push to the Homebrew tap repository
+          GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+      # If you need to create/validate a checksum file
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.get_version.outputs.VERSION }}
-          tag_name: ${{ steps.get_version.outputs.VERSION }}
-          body: ${{ steps.release_notes.outputs.body }}
-          draft: false
-          prerelease: false
-          files: |
-            dist/*.tar.gz
-            dist/*.zip
+          name: agent-def-binaries
+          path: dist/*
+          if-no-files-found: error

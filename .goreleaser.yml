@@ -1,0 +1,86 @@
+# .goreleaser.yml
+# GoReleaser configuration for agent-def
+
+# Build configuration
+builds:
+  - id: agent-def
+    main: ./cmd/agent-def/main.go
+    binary: agent-def
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+# Archive configuration
+archives:
+  - id: agent-def
+    format_overrides:
+      - goos: windows
+        format: zip
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - README.md
+      - LICENSE*
+      - CHANGELOG*
+      - docs/*
+
+# Checksum configuration
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+  algorithm: sha256
+
+# Snapshot configuration
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+# Changelog configuration
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - Merge pull request
+      - Merge branch
+
+# Release configuration
+release:
+  github:
+    owner: uphy
+    name: agent-def
+  prerelease: auto
+  draft: false
+  name_template: "{{ .ProjectName }} v{{ .Version }}"
+
+# Homebrew configuration
+brews:
+  - name: agent-def
+    repository:
+      owner: uphy
+      name: homebrew-tap
+      branch: main
+      token: "{{ .Env.GITHUB_TOKEN }}"
+    commit_author:
+      name: goreleaserbot
+      email: goreleaser@carlosbecker.com
+    description: "Convert context and command definitions for various AI agents"
+    homepage: "https://github.com/uphy/agent-def"
+    license: "MIT"
+    directory: Formula
+    install: |
+      bin.install "agent-def"
+    test: |
+      system "#{bin}/agent-def --version"

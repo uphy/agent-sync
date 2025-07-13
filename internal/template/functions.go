@@ -78,16 +78,20 @@ func (e *Engine) Agent() string {
 // 3. Other paths (without "./" or "../" prefix) are relative to agent-def.yml's directory (BasePath)
 // 4. OS-absolute paths (like C:\ on Windows) are preserved as-is
 func (e *Engine) resolveTemplatePath(path string) string {
-	// 1. Handle "/"-prefixed paths as relative to BasePath
+	// 1. Handle Windows-style absolute paths (e.g., C:\path\to\file)
+	// Check for drive letter pattern which is a strong indicator of Windows path
+	if len(path) >= 2 && path[1] == ':' && ((path[0] >= 'A' && path[0] <= 'Z') || (path[0] >= 'a' && path[0] <= 'z')) {
+		return path
+	}
+
+	// 2. Handle "/"-prefixed paths as relative to BasePath
 	if strings.HasPrefix(path, "/") {
 		trimmed := strings.TrimPrefix(path, "/")
 		return filepath.Join(e.BasePath, trimmed)
 	}
 
-	// 2. Handle Windows-style absolute paths
-	// This is specifically for Windows where C:\ style paths are absolute
-	// On Unix, this should never trigger because / paths are handled above
-	if filepath.IsAbs(path) && path[0] != '/' {
+	// 3. Handle other absolute paths
+	if filepath.IsAbs(path) {
 		return path
 	}
 

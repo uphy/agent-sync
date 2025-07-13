@@ -256,35 +256,62 @@ func TestMCPFunc_WithValidAgent(t *testing.T) {
 	registry.Register(&agent.Claude{})
 	registry.Register(&agent.Roo{})
 
-	// Test with Claude agent
-	claudeEngine := &Engine{
-		AgentType:     "claude",
-		AgentRegistry: registry,
+	testCases := []struct {
+		agentType string
+		agent     string
+		command   string
+		args      []string
+		expected  string
+	}{
+		{
+			agentType: "claude",
+			agent:     "github",
+			command:   "get-issue",
+			args:      []string{},
+			expected:  "MCP tool `github.get-issue`",
+		},
+		{
+			agentType: "roo",
+			agent:     "github",
+			command:   "get-issue",
+			args:      []string{},
+			expected:  "MCP tool `github.get-issue`",
+		},
+		{
+			agentType: "claude",
+			agent:     "jira",
+			command:   "get-ticket",
+			args:      []string{"PROJ-123"},
+			expected:  "MCP tool `jira.get-ticket(PROJ-123)`",
+		},
+		{
+			agentType: "roo",
+			agent:     "jira",
+			command:   "get-ticket",
+			args:      []string{"PROJ-123"},
+			expected:  "MCP tool `jira.get-ticket(PROJ-123)`",
+		},
 	}
 
-	claudeFn := claudeEngine.MCPFunc().(func(string, string, ...string) (string, error))
-	claudeResult, err := claudeFn("test-agent", "test-command", "arg1", "arg2")
+	for _, tc := range testCases {
+		t.Run(tc.agentType+"_"+tc.command+"_"+strings.Join(tc.args, "_"), func(t *testing.T) {
+			engine := &Engine{
+				AgentType:     tc.agentType,
+				AgentRegistry: registry,
+			}
 
-	if err != nil {
-		t.Fatalf("expected no error for Claude agent, got %v", err)
-	}
+			fn := engine.MCPFunc().(func(string, string, ...string) (string, error))
+			result, err := fn(tc.agent, tc.command, tc.args...)
 
-	// Test with Roo agent
-	rooEngine := &Engine{
-		AgentType:     "roo",
-		AgentRegistry: registry,
-	}
+			if err != nil {
+				t.Fatalf("expected no error for %s agent, got %v", tc.agentType, err)
+			}
 
-	rooFn := rooEngine.MCPFunc().(func(string, string, ...string) (string, error))
-	rooResult, err := rooFn("test-agent", "test-command", "arg1", "arg2")
-
-	if err != nil {
-		t.Fatalf("expected no error for Roo agent, got %v", err)
-	}
-
-	// Verify different implementations produce different results
-	if claudeResult == rooResult {
-		t.Errorf("expected different results for different agents, got same: %q", claudeResult)
+			if result != tc.expected {
+				t.Errorf("FormatMCP for %s: expected %q, got %q",
+					tc.agentType, tc.expected, result)
+			}
+		})
 	}
 }
 
