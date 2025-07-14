@@ -1,6 +1,7 @@
 customModes:
   - slug: deploy
     name: Deploy
+    description: deploy app
     roleDefinition: This command is used to deploy the application.
     whenToUse: When you need to deploy the application
     groups:
@@ -14,6 +15,7 @@ customModes:
       This command is used to deploy the application.
   - slug: deploy2
     name: Deploy2
+    description: deploy app2
     roleDefinition: This command is used to deploy the application.
     whenToUse: When you need to deploy the application
     groups:

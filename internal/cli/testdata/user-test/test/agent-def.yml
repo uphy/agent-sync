@@ -18,3 +18,10 @@ user:
         - agent: claude
         - agent: roo
         - agent: cline
+    - name: custom-location
+      type: memory
+      sources:
+        - memories/custom-location/custom-location.md
+      targets:
+        - agent: roo
+          target: foo.md
