@@ -12,3 +12,16 @@ customModes:
       # Deploy Command
       
       This command is used to deploy the application.
+  - slug: deploy2
+    name: Deploy2
+    roleDefinition: This command is used to deploy the application.
+    whenToUse: When you need to deploy the application
+    groups:
+      - read
+      - - edit
+        - description: Markdown files only
+          fileRegex: "\\.md$"
+    customInstructions: |-
+      # Deploy Command
+      
+      This command is used to deploy the application.

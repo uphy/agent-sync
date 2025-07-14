@@ -45,10 +45,25 @@ func (r *Roo) FormatMemory(content string) (string, error) {
 
 // FormatCommand processes command definitions for Roo agent
 func (r *Roo) FormatCommand(commands []model.Command) (string, error) {
+	// Validate required fields for each command
+	for i, cmd := range commands {
+		if cmd.Roo.Slug == "" {
+			return "", fmt.Errorf("command at index %d missing required field 'slug'", i)
+		}
+		if cmd.Roo.Name == "" {
+			return "", fmt.Errorf("command at index %d missing required field 'name'", i)
+		}
+		if cmd.Roo.RoleDefinition == "" {
+			return "", fmt.Errorf("command at index %d missing required field 'roleDefinition'", i)
+		}
+		// Groups is validated separately during struct creation
+	}
+
 	// Define structs that match our desired YAML output structure
 	type CustomMode struct {
 		Slug               string `yaml:"slug"`
 		Name               string `yaml:"name"`
+		Description        string `yaml:"description"`
 		RoleDefinition     string `yaml:"roleDefinition"`
 		WhenToUse          string `yaml:"whenToUse"`
 		Groups             any    `yaml:"groups"`
@@ -76,6 +91,7 @@ func (r *Roo) FormatCommand(commands []model.Command) (string, error) {
 		customMode := CustomMode{
 			Slug:               cmd.Roo.Slug,
 			Name:               cmd.Roo.Name,
+			Description:        cleanContent(cmd.Roo.Description),
 			RoleDefinition:     cleanContent(cmd.Roo.RoleDefinition),
 			WhenToUse:          cleanContent(cmd.Roo.WhenToUse),
 			Groups:             cmd.Roo.Groups,

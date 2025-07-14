@@ -13,6 +13,9 @@ import (
 
 // Command represents a command definition
 type Command struct {
+	// Description is a top-level description that can be used by any agent
+	Description string `yaml:"description"`
+
 	// Roo contains the command properties from frontmatter
 	Roo Roo `yaml:"roo"`
 
@@ -36,6 +39,9 @@ type Roo struct {
 
 	// Name is the display name of the command
 	Name string `yaml:"name"`
+
+	// Description is a brief description of the command
+	Description string `yaml:"description"`
 
 	// RoleDefinition describes what the command does
 	RoleDefinition string `yaml:"roleDefinition"`
@@ -116,6 +122,17 @@ func (c *Command) setDefaults() {
 	}
 	if c.Roo.Name == "" {
 		c.Roo.Name = cases.Title(language.Und).String(c.Roo.Slug)
+	}
+
+	// Apply top-level description as fallback for agent-specific descriptions if they are empty
+	if c.Roo.Description == "" && c.Description != "" {
+		c.Roo.Description = c.Description
+	}
+	if c.Claude.Description == "" && c.Description != "" {
+		c.Claude.Description = c.Description
+	}
+	if c.Copilot.Description == "" && c.Description != "" {
+		c.Copilot.Description = c.Description
 	}
 }
 
