@@ -141,5 +141,14 @@ func expandTildeInConfig(cfg *Config) error {
 		cfg.User.Tasks[i] = task
 	}
 
+	// Process logging configuration if present
+	if cfg.Logging != nil && cfg.Logging.File != "" {
+		expanded, err := util.ExpandTilde(cfg.Logging.File)
+		if err != nil {
+			return fmt.Errorf("failed to expand tilde in logging file path: %w", err)
+		}
+		cfg.Logging.File = expanded
+	}
+
 	return nil
 }

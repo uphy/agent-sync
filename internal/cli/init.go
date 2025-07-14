@@ -9,34 +9,83 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/user/agent-def/internal/log"
+	"go.uber.org/zap"
 )
 
 //go:embed templates templates/memories templates/commands
 var templatesFS embed.FS
 
+// initContext holds the CLI context for the init command
+var initContext *Context
+
 func NewInitCommand() *cobra.Command {
+	return NewInitCommandWithContext(nil)
+}
+
+// NewInitCommandWithContext returns the 'init' command with the specified context.
+func NewInitCommandWithContext(ctx *Context) *cobra.Command {
+	// Store context for command execution
+	initContext = ctx
+
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize agent-def.yml and directory structure",
 		Long:  "Generate a sample agent-def.yml in the current directory along with memories/ and commands/ folders with sample files.",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// Use the context if available
+			var logger *zap.Logger
+			var output log.OutputWriter
+
+			if initContext != nil {
+				logger = initContext.Logger
+				output = initContext.Output
+
+				// Log command execution
+				logger.Info("Executing init command")
+			}
+
 			cwd, err := os.Getwd()
 			if err != nil {
+				if logger != nil {
+					logger.Error("Failed to get current directory", zap.Error(err))
+				}
 				return fmt.Errorf("cannot get current directory: %w", err)
 			}
 
 			// Check if agent-def.yml already exists
 			yml := filepath.Join(cwd, "agent-def.yml")
 			if _, err := os.Stat(yml); err == nil {
+				if logger != nil {
+					logger.Warn("agent-def.yml already exists", zap.String("path", yml))
+				}
 				return fmt.Errorf("agent-def.yml already exists in %s", cwd)
 			}
 
-			// 再帰的にすべてのテンプレートファイルをコピー
+			if logger != nil {
+				logger.Debug("Copying template files", zap.String("destination", cwd))
+			}
+
+			// Copy all template files recursively
 			if err := copyEmbeddedDirectory(templatesFS, "templates", cwd); err != nil {
+				if logger != nil {
+					logger.Error("Failed to copy template files", zap.Error(err))
+				}
 				return fmt.Errorf("failed to copy template files: %w", err)
 			}
 
-			fmt.Println("Generated agent-def.yml, memories/, and commands/ with sample files in", cwd)
+			if output != nil {
+				output.PrintSuccess(fmt.Sprintf("Generated agent-def.yml, memories/, and commands/ with sample files in %s", cwd))
+			} else {
+				fmt.Println("Generated agent-def.yml, memories/, and commands/ with sample files in", cwd)
+			}
+
+			if logger != nil {
+				logger.Info("Successfully initialized project",
+					zap.String("directory", cwd),
+					zap.String("config", yml))
+			}
+
 			return nil
 		},
 	}

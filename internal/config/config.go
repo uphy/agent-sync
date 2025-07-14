@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+
+	"github.com/user/agent-def/internal/log"
 )
 
 // Config represents the root configuration for agent-def
@@ -12,6 +14,8 @@ type Config struct {
 	Projects map[string]Project `yaml:"projects"`
 	// User holds global user-level configuration
 	User UserConfig `yaml:"user"`
+	// Logging holds logging configuration
+	Logging *log.LogConfig `yaml:"logging,omitempty"`
 }
 
 // SetDefaultNames sets default names for all tasks across all projects and user config
@@ -21,6 +25,12 @@ func (c *Config) SetDefaultNames() {
 		c.Projects[projectName] = project // Update the map entry with the modified project
 	}
 	c.User.SetDefaultNames()
+
+	// Set default logging configuration if not provided
+	if c.Logging == nil {
+		defaultLogConfig := log.DefaultLogConfig()
+		c.Logging = &defaultLogConfig
+	}
 }
 
 // Project represents a project-specific configuration block

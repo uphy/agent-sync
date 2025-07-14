@@ -9,10 +9,12 @@ import (
 
 	"github.com/user/agent-def/internal/agent"
 	"github.com/user/agent-def/internal/config"
+	"github.com/user/agent-def/internal/log"
 	"github.com/user/agent-def/internal/model"
 	"github.com/user/agent-def/internal/parser"
 	"github.com/user/agent-def/internal/template"
 	"github.com/user/agent-def/internal/util"
+	"go.uber.org/zap"
 )
 
 // Pipeline represents the processing pipeline for a single task.
@@ -48,6 +50,12 @@ type Pipeline struct {
 	// registry contains all available agent implementations that can process
 	// and format content for different target systems.
 	registry *agent.Registry
+
+	// logger is used for internal logging of pipeline operations.
+	logger *zap.Logger
+
+	// output is used for user-facing output of pipeline status and results.
+	output log.OutputWriter
 }
 
 // fsAdapter bridges util.FileSystem to template.FileResolver.
@@ -68,7 +76,12 @@ func (a *fsAdapter) ResolvePath(path string) string {
 }
 
 // NewPipeline creates a new Pipeline with context and registers built-in agents.
-func NewPipeline(task config.Task, sourceRoot string, destinations []string, userScope bool, dryRun bool, force bool) *Pipeline {
+func NewPipeline(task config.Task, sourceRoot string, destinations []string, userScope bool, dryRun bool, force bool, logger *zap.Logger, output log.OutputWriter) *Pipeline {
+	// Use no-op logger if none provided
+	if logger == nil {
+		logger = zap.NewNop()
+	}
+
 	p := &Pipeline{
 		Task:         task,
 		SourceRoot:   sourceRoot,
@@ -78,6 +91,8 @@ func NewPipeline(task config.Task, sourceRoot string, destinations []string, use
 		Force:        force,
 		fs:           &util.RealFileSystem{},
 		registry:     agent.NewRegistry(),
+		logger:       logger,
+		output:       output,
 	}
 	p.registry.Register(&agent.Roo{})
 	p.registry.Register(&agent.Claude{})
@@ -88,16 +103,41 @@ func NewPipeline(task config.Task, sourceRoot string, destinations []string, use
 // Execute runs the full pipeline: resolve sources, template, format, and write.
 func (p *Pipeline) Execute() error {
 	t := p.Task
-	fmt.Printf("Executing task '%s' of type '%s'\n", t.Name, t.Type)
+
+	// User-facing output
+	if p.output != nil {
+		p.output.PrintProgress(fmt.Sprintf("Executing task '%s' of type '%s'", t.Name, t.Type))
+	}
+
+	// Internal logging
+	p.logger.Info("Pipeline execution started",
+		zap.String("task", t.Name),
+		zap.String("type", string(t.Type)),
+		zap.Bool("dry-run", p.DryRun),
+		zap.Bool("force", p.Force),
+		zap.Bool("userScope", p.UserScope))
 
 	// Resolve source file paths.
 	sources, err := p.resolveSources()
 	if err != nil {
+		p.logger.Error("Failed to resolve sources",
+			zap.String("error", err.Error()),
+			zap.Strings("sources", p.Task.Sources))
+		if p.output != nil {
+			p.output.PrintError(fmt.Errorf("failed to resolve sources: %w", err))
+		}
 		return fmt.Errorf("resolve sources: %w", err)
 	}
+
 	if len(sources) == 0 {
+		p.logger.Error("No source files found", zap.String("task", t.Name))
+		if p.output != nil {
+			p.output.PrintError(fmt.Errorf("no source files found for task %s", t.Name))
+		}
 		return fmt.Errorf("no source files for task %s", t.Name)
 	}
+
+	p.logger.Debug("Sources resolved successfully", zap.Strings("sources", sources))
 
 	// For each target agent.
 	for _, tgt := range t.Targets {
@@ -185,33 +225,75 @@ func (p *Pipeline) Execute() error {
 					if p.fs.FileExists(outPath) {
 						message += " (Will overwrite)"
 					}
-					fmt.Println(message)
+
+					p.logger.Info("Dry run - would write file",
+						zap.String("path", outPath),
+						zap.Bool("fileExists", p.fs.FileExists(outPath)))
+
+					if p.output != nil {
+						p.output.PrintVerbose(message)
+					}
 				} else {
 					// Check if file exists and handle confirmation if needed
 					fileExists := p.fs.FileExists(outPath)
 					shouldWrite := true
 
+					p.logger.Debug("Preparing to write file",
+						zap.String("path", outPath),
+						zap.Bool("fileExists", fileExists),
+						zap.Bool("force", p.Force))
+
 					if fileExists && !p.Force {
 						// Prompt for confirmation
-						fmt.Printf("File already exists: %s. Overwrite? [y/N]: ", outPath)
+						promptMsg := fmt.Sprintf("File already exists: %s. Overwrite? [y/N]: ", outPath)
+						if p.output != nil {
+							p.output.Print(promptMsg)
+						} else {
+							fmt.Print(promptMsg) // Fallback if no output writer
+						}
+
 						reader := bufio.NewReader(os.Stdin)
 						response, _ := reader.ReadString('\n')
 						response = strings.TrimSpace(strings.ToLower(response))
 						shouldWrite = response == "y" || response == "yes"
+
+						p.logger.Debug("User response to overwrite prompt",
+							zap.String("response", response),
+							zap.Bool("shouldWrite", shouldWrite))
 					}
 
 					if shouldWrite {
 						if err := p.fs.WriteFile(outPath, []byte(formatted)); err != nil {
+							p.logger.Error("Failed to write output file",
+								zap.String("path", outPath),
+								zap.Error(err))
+							if p.output != nil {
+								p.output.PrintError(fmt.Errorf("failed to write output %s: %w", outPath, err))
+							}
 							return fmt.Errorf("write output %s: %w", outPath, err)
 						}
-						fmt.Printf("Wrote output to %s\n", outPath)
+
+						p.logger.Info("Successfully wrote output file",
+							zap.String("path", outPath))
+
+						if p.output != nil {
+							p.output.PrintSuccess(fmt.Sprintf("Wrote output to %s", outPath))
+						}
 					} else {
-						fmt.Printf("Skipped writing to %s\n", outPath)
+						p.logger.Info("Skipped writing file", zap.String("path", outPath))
+
+						if p.output != nil {
+							p.output.Print(fmt.Sprintf("Skipped writing to %s", outPath))
+						}
 					}
 				}
 			}
 		}
 	}
+
+	p.logger.Info("Pipeline execution completed successfully",
+		zap.String("task", t.Name),
+		zap.String("type", string(t.Type)))
 
 	return nil
 }

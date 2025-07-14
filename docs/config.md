@@ -23,6 +23,8 @@ projects:
     # Project-specific configuration
 user:
   # Global user-level configuration
+logging:
+  # Logging configuration
 ```
 
 ## Configuration Reference
@@ -34,6 +36,7 @@ user:
 | `configVersion` | String | Yes | Schema version of the configuration file (e.g., "1.0") |
 | `projects` | Map | Yes | Map of named project configurations where keys are project identifiers (arbitrary names) and values are project configuration objects |
 | `user` | Object | Yes | Global user-level configuration |
+| `logging` | Object | No | Logging configuration options (see Logging Configuration section) |
 
 ### Project Configuration
 
@@ -156,6 +159,12 @@ Within templates, paths are resolved using special rules:
 2. Paths starting with `./` or `../` are relative to the including file's directory
 3. Other paths without `./` or `../` prefix are relative to the configuration file directory
 4. OS-absolute paths (like C:\ on Windows) are preserved as-is
+
+## Logging Configuration
+
+You can configure logging behavior in the configuration file by adding a `logging` section:
+
+For more detailed information about logging configuration and usage, please refer to the [Logging Guide](logging.md).
 
 ## Configuration Example
 

@@ -8,6 +8,10 @@ run = "AGENT_DEF_REPLACE=true go test -timeout 30s -run ^TestAgentDef$"
 dir = "internal/cli"
 alias = "itr"
 
+[tasks.dev]
+run = "go run ./cmd/agent-def"
+alias = "d"
+
 [tasks.install]
 run = "go install ./cmd/agent-def"
 alias = "deploy"

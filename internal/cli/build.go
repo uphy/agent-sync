@@ -2,11 +2,23 @@ package cli
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/user/agent-def/internal/log"
 	"github.com/user/agent-def/internal/processor"
+	"go.uber.org/zap"
 )
+
+// buildContext holds the CLI context for the build command
+var buildContext *Context
 
 // NewBuildCommand returns the 'build' command for the CLI.
 func NewBuildCommand() *cobra.Command {
+	return NewBuildCommandWithContext(nil)
+}
+
+// NewBuildCommandWithContext returns the 'build' command with the specified context.
+func NewBuildCommandWithContext(ctx *Context) *cobra.Command {
+	// Store context for command execution
+	buildContext = ctx
 	var userOnly bool
 	var dryRun bool
 	var force bool
@@ -18,10 +30,30 @@ func NewBuildCommand() *cobra.Command {
 		Long: `Generate files for one or more projects or user-level tasks as defined in agent-def.yml.
 If no project names are provided, all projects will be processed.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mgr, err := processor.NewManager(configPath)
+			// Use the context if available
+			var logger *zap.Logger
+			var output log.OutputWriter
+
+			if buildContext != nil {
+				logger = buildContext.Logger
+				output = buildContext.Output
+
+				// Log command execution
+				logger.Info("Executing build command",
+					zap.String("configPath", configPath),
+					zap.Strings("projects", args),
+					zap.Bool("userOnly", userOnly),
+					zap.Bool("dryRun", dryRun),
+					zap.Bool("force", force))
+			}
+
+			// Initialize manager with context components
+			mgr, err := processor.NewManager(configPath, logger, output)
 			if err != nil {
 				return err
 			}
+
+			// Execute build
 			return mgr.Build(args, userOnly, dryRun, force)
 		},
 	}
