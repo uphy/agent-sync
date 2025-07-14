@@ -60,7 +60,7 @@ Options for each task:
 
 | Setting | Type | Required | Description |
 |---------|------|----------|-------------|
-| `name` | String | No | Optional identifier for the task |
+| `name` | String | No | Optional identifier for the task. If not provided, a default name is automatically generated: for project tasks, "{project-name}-{type}" (e.g., "my-project-memory"); for user tasks, "user-{type}" (e.g., "user-command") |
 | `type` | String | Yes | Type of task, either "command" or "memory" |
 | `sources` | String Array | Yes | File or directory paths relative to Root. Supports tilde (~) expansion for home directory |
 | `concat` | Boolean | No | When true, concatenates sources into one output |

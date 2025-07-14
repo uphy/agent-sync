@@ -6,7 +6,7 @@
 [![codecov](https://codecov.io/gh/user/agent-def/branch/main/graph/badge.svg)](https://codecov.io/gh/user/agent-def)  
 [![Go Reference](https://pkg.go.dev/badge/github.com/user/agent-def.svg)](https://pkg.go.dev/github.com/user/agent-def)  
 
-Agent Definition (`agent-def`) is a tool for converting context and command definitions for various AI agents like Claude and Roo.
+Agent Definition (`agent-def`) is a tool for converting context and command definitions for various AI agents like Claude, Roo, and Cline.
 
 ## Installation
 
@@ -22,11 +22,16 @@ Or download a release from GitHub Releases.
 
 ### Init Command
 
-Initialize a new agent-def project:
+Initialize a new agent-def project with sample configuration and directory structure:
 
 ```
 agent-def init
 ```
+
+This command:
+- Creates an `agent-def.yml` configuration file
+- Sets up the `memories/` and `commands/` directories
+- Adds sample template files to help you get started
 
 Example:
 
@@ -36,117 +41,63 @@ cd my-new-project
 agent-def init
 ```
 
-### Memory Command
+### Build Command
 
-Process a memory context file:
+Process the agent definitions according to the configuration:
 
 ```
-agent-def memory <file> [flags]
+agent-def build [flags]
 ```
+
+Flags:
+- `-c, --config string` Path to agent-def.yml file or directory containing it (default ".")
+- `--user` Build only user-level tasks
+- `--dry-run` Show what would be generated without writing files
+- `-f, --force` Force overwrite without prompting for confirmation
 
 Example:
 
 ```
-agent-def memory examples/memory_context.md --agent claude
+agent-def build --config ./configs/agent-def.yml my-app
 ```
 
-### Command Command
+## Configuration
 
-Process command definition(s):
+agent-def uses a YAML configuration file (`agent-def.yml`) to define the sources and destinations for your agent definitions.
 
-```
-agent-def command <file_or_directory> [flags]
-```
+### Basic Structure
 
-Example:
-
-```
-agent-def command examples/command_definition.md --agent roo --base .
-```
-
-### List Command
-
-List supported agents:
-
-```
-agent-def list [flags]
+```yaml
+configVersion: "1.0"
+projects:
+  project-name:
+    # Project-specific configuration
+user:
+  # Global user-level configuration
 ```
 
-Example:
+### Task Types
 
-```
-agent-def list --verbose
-```
+agent-def supports two task types:
 
-## Global Flags
+1. **Memory** (`type: memory`) - Defines context information for AI agents
+2. **Command** (`type: command`) - Provides custom command definitions for AI agents
 
-- `-o, --output string` Output format (`json`, `yaml`, `text`)
-- `-v, --verbose` Enable verbose output
-
-## Commands
-
-### memory
-
-Flags:
-
-- `-a, --agent string` Target agent type (default `claude`)
-- `-b, --base string` Base path for resolving relative paths (defaults to input file directory)
-
-### command
-
-Flags:
-
-- `-a, --agent string` Target agent type (default `claude`)
-- `-b, --base string` Base path for resolving relative paths (defaults to input file/directory)
-
-### init
-
-Initialize a new agent-def project with sample configuration and directory structure:
-
-```
-agent-def init
-```
-
-This command:
-- Creates an `agent-def.yml` configuration file
-- Sets up the `context/` and `commands/` directories
-- Adds sample template files to help you get started
-
-No flags required.
-
-### list
-
-Flags:
-
-- `-v, --verbose` Show detailed capabilities for each agent
+For detailed configuration options, output destinations, concatenation behavior, template syntax, and best practices, please refer to the [Configuration Reference](docs/config.md).
 
 ## Template Syntax
 
-Agent Definition uses Go's `text/template` with `{{` and `}}` delimiters. The following helper functions are available:
+Agent Definition uses Go's `text/template` with `{{` and `}}` delimiters. Some key template functions include:
 
-- **file**: Insert an agent-specific file reference.
+| Function | Description |
+|----------|-------------|
+| `file "path/to/file"` | Formats a file reference according to the target agent |
+| `include "path/to/file"` | Includes content from another file with template processing |
+| `reference "path/to/file"` | References another file without template processing |
+| `mcp "serverName" "toolName" "arg1"` | Formats an MCP command for the target agent |
+| `agent` | Returns the current target agent identifier |
 
-  ```
-  {{file "path/to/file"}}
-  ```
-
-- **include**: Include and process another markdown file.
-
-  ```
-  {{include "path/to/file.md"}}
-  ```
-
-- **reference**: Include a reference to another file and append its content in the References section.
-
-  ```
-  {{reference "path/to/file.md"}}
-  ```
-
-- **mcp**: Generate an agent-specific MCP command invocation.
-
-  ```
-  {{mcp "serverName" "toolName" "arg1" "arg2"}}
-  ```
+See the [Configuration Reference](docs/config.md) for full details on template functions and path resolution.
 
 ## Examples
 
@@ -209,4 +160,3 @@ brew tap uphy/tap
 
 # Install agent-def
 brew install agent-def
-```

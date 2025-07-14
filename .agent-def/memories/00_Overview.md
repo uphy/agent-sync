@@ -52,7 +52,7 @@ mise run install
 
 ## Project Architecture
 
-Agent-def is a tool for converting context and command definitions for various AI agents like Claude and Roo. The architecture is organized as follows:
+Agent-def is a tool for converting context and command definitions for various AI agents like Claude, Roo, Cline, and Copilot. The architecture is organized as follows:
 
 ### Core Components
 
@@ -74,6 +74,8 @@ Agent-def is a tool for converting context and command definitions for various A
    - `agent.go`: Common interface for all agents
    - `claude.go`: Claude-specific implementation
    - `roo.go`: Roo-specific implementation
+   - `cline.go`: Cline-specific implementation
+   - `copilot.go`: Copilot-specific implementation
 
 5. **Template System** (`/internal/template/`)
    - `engine.go`: Template processing engine
