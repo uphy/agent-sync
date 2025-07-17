@@ -8,7 +8,9 @@ projects:
       - name: "Project Memory"
         type: memory
         inputs:
-          - ./memories/
+          - "./memories/**/*.md"
+          # Exclude test files with explicit quotes
+          - "!./memories/**/*_test.md"
         outputs:
           - agent: claude
           - agent: roo
@@ -16,7 +18,9 @@ projects:
       - name: "Project Commands"
         type: command
         inputs:
-          - ./commands/
+          - "./commands/**/*.md"
+          # Exclude test files with explicit quotes
+          - "!./commands/**/*_test.md"
         outputs:
           - agent: claude
           - agent: roo

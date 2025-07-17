@@ -65,7 +65,7 @@ Options for each task:
 |---------|------|----------|-------------|
 | `name` | String | No | Optional identifier for the task. If not provided, a default name is automatically generated: for project tasks, "{project-name}-{type}" (e.g., "my-project-memory"); for user tasks, "user-{type}" (e.g., "user-command") |
 | `type` | String | Yes | Type of task, either "command" or "memory" |
-| `inputs` | String Array | Yes | File or directory paths relative to Root. Supports tilde (~) expansion for home directory |
+| `inputs` | String Array | Yes | File or directory paths relative to Root. Supports tilde (~) expansion for home directory and glob patterns with exclusions |
 | `concat` | Boolean | No | When true, concatenates inputs into one output file; when false, preserves individual input files in the output directory |
 | `outputs` | Output Array | Yes | Defines the output agents and their paths |
 
@@ -77,6 +77,36 @@ Options for each output:
 |---------|------|----------|-------------|
 | `agent` | String | Yes | Target AI agent (e.g., "roo", "claude", "cline") |
 | `outputPath` | String | No | Optional custom output path. If not specified, the agent's default path is used. Supports tilde (~) expansion for home directory. The path is interpreted as a file path when `concat` is true, or a directory path when `concat` is false |
+### Glob Pattern Support in Inputs
+
+The `inputs` field supports glob patterns with doublestar support for recursive matching and exclusions:
+
+| Pattern | Description |
+|---------|-------------|
+| `*.md` | All Markdown files in the current directory |
+| `**/*.md` | All Markdown files in any subdirectory (recursive) |
+| `!*_test.md` | Exclude all test Markdown files |
+
+#### Examples
+
+```yaml
+inputs:
+  # Include all Markdown files in commands directory and subdirectories
+  - "commands/**/*.md"
+  # Exclude test files
+  - "!commands/**/*_test.md"
+  # Exclude specific temporary file
+  - "!commands/temp.md"
+```
+
+#### Pattern Order and Precedence
+
+1. All include patterns (without `!` prefix) are processed first
+2. Then exclude patterns (with `!` prefix) are applied to filter the results
+3. The final list of files is sorted alphabetically by path
+
+> **Note**: The final list of files will be sorted alphabetically by path. If you need files to be processed in a specific order, list them individually without glob patterns.
+
 
 ## Output Path Interpretation
 

@@ -298,35 +298,14 @@ func (p *Pipeline) Execute() error {
 	return nil
 }
 
-// resolveInputs expands Task.Inputs (dirs, globs, files) to relative .md files.
+// resolveInputs expands Task.Inputs with support for glob patterns and exclusions
 func (p *Pipeline) resolveInputs() ([]string, error) {
-	var result []string
-	for _, src := range p.Task.Inputs {
-		abs := filepath.Join(p.SourceRoot, src)
-		info, err := os.Stat(abs)
-		if err == nil && info.IsDir() {
-			matches, err := p.fs.ListFiles(abs, "*.md")
-			if err != nil {
-				return nil, err
-			}
-			for _, m := range matches {
-				rel, _ := filepath.Rel(p.SourceRoot, m)
-				result = append(result, rel)
-			}
-		} else if strings.Contains(src, "*") {
-			matches, err := filepath.Glob(abs)
-			if err != nil {
-				return nil, err
-			}
-			for _, m := range matches {
-				rel, _ := filepath.Rel(p.SourceRoot, m)
-				result = append(result, rel)
-			}
-		} else {
-			result = append(result, src)
-		}
+	// Use the new GlobWithExcludes function from the filesystem interface
+	paths, err := p.fs.GlobWithExcludes(p.Task.Inputs, p.SourceRoot)
+	if err != nil {
+		return nil, fmt.Errorf("failed to expand glob patterns: %w", err)
 	}
-	return result, nil
+	return paths, nil
 }
 
 // defaultOutputPath computes output path based on scope, type, and agent conventions.

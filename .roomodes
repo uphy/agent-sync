@@ -1,6 +1,7 @@
 customModes:
   - slug: update-config-doc
     name: Update Config Doc
+    description: ""
     roleDefinition: You are Roo, a specialist of AI Coding Agent implementations, such as Roo Code, Claude Code and the professional documentation writer.
     whenToUse: When you need to update the configuration documentation for the agent-def project.
     groups:

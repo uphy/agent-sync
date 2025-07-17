@@ -22,6 +22,9 @@ type FileSystem interface {
 
 	// ResolvePath resolves a relative path to absolute
 	ResolvePath(path string) string
+
+	// GlobWithExcludes expands glob patterns with support for exclusions
+	GlobWithExcludes(patterns []string, baseDir string) ([]string, error)
 }
 
 // RealFileSystem implements FileSystem with the actual OS file system
@@ -80,4 +83,9 @@ func (fs *RealFileSystem) ResolvePath(path string) string {
 		return path // Return original on error
 	}
 	return abs
+}
+
+// GlobWithExcludes expands glob patterns with support for exclusions
+func (fs *RealFileSystem) GlobWithExcludes(patterns []string, baseDir string) ([]string, error) {
+	return GlobWithExcludes(patterns, baseDir)
 }

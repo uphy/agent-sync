@@ -5,7 +5,8 @@ user:
     - name: general-rules
       type: memory
       inputs:
-        - memories
+        - memories/general-rules.md
+        - "!memories/custom-location/**"
       outputs:
         - agent: claude
         - agent: roo
@@ -13,7 +14,7 @@ user:
     - name: quick-note
       type: command
       inputs:
-        - commands
+        - commands/**/*.md
       outputs:
         - agent: claude
         - agent: roo

@@ -7,14 +7,14 @@ projects:
       - name: commands
         type: command
         inputs:
-          - commands
+          - commands/*.md
         outputs:
           - agent: roo
           - agent: claude
       - name: memories
         type: memory
         inputs:
-          - memories
+          - memories/*.md
         outputs:
           - agent: roo
           - agent: claude
