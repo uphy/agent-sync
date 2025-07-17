@@ -40,7 +40,7 @@ When enabled, output includes visual indicators:
 
 ## Configuration Methods
 
-You can configure logging behavior in three ways:
+You can configure logging behavior in two ways:
 
 ### 1. Command-Line Flags
 
@@ -67,32 +67,13 @@ export AGENT_DEF_LOG_LEVEL=debug
 export AGENT_DEF_LOG_FILE=./logs/agent-def.log
 ```
 
-### 3. Configuration File
-
-For project-specific settings, add a `logging` section to your `agent-def.yml`:
-
-```yaml
-logging:
-  enabled: true
-  level: info
-  file: ./logs/agent-def.log
-  max_size: 10
-  max_age: 30
-  max_files: 3
-  format: text
-  console_output: false
-  color: true
-  verbose: false
-```
-
 ## Configuration Priority
 
 When multiple configuration sources exist, agent-def uses this priority order:
 
 1. Command-line flags (highest priority)
 2. Environment variables
-3. Configuration file
-4. Default values (lowest priority)
+3. Default values (lowest priority)
 
 By default, logging is disabled. You must explicitly enable it using one of the configuration methods above.
 
@@ -148,46 +129,28 @@ This will:
 
 For day-to-day development work:
 
-```yaml
-# In agent-def.yml
-logging:
-  enabled: true
-  level: info
-  format: text
-  console_output: true
-  color: true
-  verbose: false
+```bash
+# Set environment variables
+export AGENT_DEF_LOG_LEVEL=info
+# Or use command-line flags
+agent-def build --verbose
 ```
 
 ### Production Environment
 
 For server or CI/CD environments:
 
-```yaml
-# In agent-def.yml
-logging:
-  enabled: true
-  level: info
-  file: /var/log/agent-def/agent-def.log
-  max_size: 100
-  max_age: 30
-  max_files: 10
-  format: json
-  console_output: false
-  verbose: false
+```bash
+# Set environment variables
+export AGENT_DEF_LOG_LEVEL=info
+export AGENT_DEF_LOG_FILE=/var/log/agent-def/agent-def.log
+# Or use command-line flags
+agent-def build --log-level info --log-file /var/log/agent-def/agent-def.log
 ```
 
 ### Silent Operation
 
-For minimal output when running in scripts or automated environments:
-
-```yaml
-# In agent-def.yml
-logging:
-  enabled: false  # This is the default
-```
-
-With this configuration (or by default), agent-def will not produce any log output.
+For minimal output when running in scripts or automated environments, simply don't set any logging options. By default, agent-def will not produce any log output unless explicitly enabled.
 
 ## Troubleshooting
 
@@ -246,15 +209,9 @@ This command is valuable for developers who need to verify the logging system is
 
 ### Complete Configuration Options
 
-| Option | CLI Flag | Env Variable | Config File | Description | Default |
-|--------|----------|--------------|-------------|-------------|---------|
-| Logging Enabled | - | - | `enabled` | Enable/disable logging | `false` |
-| Log Level | `--log-level` | `AGENT_DEF_LOG_LEVEL` | `level` | Logging detail (debug, info, warn, error) | `info` |
-| Log File | `--log-file` | `AGENT_DEF_LOG_FILE` | `file` | Path to save logs | - |
-| Verbose | `--verbose` | - | `verbose` | Show detailed messages | `false` |
-| - | - | - | `format` | Output format (text, json) | `text` |
-| - | - | - | `color` | Enable colored output | `true` |
-| - | - | - | `console_output` | Enable console output | `false` |
-| - | - | - | `max_size` | Max log file size (MB) | `10` |
-| - | - | - | `max_age` | Days to retain logs | `30` |
-| - | - | - | `max_files` | Number of log files to keep | `3` |
+| Option | CLI Flag | Env Variable | Description | Default |
+|--------|----------|--------------|-------------|---------|
+| Logging Enabled | `--verbose` | - | Enable/disable logging | `false` |
+| Log Level | `--log-level` | `AGENT_DEF_LOG_LEVEL` | Logging detail (debug, info, warn, error) | `info` |
+| Log File | `--log-file` | `AGENT_DEF_LOG_FILE` | Path to save logs | - |
+| Verbose | `--verbose` | - | Show detailed messages | `false` |

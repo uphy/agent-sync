@@ -23,8 +23,6 @@ projects:
     # Project-specific configuration
 user:
   # Global user-level configuration
-logging:
-  # Logging configuration
 ```
 
 ## Configuration Reference
@@ -36,7 +34,6 @@ logging:
 | `configVersion` | String | Yes | Schema version of the configuration file (e.g., "1.0") |
 | `projects` | Map | Yes | Map of named project configurations where keys are project identifiers (arbitrary names) and values are project configuration objects |
 | `user` | Object | Yes | Global user-level configuration |
-| `logging` | Object | No | Logging configuration options (see Logging Guide for details) |
 
 ### Project Configuration
 
@@ -217,12 +214,10 @@ tasks:
 ```
 
 **Note**: You cannot mix this simplified format with the traditional `projects` section. Attempting to do so will result in an error.
+## Logging
 
-## Logging Configuration
+For information about logging configuration and usage via command-line options and environment variables, please refer to the [Logging Guide](logging.md).
 
-You can configure logging behavior in the configuration file by adding a `logging` section:
-
-For more detailed information about logging configuration and usage, please refer to the [Logging Guide](logging.md).
 
 ## Configuration Example
 

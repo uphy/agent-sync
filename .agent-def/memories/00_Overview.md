@@ -44,7 +44,13 @@ Agent-def is a tool for converting context and command definitions for various A
    - `functions.go`: Template helper functions (file, include, reference, mcp)
    - Supports Go's `text/template` with custom functions
 
-6. **Model Definitions** (`/internal/model/`)
+6. **Logging System** (`/internal/log/`)
+   - `config.go`: Logging configuration options
+   - `logger.go`: Core logging implementation
+   - `output.go`: Log output handling
+   - `test.go`: Testing utilities for logs
+
+7. **Model Definitions** (`/internal/model/`)
    - `context.go`: Represents memory context
    - `command.go`: Represents command definitions
 
@@ -71,6 +77,8 @@ Agent-def is a tool for converting context and command definitions for various A
   - `/util/` - Common utilities
 - `/example/` - Example configurations and templates
 - `/docs/` - Documentation
+  - `/docs/config.md` - Configuration reference
+  - `/docs/logging.md` - Logging system documentation
 
 ### Configuration Structure
 
@@ -87,4 +95,4 @@ The `agent-def.yml` file defines:
 
 Each task can be of type "memory" (context) or "command" (commands), with multiple sources and targets.
 
-For more details, refer to the {{ file "docs/config.md" }} file.
+For more details, refer to the {{ file "docs/config.md" }} file for configuration and the {{ file "docs/logging.md" }} file for logging.

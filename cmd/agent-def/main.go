@@ -57,50 +57,51 @@ and listing available agents.`,
 		if outputFormat != "" && outputFormat != "json" && outputFormat != "yaml" && outputFormat != "text" {
 			return &util.ErrInvalidOutputFormat{Format: outputFormat}
 		}
-		// Initialize logging configuration
+		// Initialize logging configuration based only on command line flags and environment variables
 		logConfig := log.DefaultLogConfig()
 
-		// Process flags
+		// Process command line flags first
 		if logFile != "" {
 			logConfig.File = logFile
+			logConfig.Enabled = true
 		}
+
 		// Handle debug mode flag
 		if debugMode {
 			logLevel = "debug"
-			// Enable logging when debug mode is requested
 			logConfig.Enabled = true
 		}
 
-		// If verbose flag is used, set log level to debug unless explicitly specified
+		// Process log level
+		if logLevel != "" {
+			logConfig.Level = log.LogLevel(logLevel)
+			logConfig.Enabled = true
+		}
+
+		// Process verbose flag
 		if verbose {
-			if logLevel == "" {
+			if logLevel == "" || logLevel == "info" {
+				// Set to debug level if verbose is specified without specific level
 				logConfig.Level = log.DebugLevel
 			}
-			// Ensure logging is enabled when verbose flag is used
+			logConfig.Verbose = true
 			logConfig.Enabled = true
-		} else if logLevel != "" {
-			logConfig.Level = log.LogLevel(logLevel)
-			// Enable logging when specific log level is requested
-			logConfig.Enabled = true
-		}
-		logConfig.Verbose = verbose
-
-		// Enable logging when verbose flag is used or log file is specified
-		if verbose || logFile != "" {
-			logConfig.Enabled = true
+			logConfig.ConsoleOutput = true
 		}
 
 		// Ensure console output is enabled for debug logs even when not in verbose mode
-		logConfig.ConsoleOutput = verbose || debugMode || (logLevel == "debug")
+		if logConfig.Level == log.DebugLevel || debugMode {
+			logConfig.ConsoleOutput = true
+		}
 
-		// Process environment variables
+		// Process environment variables (lower priority than command line flags)
 		if envFile := os.Getenv("AGENT_DEF_LOG_FILE"); envFile != "" && logFile == "" {
 			logConfig.File = envFile
 			logConfig.Enabled = true
 		}
+
 		if envLevel := os.Getenv("AGENT_DEF_LOG_LEVEL"); envLevel != "" && logLevel == "" {
 			logConfig.Level = log.LogLevel(envLevel)
-			// Enable logging when environment variables are set
 			logConfig.Enabled = true
 		}
 
