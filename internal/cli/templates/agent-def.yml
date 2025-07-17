@@ -2,22 +2,22 @@ configVersion: "1.0"
 
 projects:
   my-project:
-    destinations:
+    outputDirs:
       - ./dest # Example destination
     tasks:
       - name: "Project Memory"
         type: memory
-        sources:
+        inputs:
           - ./memories/
-        targets:
+        outputs:
           - agent: claude
           - agent: roo
 
       - name: "Project Commands"
         type: command
-        sources:
+        inputs:
           - ./commands/
-        targets:
+        outputs:
           - agent: claude
           - agent: roo
 

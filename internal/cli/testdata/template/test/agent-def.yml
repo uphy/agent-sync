@@ -2,14 +2,14 @@ configVersion: "1.0"
 projects:
   projectA:
     root: .
-    destinations:
+    outputDirs:
       - projectA
     tasks:
       - name: memories
         type: memory
-        sources:
+        inputs:
           - template.md
-        targets:
+        outputs:
           - agent: claude
           - agent: roo
           - agent: cline

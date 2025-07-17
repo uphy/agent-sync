@@ -1,20 +1,20 @@
 configVersion: "1.0"
 projects:
   agent-def:
-    destinations:
+    outputDirs:
       - ..
     tasks:
       - name: commands
         type: command
-        sources:
+        inputs:
           - commands
-        targets:
+        outputs:
           - agent: roo
           - agent: claude
       - name: memories
         type: memory
-        sources:
+        inputs:
           - memories
-        targets:
+        outputs:
           - agent: roo
           - agent: claude

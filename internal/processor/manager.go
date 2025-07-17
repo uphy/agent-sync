@@ -81,7 +81,7 @@ func (m *Manager) Build(projects []string, userOnly, dryRun, force bool) error {
 			m.logger.Info("Processing project",
 				zap.String("name", name),
 				zap.Int("taskCount", len(proj.Tasks)),
-				zap.Strings("destinations", proj.Destinations))
+				zap.Strings("outputDirs", proj.OutputDirs))
 
 			if m.output != nil {
 				m.output.PrintProgress(fmt.Sprintf("Processing project: %s", name))
@@ -94,7 +94,7 @@ func (m *Manager) Build(projects []string, userOnly, dryRun, force bool) error {
 					zap.String("taskName", task.Name),
 					zap.String("taskType", string(task.Type)))
 
-				pipeline := NewPipeline(task, root, proj.Destinations, false, dryRun, m.force, m.logger, m.output)
+				pipeline := NewPipeline(task, root, proj.OutputDirs, false, dryRun, m.force, m.logger, m.output)
 				if err := pipeline.Execute(); err != nil {
 					m.logger.Error("Project task execution failed",
 						zap.String("project", name),

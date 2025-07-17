@@ -4,24 +4,24 @@ user:
   tasks:
     - name: general-rules
       type: memory
-      sources:
+      inputs:
         - memories
-      targets:
+      outputs:
         - agent: claude
         - agent: roo
         - agent: cline
     - name: quick-note
       type: command
-      sources:
+      inputs:
         - commands
-      targets:
+      outputs:
         - agent: claude
         - agent: roo
         - agent: cline
     - name: custom-location
       type: memory
-      sources:
+      inputs:
         - memories/custom-location/custom-location.md
-      targets:
+      outputs:
         - agent: roo
-          target: foo.md
+          outputPath: foo.md

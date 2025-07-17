@@ -71,36 +71,36 @@ func expandTildeInConfig(cfg *Config) error {
 			}
 		}
 
-		// Expand tilde in Project.Destinations
-		for i, dest := range proj.Destinations {
+		// Expand tilde in Project.OutputDirs
+		for i, dest := range proj.OutputDirs {
 			expanded, err := util.ExpandTilde(dest)
 			if err != nil {
-				return fmt.Errorf("failed to expand tilde in project %s destination: %w", projName, err)
+				return fmt.Errorf("failed to expand tilde in project %s output directory: %w", projName, err)
 			}
-			proj.Destinations[i] = expanded
+			proj.OutputDirs[i] = expanded
 		}
 
-		// Process Task.Sources and Target.Target in each Task
+		// Process Task.Inputs and Output.OutputPath in each Task
 		for i, task := range proj.Tasks {
-			// Expand tilde in Task.Sources
-			for j, src := range task.Sources {
+			// Expand tilde in Task.Inputs
+			for j, src := range task.Inputs {
 				expanded, err := util.ExpandTilde(src)
 				if err != nil {
-					return fmt.Errorf("failed to expand tilde in source for project %s task %s: %w",
+					return fmt.Errorf("failed to expand tilde in input for project %s task %s: %w",
 						projName, task.Name, err)
 				}
-				task.Sources[j] = expanded
+				task.Inputs[j] = expanded
 			}
 
-			// Expand tilde in Target.Target for each Target
-			for j, target := range task.Targets {
-				if target.Target != "" {
-					target.Target, err = util.ExpandTilde(target.Target)
+			// Expand tilde in Output.OutputPath for each Output
+			for j, output := range task.Outputs {
+				if output.OutputPath != "" {
+					output.OutputPath, err = util.ExpandTilde(output.OutputPath)
 					if err != nil {
-						return fmt.Errorf("failed to expand tilde in target for project %s task %s: %w",
+						return fmt.Errorf("failed to expand tilde in output path for project %s task %s: %w",
 							projName, task.Name, err)
 					}
-					task.Targets[j] = target
+					task.Outputs[j] = output
 				}
 			}
 
@@ -114,26 +114,26 @@ func expandTildeInConfig(cfg *Config) error {
 
 	// Process user-level tasks
 	for i, task := range cfg.User.Tasks {
-		// Expand tilde in Task.Sources
-		for j, src := range task.Sources {
+		// Expand tilde in Task.Inputs
+		for j, src := range task.Inputs {
 			expanded, err := util.ExpandTilde(src)
 			if err != nil {
-				return fmt.Errorf("failed to expand tilde in source for user task %s: %w",
+				return fmt.Errorf("failed to expand tilde in input for user task %s: %w",
 					task.Name, err)
 			}
-			task.Sources[j] = expanded
+			task.Inputs[j] = expanded
 		}
 
-		// Expand tilde in Target.Target for each Target
-		for j, target := range task.Targets {
-			if target.Target != "" {
-				expanded, err := util.ExpandTilde(target.Target)
+		// Expand tilde in Output.OutputPath for each Output
+		for j, output := range task.Outputs {
+			if output.OutputPath != "" {
+				expanded, err := util.ExpandTilde(output.OutputPath)
 				if err != nil {
-					return fmt.Errorf("failed to expand tilde in target for user task %s: %w",
+					return fmt.Errorf("failed to expand tilde in output path for user task %s: %w",
 						task.Name, err)
 				}
-				target.Target = expanded
-				task.Targets[j] = target
+				output.OutputPath = expanded
+				task.Outputs[j] = output
 			}
 		}
 

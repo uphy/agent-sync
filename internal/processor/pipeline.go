@@ -20,16 +20,16 @@ import (
 // Pipeline represents the processing pipeline for a single task.
 type Pipeline struct {
 	// Task contains the configuration for the current task being processed,
-	// including its name, type, sources, targets, and concatenation settings.
+	// including its name, type, inputs, targets, and concatenation settings.
 	Task config.Task
 
 	// SourceRoot is the base directory path for resolving source files and determining
 	// output paths. For user-scoped tasks, it represents the user's home directory.
 	SourceRoot string
 
-	// Destinations is a list of output directory paths where the processed
-	// content will be written. Each destination will receive a copy of the output.
-	Destinations []string
+	// OutputDirs is a list of output directory paths where the processed
+	// content will be written. Each output directory will receive a copy of the output.
+	OutputDirs []string
 
 	// UserScope indicates whether the task operates in user scope (true) or project
 	// scope (false). This affects output path resolution and file organization.
@@ -83,16 +83,16 @@ func NewPipeline(task config.Task, sourceRoot string, destinations []string, use
 	}
 
 	p := &Pipeline{
-		Task:         task,
-		SourceRoot:   sourceRoot,
-		Destinations: destinations,
-		UserScope:    userScope,
-		DryRun:       dryRun,
-		Force:        force,
-		fs:           &util.RealFileSystem{},
-		registry:     agent.NewRegistry(),
-		logger:       logger,
-		output:       output,
+		Task:       task,
+		SourceRoot: sourceRoot,
+		OutputDirs: destinations,
+		UserScope:  userScope,
+		DryRun:     dryRun,
+		Force:      force,
+		fs:         &util.RealFileSystem{},
+		registry:   agent.NewRegistry(),
+		logger:     logger,
+		output:     output,
 	}
 	p.registry.Register(&agent.Roo{})
 	p.registry.Register(&agent.Claude{})
@@ -100,7 +100,7 @@ func NewPipeline(task config.Task, sourceRoot string, destinations []string, use
 	return p
 }
 
-// Execute runs the full pipeline: resolve sources, template, format, and write.
+// Execute runs the full pipeline: resolve inputs, template, format, and write.
 func (p *Pipeline) Execute() error {
 	t := p.Task
 
@@ -117,16 +117,16 @@ func (p *Pipeline) Execute() error {
 		zap.Bool("force", p.Force),
 		zap.Bool("userScope", p.UserScope))
 
-	// Resolve source file paths.
-	sources, err := p.resolveSources()
+	// Resolve input file paths.
+	sources, err := p.resolveInputs()
 	if err != nil {
-		p.logger.Error("Failed to resolve sources",
+		p.logger.Error("Failed to resolve inputs",
 			zap.String("error", err.Error()),
-			zap.Strings("sources", p.Task.Sources))
+			zap.Strings("inputs", p.Task.Inputs))
 		if p.output != nil {
-			p.output.PrintError(fmt.Errorf("failed to resolve sources: %w", err))
+			p.output.PrintError(fmt.Errorf("failed to resolve inputs: %w", err))
 		}
-		return fmt.Errorf("resolve sources: %w", err)
+		return fmt.Errorf("resolve inputs: %w", err)
 	}
 
 	if len(sources) == 0 {
@@ -137,22 +137,22 @@ func (p *Pipeline) Execute() error {
 		return fmt.Errorf("no source files for task %s", t.Name)
 	}
 
-	p.logger.Debug("Sources resolved successfully", zap.Strings("sources", sources))
+	p.logger.Debug("Inputs resolved successfully", zap.Strings("sources", sources))
 
-	// For each target agent.
-	for _, tgt := range t.Targets {
-		agent, ok := p.registry.Get(tgt.Agent)
+	// For each output agent.
+	for _, output := range t.Outputs {
+		agent, ok := p.registry.Get(output.Agent)
 		if !ok {
-			return fmt.Errorf("unknown agent %s", tgt.Agent)
+			return fmt.Errorf("unknown agent %s", output.Agent)
 		}
-		// Determine if sources should be concatenated.
+		// Determine if inputs should be concatenated.
 		concat := false
 		if t.Concat != nil {
 			// Based on user-defined concat setting.
 			concat = *t.Concat
 		} else {
 			// Default concat behavior based on agent type.
-			agent, ok := p.registry.Get(tgt.Agent)
+			agent, ok := p.registry.Get(output.Agent)
 			if ok {
 				concat = agent.ShouldConcatenate(p.Task.Type)
 			}
@@ -176,7 +176,7 @@ func (p *Pipeline) Execute() error {
 			var rendered []string
 			for _, rel := range grp {
 				full := filepath.Join(p.SourceRoot, rel)
-				engine := template.NewEngine(&fsAdapter{p.fs}, tgt.Agent, p.SourceRoot, p.registry)
+				engine := template.NewEngine(&fsAdapter{p.fs}, output.Agent, p.SourceRoot, p.registry)
 				out, err := engine.ExecuteFile(full, nil)
 				if err != nil {
 					return fmt.Errorf("template execute %s: %w", rel, err)
@@ -210,12 +210,12 @@ func (p *Pipeline) Execute() error {
 				return fmt.Errorf("unsupported task type %s", t.Type)
 			}
 			if err != nil {
-				return fmt.Errorf("format for agent %s: %w", tgt.Agent, err)
+				return fmt.Errorf("format for agent %s: %w", output.Agent, err)
 			}
 
-			// Write outputs to destinations.
-			for _, dest := range p.Destinations {
-				outPath, err := p.defaultOutputPath(dest, tgt, grp, concat)
+			// Write outputs to output directories.
+			for _, dest := range p.OutputDirs {
+				outPath, err := p.defaultOutputPath(dest, output, grp, concat)
 				if err != nil {
 					return fmt.Errorf("determine output path: %w", err)
 				}
@@ -298,10 +298,10 @@ func (p *Pipeline) Execute() error {
 	return nil
 }
 
-// resolveSources expands Task.Sources (dirs, globs, files) to relative .md files.
-func (p *Pipeline) resolveSources() ([]string, error) {
+// resolveInputs expands Task.Inputs (dirs, globs, files) to relative .md files.
+func (p *Pipeline) resolveInputs() ([]string, error) {
 	var result []string
-	for _, src := range p.Task.Sources {
+	for _, src := range p.Task.Inputs {
 		abs := filepath.Join(p.SourceRoot, src)
 		info, err := os.Stat(abs)
 		if err == nil && info.IsDir() {
@@ -330,10 +330,10 @@ func (p *Pipeline) resolveSources() ([]string, error) {
 }
 
 // defaultOutputPath computes output path based on scope, type, and agent conventions.
-func (p *Pipeline) defaultOutputPath(outputBaseDir string, tgt config.Target, sourceFiles []string, concat bool) (string, error) {
-	// Override if target path provided.
-	if tgt.Target != "" {
-		return filepath.Join(outputBaseDir, tgt.Target), nil
+func (p *Pipeline) defaultOutputPath(outputBaseDir string, output config.Output, sourceFiles []string, concat bool) (string, error) {
+	// Override if output path provided.
+	if output.OutputPath != "" {
+		return filepath.Join(outputBaseDir, output.OutputPath), nil
 	}
 
 	name := filepath.Base(sourceFiles[len(sourceFiles)-1])
@@ -342,9 +342,9 @@ func (p *Pipeline) defaultOutputPath(outputBaseDir string, tgt config.Target, so
 	}
 
 	// Use the agent's appropriate output path method based on task type
-	agent, ok := p.registry.Get(tgt.Agent)
+	agent, ok := p.registry.Get(output.Agent)
 	if !ok {
-		return "", fmt.Errorf("unknown agent %s", tgt.Agent)
+		return "", fmt.Errorf("unknown agent %s", output.Agent)
 	}
 
 	// Call the appropriate method based on task type

@@ -20,14 +20,14 @@ func TestLoadConfig_Logging(t *testing.T) {
 configVersion: "1.0"
 projects:
   test-project:
-    destinations:
+    outputDirs:
       - ./output
     tasks:
       - name: test-task
         type: memory
-        sources:
+        inputs:
           - ./memories
-        targets:
+        outputs:
           - agent: claude
 user:
   tasks: []
@@ -65,14 +65,14 @@ logging:
 configVersion: "1.0"
 projects:
   test-project:
-    destinations:
+    outputDirs:
       - ./output
     tasks:
       - name: test-task
         type: memory
-        sources:
+        inputs:
           - ./memories
-        targets:
+        outputs:
           - agent: claude
 user:
   tasks: []
@@ -109,7 +109,7 @@ func TestExpandTildeInLoggingConfig(t *testing.T) {
 configVersion: "1.0"
 projects:
   test-project:
-    destinations:
+    outputDirs:
       - ./output
     tasks: []
 user:

@@ -1,3 +1,6 @@
+[tasks.test]
+run = "go test -timeout 30s ./..."
+
 [tasks.integration-test]
 run = "go test -timeout 30s -run ^TestAgentDef$"
 dir = "internal/cli"

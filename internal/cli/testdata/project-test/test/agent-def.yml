@@ -2,23 +2,23 @@ configVersion: "1.0"
 projects:
   projectA:
     root: .
-    destinations:
+    outputDirs:
       - projectA
     tasks:
       - name: memories
         type: memory
-        sources:
+        inputs:
           - projectA/memories
-        targets:
+        outputs:
           - agent: claude
           - agent: roo
           - agent: cline
           - agent: copilot
       - name: commands
         type: command
-        sources:
+        inputs:
           - projectA/commands
-        targets:
+        outputs:
           - agent: claude
           - agent: roo
           - agent: cline

@@ -2,18 +2,18 @@
 projects:
   projectA:
     root: .
-    destinations:
+    outputDirs:
       - projectA
     tasks:
       - name: memories
         type: memory
-        # Missing sources field
-        targets:
+        # Missing inputs field
+        outputs:
           - agent: claude
           - agent: roo
       - name: commands
         type: command
-        sources:
+        inputs:
           - non-existent-directory
-        targets:
+        outputs:
           - agent: unknown-agent
