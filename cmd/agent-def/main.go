@@ -91,7 +91,7 @@ and listing available agents.`,
 		}
 
 		// Ensure console output is enabled for debug logs even when not in verbose mode
-		logConfig.ConsoleOutput = verbose || debugMode || (logLevel == "debug") || logConfig.File == ""
+		logConfig.ConsoleOutput = verbose || debugMode || (logLevel == "debug")
 
 		// Process environment variables
 		if envFile := os.Getenv("AGENT_DEF_LOG_FILE"); envFile != "" && logFile == "" {

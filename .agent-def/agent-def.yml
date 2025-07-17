@@ -1,20 +1,18 @@
 configVersion: "1.0"
-projects:
-  agent-def:
-    outputDirs:
-      - ..
-    tasks:
-      - name: commands
-        type: command
-        inputs:
-          - commands/*.md
-        outputs:
-          - agent: roo
-          - agent: claude
-      - name: memories
-        type: memory
-        inputs:
-          - memories/*.md
-        outputs:
-          - agent: roo
-          - agent: claude
+
+outputDirs:
+  - ..
+
+tasks:
+  - type: command
+    inputs:
+      - commands/*.md
+    outputs:
+      - agent: roo
+      - agent: claude
+  - type: memory
+    inputs:
+      - memories/*.md
+    outputs:
+      - agent: roo
+      - agent: claude

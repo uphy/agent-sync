@@ -12,6 +12,9 @@ type Config struct {
 	ConfigVersion string `yaml:"configVersion"`
 	// Projects holds named project configurations
 	Projects map[string]Project `yaml:"projects"`
+	// New fields for top-level project config
+	OutputDirs []string `yaml:"outputDirs,omitempty"`
+	Tasks      []Task   `yaml:"tasks,omitempty"`
 	// User holds global user-level configuration
 	User UserConfig `yaml:"user"`
 	// Logging holds logging configuration
@@ -25,6 +28,11 @@ func (c *Config) SetDefaultNames() {
 		c.Projects[projectName] = project // Update the map entry with the modified project
 	}
 	c.User.SetDefaultNames()
+
+	// Set default names for top-level tasks
+	for i := range c.Tasks {
+		c.Tasks[i].SetDefaultName("default")
+	}
 
 	// Set default logging configuration if not provided
 	if c.Logging == nil {

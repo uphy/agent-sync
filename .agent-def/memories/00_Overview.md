@@ -2,52 +2,14 @@
 
 ## Development Commands
 
-### Building and Running
-
-```bash
-# Build the project
-go build ./cmd/agent-def
-
-# Install the binary to GOPATH/bin
-go install ./cmd/agent-def
-
-# Run the example configuration
-cd example/agent-def
-go run ../../cmd/agent-def/main.go build -f
-
-# Clean up example output
-rm -rf ../dest
-```
-
-### Testing
-
-```bash
-# Run all tests
-go test ./...
-
-# Run integration tests
-go test -timeout 30s -run ^TestAgentDef$ ./internal/cli
-
-# Update integration test expectations
-AGENT_DEF_REPLACE=true go test -timeout 30s -run ^TestAgentDef$ ./internal/cli
-```
-
-### Development Tasks with mise
-
 This project uses [mise](https://mise.jdx.dev/) for task running:
 
 ```bash
-# Run the example configuration
-mise run example
+# Run all tests (including integration tests)
+mise run test
 
-# Run integration tests
+# Run only integration tests
 mise run integration-test
-
-# Update integration test expectations
-mise run integration-test-replace
-
-# Install the binary
-mise run install
 ```
 
 ## Project Architecture

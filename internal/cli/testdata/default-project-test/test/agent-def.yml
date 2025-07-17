@@ -1,0 +1,19 @@
+configVersion: "1.0"
+# Using the new simplified format with top-level fields instead of projects section
+outputDirs:
+  - default-project
+tasks:
+  - name: default-memories
+    type: memory
+    inputs:
+      - memories/**
+    outputs:
+      - agent: claude
+      - agent: roo
+  - name: default-commands
+    type: command
+    inputs:
+      - commands/**
+    outputs:
+      - agent: claude
+      - agent: roo

@@ -40,7 +40,7 @@ func TestAgentDef(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			// Determine if this is an expected error case
 			expectError := false
-			if testName == "edge-cases" {
+			if testName == "edge-cases" || testName == "mixed-format-test" {
 				expectError = true
 			}
 

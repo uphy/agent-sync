@@ -1,0 +1,30 @@
+configVersion: "1.0"
+# Mixed format with both top-level fields and projects section (should cause error)
+outputDirs:
+  - mixed-project
+tasks:
+  - name: top-level-memory
+    type: memory
+    inputs:
+      - memories/**
+    outputs:
+      - agent: claude
+      - agent: roo
+
+# Also including projects section which is not allowed when top-level fields are present
+projects:
+  projectB:
+    outputDirs:
+      - projectB
+    tasks:
+      - name: project-memory
+        type: memory
+        inputs:
+          - memories/**
+        outputs:
+          - agent: claude
+          - agent: roo
+
+# User configuration
+user:
+  tasks: []

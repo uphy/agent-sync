@@ -199,6 +199,25 @@ Within templates, paths are resolved using special rules:
 3. Other paths without `./` or `../` prefix are relative to the configuration file directory
 4. OS-absolute paths (like C:\ on Windows) are preserved as-is
 
+## Simplified Configuration Format
+
+agent-def supports a simplified configuration format designed for single project use cases. This format allows you to place `outputDirs` and `tasks` directly at the top level, omitting the `projects` section:
+
+```yaml
+configVersion: "1.0"
+outputDirs:
+  - ..
+tasks:
+  - name: memories
+    type: memory
+    inputs:
+      - memories/*.md
+    outputs:
+      - agent: roo
+```
+
+**Note**: You cannot mix this simplified format with the traditional `projects` section. Attempting to do so will result in an error.
+
 ## Logging Configuration
 
 You can configure logging behavior in the configuration file by adding a `logging` section:

@@ -45,6 +45,30 @@ func LoadConfig(path string) (*Config, string, error) {
 		return nil, "", fmt.Errorf("failed to parse YAML in %q: %w", cfgPath, err)
 	}
 
+	// Check for mixed format (both top-level fields and projects section)
+	if (len(cfg.OutputDirs) > 0 || len(cfg.Tasks) > 0) && len(cfg.Projects) > 0 {
+		return nil, "", fmt.Errorf("configuration cannot mix top-level outputDirs/tasks with projects section")
+	}
+
+	// Convert top-level settings to a "default" project
+	if len(cfg.OutputDirs) > 0 || len(cfg.Tasks) > 0 {
+		if cfg.Projects == nil {
+			cfg.Projects = make(map[string]Project)
+		}
+
+		// Create "default" project
+		defaultProject := Project{
+			OutputDirs: cfg.OutputDirs,
+			Tasks:      cfg.Tasks,
+		}
+
+		cfg.Projects["default"] = defaultProject
+
+		// Clear top-level fields after conversion
+		cfg.OutputDirs = nil
+		cfg.Tasks = nil
+	}
+
 	// Normalize all paths in the config by expanding tildes (~) to home directory
 	if err := expandTildeInConfig(&cfg); err != nil {
 		return nil, "", fmt.Errorf("failed to expand tildes in paths: %w", err)
