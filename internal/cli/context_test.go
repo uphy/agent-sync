@@ -84,32 +84,40 @@ func TestEnvironmentVariables(t *testing.T) {
 	origLogLevel := os.Getenv("AGENT_DEF_LOG_LEVEL")
 	defer func() {
 		// Restore original environment
-		os.Setenv("AGENT_DEF_LOG_FILE", origLogFile)
-		os.Setenv("AGENT_DEF_LOG_LEVEL", origLogLevel)
+		if err := os.Setenv("AGENT_DEF_LOG_FILE", origLogFile); err != nil {
+			t.Logf("Failed to restore AGENT_DEF_LOG_FILE: %v", err)
+		}
+		if err := os.Setenv("AGENT_DEF_LOG_LEVEL", origLogLevel); err != nil {
+			t.Logf("Failed to restore AGENT_DEF_LOG_LEVEL: %v", err)
+		}
 	}()
 
 	// Set test environment variables
 	testLogFile := "/tmp/test.log"
 	testLogLevel := "debug"
-	os.Setenv("AGENT_DEF_LOG_FILE", testLogFile)
-	os.Setenv("AGENT_DEF_LOG_LEVEL", testLogLevel)
+	if err := os.Setenv("AGENT_DEF_LOG_FILE", testLogFile); err != nil {
+		t.Fatalf("Failed to set AGENT_DEF_LOG_FILE: %v", err)
+	}
+	if err := os.Setenv("AGENT_DEF_LOG_LEVEL", testLogLevel); err != nil {
+		t.Fatalf("Failed to set AGENT_DEF_LOG_LEVEL: %v", err)
+	}
 
 	// Create a test config to verify environment variable processing
-	config := log.DefaultLogConfig()
+	config := log.DefaultConfig()
 
 	// Process environment variables (similar to what main.go does)
 	if envFile := os.Getenv("AGENT_DEF_LOG_FILE"); envFile != "" {
 		config.File = envFile
 	}
 	if envLevel := os.Getenv("AGENT_DEF_LOG_LEVEL"); envLevel != "" {
-		config.Level = log.LogLevel(envLevel)
+		config.Level = log.Level(envLevel)
 	}
 
 	// Verify that the environment variables were processed correctly
 	if config.File != testLogFile {
 		t.Errorf("Expected log file to be %s, got %s", testLogFile, config.File)
 	}
-	if config.Level != log.LogLevel(testLogLevel) {
+	if config.Level != log.Level(testLogLevel) {
 		t.Errorf("Expected log level to be %s, got %s", testLogLevel, config.Level)
 	}
 }
@@ -117,26 +125,34 @@ func TestEnvironmentVariables(t *testing.T) {
 // TestFlagPrecedence tests that command-line flags take precedence over environment variables
 func TestFlagPrecedence(t *testing.T) {
 	// Set environment variables
-	os.Setenv("AGENT_DEF_LOG_FILE", "/tmp/env.log")
-	os.Setenv("AGENT_DEF_LOG_LEVEL", "error")
+	if err := os.Setenv("AGENT_DEF_LOG_FILE", "/tmp/env.log"); err != nil {
+		t.Fatalf("Failed to set AGENT_DEF_LOG_FILE: %v", err)
+	}
+	if err := os.Setenv("AGENT_DEF_LOG_LEVEL", "error"); err != nil {
+		t.Fatalf("Failed to set AGENT_DEF_LOG_LEVEL: %v", err)
+	}
 	defer func() {
-		os.Unsetenv("AGENT_DEF_LOG_FILE")
-		os.Unsetenv("AGENT_DEF_LOG_LEVEL")
+		if err := os.Unsetenv("AGENT_DEF_LOG_FILE"); err != nil {
+			t.Logf("Failed to unset AGENT_DEF_LOG_FILE: %v", err)
+		}
+		if err := os.Unsetenv("AGENT_DEF_LOG_LEVEL"); err != nil {
+			t.Logf("Failed to unset AGENT_DEF_LOG_LEVEL: %v", err)
+		}
 	}()
 
 	// Define command line flags (similar to what main.go does)
-	var logFile string = "/tmp/flag.log" // Simulating CLI flag value
-	var logLevel string = "debug"        // Simulating CLI flag value
+	var logFile = "/tmp/flag.log" // Simulating CLI flag value
+	var logLevel = "debug"        // Simulating CLI flag value
 
 	// Create a test config
-	config := log.DefaultLogConfig()
+	config := log.DefaultConfig()
 
 	// Process flags (similar to what main.go does)
 	if logFile != "" {
 		config.File = logFile
 	}
 	if logLevel != "" {
-		config.Level = log.LogLevel(logLevel)
+		config.Level = log.Level(logLevel)
 	}
 
 	// Process environment variables if flags not set
@@ -145,14 +161,14 @@ func TestFlagPrecedence(t *testing.T) {
 		config.File = envFile
 	}
 	if envLevel := os.Getenv("AGENT_DEF_LOG_LEVEL"); envLevel != "" && logLevel == "" {
-		config.Level = log.LogLevel(envLevel)
+		config.Level = log.Level(envLevel)
 	}
 
 	// Verify that the flags take precedence
 	if config.File != "/tmp/flag.log" {
 		t.Errorf("Expected log file to be /tmp/flag.log, got %s", config.File)
 	}
-	if config.Level != log.LogLevel("debug") {
+	if config.Level != log.Level("debug") {
 		t.Errorf("Expected log level to be debug, got %s", config.Level)
 	}
 }

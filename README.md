@@ -159,4 +159,5 @@ The release process automatically updates the Homebrew formula in the [homebrew-
 brew tap uphy/tap
 
 # Install agent-def
-brew install agent-def
+brew install agent-
+```

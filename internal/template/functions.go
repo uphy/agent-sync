@@ -67,6 +67,7 @@ func (e *Engine) MCPFunc() interface{} {
 	}
 }
 
+// Agent returns the current agent type being used for template processing.
 func (e *Engine) Agent() string {
 	return e.AgentType
 }

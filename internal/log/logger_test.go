@@ -14,12 +14,12 @@ import (
 func TestNewZapLogger(t *testing.T) {
 	tests := []struct {
 		name    string
-		config  LogConfig
+		config  Config
 		wantErr bool
 	}{
 		{
 			name: "基本設定",
-			config: LogConfig{
+			config: Config{
 				Enabled:       true,
 				Level:         InfoLevel,
 				Format:        TextFormat,
@@ -29,14 +29,14 @@ func TestNewZapLogger(t *testing.T) {
 		},
 		{
 			name: "無効ロギング",
-			config: LogConfig{
+			config: Config{
 				Enabled: false,
 			},
 			wantErr: false,
 		},
 		{
 			name: "JSONフォーマット",
-			config: LogConfig{
+			config: Config{
 				Enabled:       true,
 				Level:         DebugLevel,
 				Format:        JSONFormat,
@@ -70,11 +70,15 @@ func TestFileOutput(t *testing.T) {
 	// テスト用の一時ディレクトリを作成
 	tempDir, err := os.MkdirTemp("", "logger-test")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			t.Logf("Failed to remove temporary directory %s: %v", tempDir, err)
+		}
+	}()
 
 	logFile := filepath.Join(tempDir, "test.log")
 
-	config := LogConfig{
+	config := Config{
 		Enabled:       true,
 		Level:         InfoLevel,
 		File:          logFile,
@@ -126,7 +130,7 @@ func TestGlobalLogger(t *testing.T) {
 	assert.NotNil(t, logger)
 
 	// カスタム設定でグローバルロガーを初期化
-	customConfig := LogConfig{
+	customConfig := Config{
 		Enabled:       true,
 		Level:         DebugLevel,
 		Format:        JSONFormat,
@@ -155,7 +159,7 @@ func TestLoggerWithInvalidConfig(t *testing.T) {
 	// 実装上、設定が無効でもエラーは返さない
 	// 代わりにデフォルト値やNOPロガーを使用する
 
-	config := LogConfig{
+	config := Config{
 		Enabled: true,
 		Level:   "invalid", // 無効なレベル
 		Format:  "invalid", // 無効なフォーマット
@@ -167,7 +171,7 @@ func TestLoggerWithInvalidConfig(t *testing.T) {
 
 	// 実際のところ、Validateが失敗しても、NewZapLoggerは
 	// デフォルト値を使用してロガーを作成する
-	logger, err := NewZapLogger(LogConfig{
+	logger, err := NewZapLogger(Config{
 		Enabled:       true,
 		Level:         "invalid_level", // 内部でデフォルトのInfoLevelに変換
 		Format:        TextFormat,

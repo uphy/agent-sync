@@ -12,7 +12,11 @@ func TestLoadConfig_Basic(t *testing.T) {
 	// Create a temporary directory for test files
 	tmpDir, err := os.MkdirTemp("", "agent-def-test")
 	assert.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Failed to remove temporary directory: %v", err)
+		}
+	}()
 
 	// Basic configuration without logging section
 	configBasic := `
@@ -47,15 +51,25 @@ func TestExpandTildeInConfig(t *testing.T) {
 	// Create a temporary directory for test files
 	tmpDir, err := os.MkdirTemp("", "agent-def-test")
 	assert.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Failed to remove temporary directory: %v", err)
+		}
+	}()
 
 	// Mock home directory for testing
 	originalHome := os.Getenv("HOME")
 	mockHome := filepath.Join(tmpDir, "mock-home")
 	err = os.Mkdir(mockHome, 0755)
 	assert.NoError(t, err)
-	os.Setenv("HOME", mockHome)
-	defer os.Setenv("HOME", originalHome)
+	if err := os.Setenv("HOME", mockHome); err != nil {
+		t.Fatalf("Failed to set HOME environment variable: %v", err)
+	}
+	defer func() {
+		if err := os.Setenv("HOME", originalHome); err != nil {
+			t.Logf("Failed to restore HOME environment variable: %v", err)
+		}
+	}()
 
 	configWithTilde := `
 configVersion: "1.0"

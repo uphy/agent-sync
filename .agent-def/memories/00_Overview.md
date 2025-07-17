@@ -10,6 +10,9 @@ mise run test
 
 # Run only integration tests
 mise run integration-test
+
+# Run linter
+mise run lint
 ```
 
 ## Project Architecture

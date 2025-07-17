@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-func TestDefaultLogConfig(t *testing.T) {
-	config := DefaultLogConfig()
+func TestDefaultConfig(t *testing.T) {
+	config := DefaultConfig()
 
 	if config.Enabled {
 		t.Error("DefaultLogConfig: Enabled should be false")
@@ -44,18 +44,18 @@ func TestDefaultLogConfig(t *testing.T) {
 
 func TestLogLevelValidation(t *testing.T) {
 	tests := []struct {
-		level    LogLevel
+		level    Level
 		expected bool
 	}{
 		{DebugLevel, true},
 		{InfoLevel, true},
 		{WarnLevel, true},
 		{ErrorLevel, true},
-		{LogLevel("invalid"), false},
+		{Level("invalid"), false},
 	}
 
 	for _, test := range tests {
-		config := DefaultLogConfig()
+		config := DefaultConfig()
 		config.Level = test.level
 		if result := config.IsValidLevel(); result != test.expected {
 			t.Errorf("IsValidLevel for %s: expected %v, got %v", test.level, test.expected, result)
@@ -74,7 +74,7 @@ func TestLogFormatValidation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		config := DefaultLogConfig()
+		config := DefaultConfig()
 		config.Format = test.format
 		if result := config.IsValidFormat(); result != test.expected {
 			t.Errorf("IsValidFormat for %s: expected %v, got %v", test.format, test.expected, result)
@@ -85,45 +85,45 @@ func TestLogFormatValidation(t *testing.T) {
 func TestConfigValidation(t *testing.T) {
 	tests := []struct {
 		name        string
-		modifyFunc  func(*LogConfig)
+		modifyFunc  func(*Config)
 		expectError bool
 	}{
 		{
 			name:        "Valid default config",
-			modifyFunc:  func(c *LogConfig) {},
+			modifyFunc:  func(c *Config) {},
 			expectError: false,
 		},
 		{
 			name: "Invalid level",
-			modifyFunc: func(c *LogConfig) {
-				c.Level = LogLevel("invalid")
+			modifyFunc: func(c *Config) {
+				c.Level = Level("invalid")
 			},
 			expectError: true,
 		},
 		{
 			name: "Invalid format",
-			modifyFunc: func(c *LogConfig) {
+			modifyFunc: func(c *Config) {
 				c.Format = Format("invalid")
 			},
 			expectError: true,
 		},
 		{
 			name: "Invalid MaxSize",
-			modifyFunc: func(c *LogConfig) {
+			modifyFunc: func(c *Config) {
 				c.MaxSize = 0
 			},
 			expectError: true,
 		},
 		{
 			name: "Invalid MaxAge",
-			modifyFunc: func(c *LogConfig) {
+			modifyFunc: func(c *Config) {
 				c.MaxAge = 0
 			},
 			expectError: true,
 		},
 		{
 			name: "Invalid MaxFiles",
-			modifyFunc: func(c *LogConfig) {
+			modifyFunc: func(c *Config) {
 				c.MaxFiles = -1
 			},
 			expectError: true,
@@ -132,7 +132,7 @@ func TestConfigValidation(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			config := DefaultLogConfig()
+			config := DefaultConfig()
 			test.modifyFunc(&config)
 
 			err := config.Validate()
@@ -160,7 +160,7 @@ color: false
 verbose: true
 `
 
-	config, err := LoadLogConfigFromYAMLContent(yamlContent)
+	config, err := LoadConfigFromYAMLContent(yamlContent)
 	if err != nil {
 		t.Fatalf("Failed to load config from YAML content: %v", err)
 	}
@@ -203,7 +203,11 @@ func TestLoadFromYAMLFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Failed to remove temporary directory %s: %v", tmpDir, err)
+		}
+	}()
 
 	configPath := filepath.Join(tmpDir, "test-config.yml")
 	yamlContent := []byte(`
@@ -222,7 +226,7 @@ color: false
 		t.Fatalf("Failed to write test config file: %v", err)
 	}
 
-	config, err := LoadLogConfigFromYAML(configPath)
+	config, err := LoadConfigFromYAML(configPath)
 	if err != nil {
 		t.Fatalf("Failed to load config from YAML file: %v", err)
 	}
@@ -254,21 +258,21 @@ color: false
 }
 
 func TestLoadFromNonExistentFile(t *testing.T) {
-	_, err := LoadLogConfigFromYAML("/non/existent/path.yml")
+	_, err := LoadConfigFromYAML("/non/existent/path.yml")
 	if err == nil {
 		t.Error("Expected error when loading from non-existent file, but got nil")
 	}
 }
 
 func TestLoadInvalidYAMLContent(t *testing.T) {
-	_, err := LoadLogConfigFromYAMLContent("invalid: : yaml: content")
+	_, err := LoadConfigFromYAMLContent("invalid: : yaml: content")
 	if err == nil {
 		t.Error("Expected error when loading invalid YAML content, but got nil")
 	}
 }
 
 func TestConfigString(t *testing.T) {
-	config := LogConfig{
+	config := Config{
 		Enabled:       true,
 		Level:         InfoLevel,
 		File:          "/var/log/app.log",
@@ -285,7 +289,7 @@ func TestConfigString(t *testing.T) {
 
 	// 基本的な内容が含まれているか確認
 	expectedSubstrings := []string{
-		"LogConfig{",
+		"Config{",
 		"Enabled: true",
 		"Level: info",
 		"File: /var/log/app.log",

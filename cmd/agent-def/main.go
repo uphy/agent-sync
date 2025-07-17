@@ -58,7 +58,7 @@ and listing available agents.`,
 			return &util.ErrInvalidOutputFormat{Format: outputFormat}
 		}
 		// Initialize logging configuration based only on command line flags and environment variables
-		logConfig := log.DefaultLogConfig()
+		logConfig := log.DefaultConfig()
 
 		// Process command line flags first
 		if logFile != "" {
@@ -74,7 +74,7 @@ and listing available agents.`,
 
 		// Process log level
 		if logLevel != "" {
-			logConfig.Level = log.LogLevel(logLevel)
+			logConfig.Level = log.Level(logLevel)
 			logConfig.Enabled = true
 		}
 
@@ -101,7 +101,7 @@ and listing available agents.`,
 		}
 
 		if envLevel := os.Getenv("AGENT_DEF_LOG_LEVEL"); envLevel != "" && logLevel == "" {
-			logConfig.Level = log.LogLevel(envLevel)
+			logConfig.Level = log.Level(envLevel)
 			logConfig.Enabled = true
 		}
 
@@ -112,7 +112,15 @@ and listing available agents.`,
 			fmt.Fprintf(os.Stderr, "Error initializing logger: %v\n", err)
 			os.Exit(1)
 		}
-		defer logger.Sync()
+		defer func() {
+			// Ignoring sync error during shutdown is common practice with zap
+			// but we should at least log it if in debug mode
+			if err := logger.Sync(); err != nil {
+				if logConfig.Level == log.DebugLevel {
+					fmt.Fprintf(os.Stderr, "Failed to sync logger: %v\n", err)
+				}
+			}
+		}()
 
 		// Initialize output writer
 		output := &log.ConsoleOutput{

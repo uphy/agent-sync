@@ -77,9 +77,8 @@ func (c *Claude) FormatCommand(commands []model.Command) (string, error) {
 func (c *Claude) DefaultMemoryPath(outputBaseDir string, userScope bool, fileName string) (string, error) {
 	if userScope {
 		return filepath.Join(outputBaseDir, ".claude", "CLAUDE.md"), nil
-	} else {
-		return filepath.Join(outputBaseDir, "CLAUDE.md"), nil
 	}
+	return filepath.Join(outputBaseDir, "CLAUDE.md"), nil
 }
 
 // DefaultCommandPath determines the output path for Claude agent command files

@@ -18,6 +18,7 @@ func (e *ErrFileNotFound) Error() string {
 	return fmt.Sprintf("file not found: %s", e.Path)
 }
 
+// FormattedError returns a user-friendly error message for file not found errors
 func (e *ErrFileNotFound) FormattedError() string {
 	return fmt.Sprintf("Could not find file at path: %s", e.Path)
 }
@@ -32,6 +33,7 @@ func (e *ErrTemplateExecution) Error() string {
 	return fmt.Sprintf("template execution failed for '%s': %v", e.Template, e.Cause)
 }
 
+// FormattedError returns a user-friendly error message for template execution errors
 func (e *ErrTemplateExecution) FormattedError() string {
 	return fmt.Sprintf("Failed to execute template '%s': %v", e.Template, e.Cause)
 }
@@ -45,6 +47,7 @@ func (e *ErrInvalidAgent) Error() string {
 	return fmt.Sprintf("unknown agent type: %s", e.Type)
 }
 
+// FormattedError returns a user-friendly error message for invalid agent errors
 func (e *ErrInvalidAgent) FormattedError() string {
 	return fmt.Sprintf("Invalid agent type: '%s'. Use 'agent-def list' to see available agents.", e.Type)
 }
@@ -59,6 +62,7 @@ func (e *ErrParseFailure) Error() string {
 	return fmt.Sprintf("failed to parse '%s': %v", e.Path, e.Cause)
 }
 
+// FormattedError returns a user-friendly error message for parsing errors
 func (e *ErrParseFailure) FormattedError() string {
 	return fmt.Sprintf("Failed to parse file '%s': %v", e.Path, e.Cause)
 }
@@ -73,6 +77,7 @@ func (e *ErrMalformedFrontmatter) Error() string {
 	return fmt.Sprintf("malformed frontmatter in '%s': %v", e.Path, e.Cause)
 }
 
+// FormattedError returns a user-friendly error message for malformed frontmatter errors
 func (e *ErrMalformedFrontmatter) FormattedError() string {
 	return fmt.Sprintf("Malformed frontmatter in file '%s': %v", e.Path, e.Cause)
 }
@@ -86,6 +91,7 @@ func (e *ErrInvalidOutputFormat) Error() string {
 	return fmt.Sprintf("invalid output format: %s", e.Format)
 }
 
+// FormattedError returns a user-friendly error message for invalid output format errors
 func (e *ErrInvalidOutputFormat) FormattedError() string {
 	return fmt.Sprintf("Invalid output format: '%s'. Supported formats are 'json', 'yaml', and 'text'.", e.Format)
 }
@@ -99,6 +105,7 @@ func (e *ErrInvalidConfig) Error() string {
 	return fmt.Sprintf("invalid configuration: %s", e.Reason)
 }
 
+// FormattedError returns a user-friendly error message for invalid configuration errors
 func (e *ErrInvalidConfig) FormattedError() string {
 	return fmt.Sprintf("Configuration error: %s", e.Reason)
 }

@@ -183,8 +183,14 @@ func TestCopilot_DefaultMemoryPath(t *testing.T) {
 	c := &Copilot{}
 	// Store original home directory
 	origHomeDir := os.Getenv("HOME")
-	os.Setenv("HOME", "/mock/home")
-	defer os.Setenv("HOME", origHomeDir)
+	if err := os.Setenv("HOME", "/mock/home"); err != nil {
+		t.Fatalf("Failed to set HOME environment variable: %v", err)
+	}
+	defer func() {
+		if err := os.Setenv("HOME", origHomeDir); err != nil {
+			t.Logf("Failed to restore HOME environment variable: %v", err)
+		}
+	}()
 
 	t.Run("user scope", func(t *testing.T) {
 
@@ -214,8 +220,14 @@ func TestCopilot_DefaultCommandPath(t *testing.T) {
 	c := &Copilot{}
 	// Store original home directory
 	origHomeDir := os.Getenv("HOME")
-	os.Setenv("HOME", "/mock/home")
-	defer os.Setenv("HOME", origHomeDir)
+	if err := os.Setenv("HOME", "/mock/home"); err != nil {
+		t.Fatalf("Failed to set HOME environment variable: %v", err)
+	}
+	defer func() {
+		if err := os.Setenv("HOME", origHomeDir); err != nil {
+			t.Logf("Failed to restore HOME environment variable: %v", err)
+		}
+	}()
 
 	t.Run("user scope", func(t *testing.T) {
 

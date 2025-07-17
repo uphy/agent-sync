@@ -14,7 +14,11 @@ func TestGlobWithExcludes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(testDir)
+	defer func() {
+		if err := os.RemoveAll(testDir); err != nil {
+			t.Logf("Failed to remove test directory: %v", err)
+		}
+	}()
 
 	// Create test file structure:
 	// - file1.md
@@ -36,13 +40,17 @@ func TestGlobWithExcludes(t *testing.T) {
 
 	// Create subdirectory and files
 	subDir := filepath.Join(testDir, "subdir")
-	os.MkdirAll(subDir, 0755)
+	if err := os.MkdirAll(subDir, 0755); err != nil {
+		t.Fatalf("Failed to create subdirectory: %v", err)
+	}
 	createTestFile(t, subDir, "nested1.md")
 	createTestFile(t, subDir, "nested_test.md")
 
 	// Create deep directory and files
 	deepDir := filepath.Join(subDir, "deepdir")
-	os.MkdirAll(deepDir, 0755)
+	if err := os.MkdirAll(deepDir, 0755); err != nil {
+		t.Fatalf("Failed to create deep directory: %v", err)
+	}
 	createTestFile(t, deepDir, "deep1.md")
 	createTestFile(t, deepDir, "deep_test.md")
 
@@ -133,5 +141,7 @@ func createTestFile(t *testing.T, dir, name string) {
 	if err != nil {
 		t.Fatalf("Failed to create test file %s: %v", path, err)
 	}
-	f.Close()
+	if err := f.Close(); err != nil {
+		t.Fatalf("Failed to close test file: %v", err)
+	}
 }

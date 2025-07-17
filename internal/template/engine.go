@@ -47,7 +47,9 @@ type Engine struct {
 	AgentRegistry *agent.Registry
 }
 
-type TemplateContext struct {
+// Context holds the context information for template processing,
+// including information about which agent is being used for output.
+type Context struct {
 	Agent string
 }
 

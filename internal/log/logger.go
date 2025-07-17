@@ -26,7 +26,7 @@ type Logger interface {
 }
 
 // NewZapLogger は設定に基づいてzapロガーを初期化する関数
-func NewZapLogger(config LogConfig) (*zap.Logger, error) {
+func NewZapLogger(config Config) (*zap.Logger, error) {
 	// ロギングが無効の場合はNopLoggerを返す
 	if !config.Enabled {
 		return zap.NewNop(), nil
@@ -138,7 +138,7 @@ func NewZapLogger(config LogConfig) (*zap.Logger, error) {
 }
 
 // InitGlobalLogger はグローバルロガーを初期化する
-func InitGlobalLogger(config LogConfig) error {
+func InitGlobalLogger(config Config) error {
 	logger, err := NewZapLogger(config)
 	if err != nil {
 		return err
@@ -172,7 +172,7 @@ func GetLogger() *zap.Logger {
 
 	if globalLogger == nil {
 		var err error
-		globalLogger, err = NewZapLogger(DefaultLogConfig())
+		globalLogger, err = NewZapLogger(DefaultConfig())
 		if err != nil {
 			// 初期化エラーの場合は何もしないロガーを返す
 			globalLogger = zap.NewNop()

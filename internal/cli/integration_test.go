@@ -21,7 +21,11 @@ func TestAgentDef(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to build agent-def binary: %v", err)
 	}
-	defer os.Remove(binaryPath) // Clean up the binary after tests
+	defer func() {
+		if err := os.Remove(binaryPath); err != nil {
+			t.Logf("Failed to remove binary %s: %v", binaryPath, err)
+		}
+	}() // Clean up the binary after tests
 
 	// Find all test directories under testdata
 	testDirs, err := findTestDirectories()
@@ -39,17 +43,18 @@ func TestAgentDef(t *testing.T) {
 
 		t.Run(testName, func(t *testing.T) {
 			// Determine if this is an expected error case
-			expectError := false
-			if testName == "edge-cases" || testName == "mixed-format-test" {
-				expectError = true
-			}
+			expectError := testName == "edge-cases" || testName == "mixed-format-test"
 
 			// Create a temporary directory for the test
 			tempDir, err := os.MkdirTemp("", "agent-def-test-")
 			if err != nil {
 				t.Fatalf("Failed to create temporary directory: %v", err)
 			}
-			defer os.RemoveAll(tempDir)
+			defer func() {
+				if err := os.RemoveAll(tempDir); err != nil {
+					t.Logf("Failed to remove temporary directory %s: %v", tempDir, err)
+				}
+			}()
 
 			// Path to test directory containing agent-def.yml
 			testPath := filepath.Join(testDir, "test")
@@ -81,7 +86,9 @@ func TestAgentDef(t *testing.T) {
 			// Compare output with expected output
 			expectedDir := filepath.Join(testDir, "expected")
 			if replace {
-				os.RemoveAll(expectedDir)
+				if err := os.RemoveAll(expectedDir); err != nil {
+					t.Fatalf("Failed to remove expected directory: %v", err)
+				}
 				if err := copyDir(tempDir, expectedDir); err != nil {
 					t.Fatalf("Failed to copy output to expected directory: %v", err)
 				}
@@ -227,7 +234,12 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return fmt.Errorf("error opening source file: %w", err)
 	}
-	defer srcFile.Close()
+	defer func() {
+		if err := srcFile.Close(); err != nil {
+			// Just log the error since we're in a defer and can't return it
+			fmt.Printf("Error closing source file: %v\n", err)
+		}
+	}()
 
 	// Get source file info for permissions
 	srcInfo, err := srcFile.Stat()
@@ -240,7 +252,12 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return fmt.Errorf("error creating destination file: %w", err)
 	}
-	defer dstFile.Close()
+	defer func() {
+		if err := dstFile.Close(); err != nil {
+			// Just log the error since we're in a defer and can't return it
+			fmt.Printf("Error closing destination file: %v\n", err)
+		}
+	}()
 
 	// Copy file contents
 	if _, err = io.Copy(dstFile, srcFile); err != nil {
@@ -409,7 +426,9 @@ func buildAgentDefBinary() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp file: %w", err)
 	}
-	tempFile.Close()
+	if err := tempFile.Close(); err != nil {
+		return "", fmt.Errorf("failed to close temporary file: %w", err)
+	}
 
 	binaryPath := tempFile.Name()
 	fmt.Printf("Building agent-def binary to: %s\n", binaryPath)

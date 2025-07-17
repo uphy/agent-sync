@@ -50,7 +50,10 @@ func (c *ConsoleOutput) Printf(format string, args ...interface{}) {
 // PrintProgress outputs a progress message
 func (c *ConsoleOutput) PrintProgress(msg string) {
 	if c.Color {
-		color.New(color.FgBlue).Println("➜ " + msg)
+		_, err := color.New(color.FgBlue).Println("➜ " + msg)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to print progress message: %v\n", err)
+		}
 	} else {
 		fmt.Println("➜ " + msg)
 	}
@@ -59,7 +62,10 @@ func (c *ConsoleOutput) PrintProgress(msg string) {
 // PrintSuccess outputs a success message
 func (c *ConsoleOutput) PrintSuccess(msg string) {
 	if c.Color {
-		color.New(color.FgGreen).Println("✓ " + msg)
+		_, err := color.New(color.FgGreen).Println("✓ " + msg)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to print success message: %v\n", err)
+		}
 	} else {
 		fmt.Println("✓ " + msg)
 	}
@@ -68,7 +74,10 @@ func (c *ConsoleOutput) PrintSuccess(msg string) {
 // PrintError outputs an error message
 func (c *ConsoleOutput) PrintError(err error) {
 	if c.Color {
-		color.New(color.FgRed).Fprintf(os.Stderr, "✗ Error: %v\n", err)
+		_, printErr := color.New(color.FgRed).Fprintf(os.Stderr, "✗ Error: %v\n", err)
+		if printErr != nil {
+			fmt.Fprintf(os.Stderr, "Failed to print error message: %v\n", printErr)
+		}
 	} else {
 		fmt.Fprintf(os.Stderr, "✗ Error: %v\n", err)
 	}
@@ -78,7 +87,10 @@ func (c *ConsoleOutput) PrintError(err error) {
 func (c *ConsoleOutput) PrintVerbose(msg string) {
 	if c.Verbose {
 		if c.Color {
-			color.New(color.FgCyan).Println("ℹ " + msg)
+			_, err := color.New(color.FgCyan).Println("ℹ " + msg)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to print verbose message: %v\n", err)
+			}
 		} else {
 			fmt.Println("ℹ " + msg)
 		}
@@ -91,7 +103,11 @@ func (c *ConsoleOutput) Confirm(prompt string) bool {
 
 	for {
 		if c.Color {
-			color.New(color.FgYellow).Printf("%s [y/N]: ", prompt)
+			_, err := color.New(color.FgYellow).Printf("%s [y/N]: ", prompt)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to print confirmation prompt: %v\n", err)
+				return false
+			}
 		} else {
 			fmt.Printf("%s [y/N]: ", prompt)
 		}
@@ -103,9 +119,10 @@ func (c *ConsoleOutput) Confirm(prompt string) bool {
 
 		response = strings.ToLower(strings.TrimSpace(response))
 
-		if response == "y" || response == "yes" {
+		switch response {
+		case "y", "yes":
 			return true
-		} else if response == "" || response == "n" || response == "no" {
+		case "", "n", "no":
 			return false
 		}
 	}

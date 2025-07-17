@@ -19,6 +19,8 @@ var templatesFS embed.FS
 // initContext holds the CLI context for the init command
 var initContext *Context
 
+// NewInitCommand returns the 'init' command with a nil context.
+// It initializes the default agent-def project structure.
 func NewInitCommand() *cobra.Command {
 	return NewInitCommandWithContext(nil)
 }

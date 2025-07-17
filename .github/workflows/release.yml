@@ -1,4 +1,4 @@
-name: Release
+name: release
 
 on:
   push:
@@ -19,25 +19,31 @@ jobs:
           fetch-depth: 0 # Required for GoReleaser to generate proper changelogs
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: ">=1.21.0"
+          go-version-file: go.mod
           cache: true
+
+      - name: Create GitHub App token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.UPHY_OPS_APP_ID }}
+          private-key: ${{ secrets.UPHY_OPS_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: agent-def,homebrew-tap
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
-          distribution: goreleaser
           version: latest
           args: release --clean
         env:
-          # This token is automatically provided by GitHub Actions
-          # It needs to have permissions to push to the Homebrew tap repository
-          GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
 
       # If you need to create/validate a checksum file
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: agent-def-binaries
           path: dist/*

@@ -1,5 +1,6 @@
 {
   "yaml.schemas": {
     "schema.json": ["**/agent-def.yml"]
-  }
+  },
+  "go.lintTool": "golangci-lint"
 }

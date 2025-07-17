@@ -1,7 +1,6 @@
 package util
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -32,7 +31,7 @@ type RealFileSystem struct{}
 
 // ReadFile reads a file at the given path
 func (fs *RealFileSystem) ReadFile(path string) ([]byte, error) {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, &ErrFileNotFound{Path: path}
@@ -50,7 +49,7 @@ func (fs *RealFileSystem) WriteFile(path string, data []byte) error {
 		return WrapError(err, "failed to create directory")
 	}
 
-	if err := ioutil.WriteFile(path, data, 0644); err != nil {
+	if err := os.WriteFile(path, data, 0644); err != nil {
 		return WrapError(err, "failed to write file")
 	}
 

@@ -9,15 +9,15 @@ import (
 	"github.com/goccy/go-yaml"
 )
 
-// LogLevel はログレベルを表す型
-type LogLevel string
+// Level represents the logging level
+type Level string
 
 // ログレベル定数
 const (
-	DebugLevel LogLevel = "debug"
-	InfoLevel  LogLevel = "info"
-	WarnLevel  LogLevel = "warn"
-	ErrorLevel LogLevel = "error"
+	DebugLevel Level = "debug"
+	InfoLevel  Level = "info"
+	WarnLevel  Level = "warn"
+	ErrorLevel Level = "error"
 )
 
 // Format はログ出力フォーマットを表す型
@@ -29,11 +29,11 @@ const (
 	JSONFormat Format = "json"
 )
 
-// LogConfig はロギング設定を表す
-type LogConfig struct {
+// Config represents logging configuration
+type Config struct {
 	// 基本設定
-	Enabled bool     `yaml:"enabled"` // ロギングを有効にするか
-	Level   LogLevel `yaml:"level"`   // "debug", "info", "warn", "error"
+	Enabled bool  `yaml:"enabled"` // ロギングを有効にするか
+	Level   Level `yaml:"level"`   // "debug", "info", "warn", "error"
 
 	// ファイル出力設定
 	File     string `yaml:"file"`      // ログファイルパス、空の場合はファイル出力なし
@@ -50,9 +50,9 @@ type LogConfig struct {
 	Verbose       bool `yaml:"verbose"`        // 詳細出力を有効にするか
 }
 
-// DefaultLogConfig はデフォルトのログ設定を返す
-func DefaultLogConfig() LogConfig {
-	return LogConfig{
+// DefaultConfig はデフォルトのログ設定を返す
+func DefaultConfig() Config {
+	return Config{
 		Enabled:       false, // デフォルトで無効に変更
 		Level:         InfoLevel,
 		File:          "",
@@ -67,7 +67,7 @@ func DefaultLogConfig() LogConfig {
 }
 
 // IsValidLevel はログレベルが有効かどうかを検証する
-func (c *LogConfig) IsValidLevel() bool {
+func (c *Config) IsValidLevel() bool {
 	switch c.Level {
 	case DebugLevel, InfoLevel, WarnLevel, ErrorLevel:
 		return true
@@ -77,7 +77,7 @@ func (c *LogConfig) IsValidLevel() bool {
 }
 
 // IsValidFormat はフォーマットが有効かどうかを検証する
-func (c *LogConfig) IsValidFormat() bool {
+func (c *Config) IsValidFormat() bool {
 	switch c.Format {
 	case TextFormat, JSONFormat:
 		return true
@@ -87,7 +87,7 @@ func (c *LogConfig) IsValidFormat() bool {
 }
 
 // Validate は設定が有効かどうかを検証する
-func (c *LogConfig) Validate() error {
+func (c *Config) Validate() error {
 	if !c.IsValidLevel() {
 		return fmt.Errorf("invalid log level: %s", c.Level)
 	}
@@ -119,14 +119,14 @@ func (c *LogConfig) Validate() error {
 	return nil
 }
 
-// LoadFromYAML は指定されたYAMLファイルからロギング設定を読み込む
-func LoadLogConfigFromYAML(path string) (*LogConfig, error) {
+// LoadConfigFromYAML loads logging configuration from the specified YAML file.
+func LoadConfigFromYAML(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	config := DefaultLogConfig()
+	config := DefaultConfig()
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
@@ -139,9 +139,9 @@ func LoadLogConfigFromYAML(path string) (*LogConfig, error) {
 	return &config, nil
 }
 
-// LoadFromYAMLContent はYAML文字列からロギング設定を読み込む
-func LoadLogConfigFromYAMLContent(content string) (*LogConfig, error) {
-	config := DefaultLogConfig()
+// LoadConfigFromYAMLContent loads logging configuration from YAML content string.
+func LoadConfigFromYAMLContent(content string) (*Config, error) {
+	config := DefaultConfig()
 	err := yaml.Unmarshal([]byte(content), &config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse config content: %w", err)
@@ -154,10 +154,10 @@ func LoadLogConfigFromYAMLContent(content string) (*LogConfig, error) {
 	return &config, nil
 }
 
-// String はLogConfigの文字列表現を返す
-func (c *LogConfig) String() string {
+// String はConfigの文字列表現を返す
+func (c *Config) String() string {
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("LogConfig{Enabled: %t, ", c.Enabled))
+	sb.WriteString(fmt.Sprintf("Config{Enabled: %t, ", c.Enabled))
 	sb.WriteString(fmt.Sprintf("Level: %s, ", c.Level))
 	if c.File != "" {
 		sb.WriteString(fmt.Sprintf("File: %s, ", c.File))
