@@ -125,10 +125,6 @@
                     },
                     "minItems": 1
                 },
-                "concat": {
-                    "type": "boolean",
-                    "description": "When true, concatenates inputs into one output file; when false, preserves individual input files in the output directory"
-                },
                 "outputs": {
                     "type": "array",
                     "description": "Defines the output agents and their paths",
@@ -160,6 +156,10 @@
                 "outputPath": {
                     "type": "string",
                     "description": "Optional custom output path. If not specified, the agent's default path is used. Supports tilde (~) expansion for home directory. The path is interpreted as a file path when 'concat' is true, or a directory path when 'concat' is false"
+                },
+                "concat": {
+                    "type": "boolean",
+                    "description": "When true, concatenates inputs into one output file; when false, preserves individual input files in the output directory"
                 }
             },
             "required": [

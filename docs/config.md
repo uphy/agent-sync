@@ -63,7 +63,6 @@ Options for each task:
 | `name` | String | No | Optional identifier for the task. If not provided, a default name is automatically generated: for project tasks, "{project-name}-{type}" (e.g., "my-project-memory"); for user tasks, "user-{type}" (e.g., "user-command") |
 | `type` | String | Yes | Type of task, either "command" or "memory" |
 | `inputs` | String Array | Yes | File or directory paths relative to Root. Supports tilde (~) expansion for home directory and glob patterns with exclusions |
-| `concat` | Boolean | No | When true, concatenates inputs into one output file; when false, preserves individual input files in the output directory |
 | `outputs` | Output Array | Yes | Defines the output agents and their paths |
 
 ### Output Configuration
@@ -73,6 +72,7 @@ Options for each output:
 | Setting | Type | Required | Description |
 |---------|------|----------|-------------|
 | `agent` | String | Yes | Target AI agent (e.g., "roo", "claude", "cline") |
+| `concat` | Boolean | No | When true, concatenates inputs into one output file; when false, preserves individual input files in the output directory |
 | `outputPath` | String | No | Optional custom output path. If not specified, the agent's default path is used. Supports tilde (~) expansion for home directory. The path is interpreted as a file path when `concat` is true, or a directory path when `concat` is false |
 ### Glob Pattern Support in Inputs
 
@@ -107,7 +107,7 @@ inputs:
 
 ## Output Path Interpretation
 
-How `outputPath` is interpreted depends on the `concat` setting:
+How `outputPath` is interpreted depends on the `concat` setting at the output level:
 
 - When `concat: true`, `outputPath` refers to a **file** where all input content will be concatenated
 - When `concat: false`, `outputPath` refers to a **directory** where individual files will be placed
@@ -169,7 +169,7 @@ Each agent may support specific frontmatter attributes for commands:
 
 ### Default Concatenation Behavior
 
-If not explicitly set via `concat` option, the following default concatenation behaviors apply:
+If not explicitly set via the `concat` option at the output level, the following default concatenation behaviors apply:
 
 | Agent | Task Type | Default Concatenation |
 |-------|-----------|----------------------|
@@ -211,6 +211,7 @@ tasks:
       - memories/*.md
     outputs:
       - agent: roo
+        concat: false  # Default for Roo memory tasks
 ```
 
 **Note**: You cannot mix this simplified format with the traditional `projects` section. Attempting to do so will result in an error.
@@ -238,21 +239,23 @@ projects:
         type: memory
         inputs:
           - ./projects/my-app/memories/
-        # When concat is true, all inputs are combined into one file
-        concat: true
         outputs:
+          # When concat is true, all inputs are combined into one file
           - agent: claude  # Outputs to single file CLAUDE.md
+            concat: true
           - agent: roo     # Outputs to single file .roo/rules/context.md
+            concat: true
           
       # Project-specific commands
       - name: "Project Commands"
         type: command
         inputs:
           - ./projects/my-app/commands/
-        # concat defaults to false for Claude commands
         outputs:
           - agent: claude  # Outputs to directory .claude/commands/
-          - agent: roo     # Outputs to single file .roomodes (concat defaults to true)
+            concat: false  # Default for Claude commands is false
+          - agent: roo     # Outputs to single file .roomodes
+            concat: true   # Default for Roo commands is true
 
 # User-level global configuration
 user:
@@ -262,11 +265,12 @@ user:
       type: memory
       inputs:
         - ./user/memories/
-      concat: true
       outputs:
         - agent: claude
+          concat: true
           outputPath: "~/.claude_global_context.md"  # Custom file output path
         - agent: roo
+          concat: true
           
     # Global commands
     - name: "User Global Commands"
@@ -275,7 +279,9 @@ user:
         - ./user/commands/
       outputs:
         - agent: claude  # Individual files in default directory
-        - agent: roo     # Single file (concat defaults to true)
+          concat: false  # Default for Claude commands is false
+        - agent: roo     # Single file
+          concat: true   # Default for Roo commands is true
 ```
 
 ## Template Functions

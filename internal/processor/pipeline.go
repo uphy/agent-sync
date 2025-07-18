@@ -147,9 +147,9 @@ func (p *Pipeline) Execute() error {
 		}
 		// Determine if inputs should be concatenated.
 		concat := false
-		if t.Concat != nil {
+		if output.Concat != nil {
 			// Based on user-defined concat setting.
-			concat = *t.Concat
+			concat = *output.Concat
 		} else {
 			// Default concat behavior based on agent type.
 			agent, ok := p.registry.Get(output.Agent)

@@ -74,8 +74,6 @@ type Task struct {
 	// Inputs are file or directory paths relative to Root
 	// Supports tilde (~) expansion for home directory.
 	Inputs []string `yaml:"inputs"`
-	// Concat indicates whether to concatenate inputs into one output
-	Concat *bool `yaml:"concat,omitempty"`
 	// Outputs define the output agents and paths
 	Outputs []Output `yaml:"outputs"`
 }
@@ -91,6 +89,8 @@ func (t *Task) SetDefaultName(prefix string) {
 type Output struct {
 	// Agent is the target AI agent (e.g., "roo", "claude")
 	Agent string `yaml:"agent"`
+	// Concat indicates whether to concatenate inputs into one output
+	Concat *bool `yaml:"concat,omitempty"`
 	// OutputPath is an optional custom output path
 	// Supports tilde (~) expansion for home directory.
 	OutputPath string `yaml:"outputPath,omitempty"`
