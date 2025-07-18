@@ -51,7 +51,6 @@ agent-def build [flags]
 
 Flags:
 - `-c, --config string` Path to agent-def.yml file or directory containing it (default ".")
-- `--user` Build only user-level tasks
 - `--dry-run` Show what would be generated without writing files
 - `-f, --force` Force overwrite without prompting for confirmation
 
@@ -60,6 +59,8 @@ Example:
 ```
 agent-def build --config ./configs/agent-def.yml my-app
 ```
+
+The build command processes both project-specific and user-level tasks by default. If you specify project names as arguments, only those projects will be processed, but user-level tasks will still be processed.
 
 ## Configuration
 

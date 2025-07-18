@@ -51,66 +51,63 @@ func NewManager(cfgPath string, logger *zap.Logger, output log.OutputWriter) (*M
 }
 
 // Build executes the build pipeline for the specified projects or user scope.
-func (m *Manager) Build(projects []string, userOnly, dryRun, force bool) error {
+func (m *Manager) Build(projects []string, dryRun, force bool) error {
 	m.force = force
 
 	m.logger.Info("Starting build process",
 		zap.Strings("projects", projects),
-		zap.Bool("userOnly", userOnly),
 		zap.Bool("dryRun", dryRun),
 		zap.Bool("force", force))
-	// Process project-level tasks unless userOnly is set
-	if !userOnly {
-		for name, proj := range m.cfg.Projects {
-			if len(projects) > 0 && !contains(projects, name) {
-				continue
-			}
-			// determine project root
-			root := proj.Root
-			if root == "" {
-				// If no root is specified, use config directory
-				root = m.configDir
-				m.logger.Debug("Using config directory as project root", zap.String("project", name))
-			} else if !filepath.IsAbs(root) {
-				// If root is relative, make it relative to config directory
-				root = filepath.Join(m.configDir, root)
-				m.logger.Debug("Resolved relative project root",
+	// Process project-level tasks
+	for name, proj := range m.cfg.Projects {
+		if len(projects) > 0 && !contains(projects, name) {
+			continue
+		}
+		// determine project root
+		root := proj.Root
+		if root == "" {
+			// If no root is specified, use config directory
+			root = m.configDir
+			m.logger.Debug("Using config directory as project root", zap.String("project", name))
+		} else if !filepath.IsAbs(root) {
+			// If root is relative, make it relative to config directory
+			root = filepath.Join(m.configDir, root)
+			m.logger.Debug("Resolved relative project root",
+				zap.String("project", name),
+				zap.String("root", root))
+		}
+		m.logger.Info("Processing project",
+			zap.String("name", name),
+			zap.Int("taskCount", len(proj.Tasks)),
+			zap.Strings("outputDirs", proj.OutputDirs))
+
+		if m.output != nil {
+			m.output.PrintProgress(fmt.Sprintf("Processing project: %s", name))
+		}
+
+		for i, task := range proj.Tasks {
+			m.logger.Debug("Processing project task",
+				zap.String("project", name),
+				zap.Int("taskIndex", i),
+				zap.String("taskName", task.Name),
+				zap.String("taskType", string(task.Type)))
+
+			pipeline := NewPipeline(task, root, proj.OutputDirs, false, dryRun, m.force, m.logger, m.output)
+			if err := pipeline.Execute(); err != nil {
+				m.logger.Error("Project task execution failed",
 					zap.String("project", name),
-					zap.String("root", root))
-			}
-			m.logger.Info("Processing project",
-				zap.String("name", name),
-				zap.Int("taskCount", len(proj.Tasks)),
-				zap.Strings("outputDirs", proj.OutputDirs))
+					zap.Error(err))
 
-			if m.output != nil {
-				m.output.PrintProgress(fmt.Sprintf("Processing project: %s", name))
-			}
-
-			for i, task := range proj.Tasks {
-				m.logger.Debug("Processing project task",
-					zap.String("project", name),
-					zap.Int("taskIndex", i),
-					zap.String("taskName", task.Name),
-					zap.String("taskType", string(task.Type)))
-
-				pipeline := NewPipeline(task, root, proj.OutputDirs, false, dryRun, m.force, m.logger, m.output)
-				if err := pipeline.Execute(); err != nil {
-					m.logger.Error("Project task execution failed",
-						zap.String("project", name),
-						zap.Error(err))
-
-					if m.output != nil {
-						m.output.PrintError(err)
-					}
-
-					return fmt.Errorf("project %s task execution failed: %w", name, err)
+				if m.output != nil {
+					m.output.PrintError(err)
 				}
-			}
 
-			if m.output != nil {
-				m.output.PrintSuccess(fmt.Sprintf("Project %s processed successfully", name))
+				return fmt.Errorf("project %s task execution failed: %w", name, err)
 			}
+		}
+
+		if m.output != nil {
+			m.output.PrintSuccess(fmt.Sprintf("Project %s processed successfully", name))
 		}
 	}
 

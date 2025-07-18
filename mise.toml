@@ -32,3 +32,9 @@ alias = "l"
 
 [tasks.format]
 run = "gofmt -w ."
+
+[tasks.build]
+run = "go build ./..."
+
+[tasks.pre-commit]
+depends = ["build", "lint", "format", "test"]

@@ -19,7 +19,6 @@ func NewBuildCommand() *cobra.Command {
 func NewBuildCommandWithContext(ctx *Context) *cobra.Command {
 	// Store context for command execution
 	buildContext = ctx
-	var userOnly bool
 	var dryRun bool
 	var force bool
 	var configPath string
@@ -42,7 +41,6 @@ If no project names are provided, all projects will be processed.`,
 				logger.Info("Executing build command",
 					zap.String("configPath", configPath),
 					zap.Strings("projects", args),
-					zap.Bool("userOnly", userOnly),
 					zap.Bool("dryRun", dryRun),
 					zap.Bool("force", force))
 			}
@@ -54,11 +52,10 @@ If no project names are provided, all projects will be processed.`,
 			}
 
 			// Execute build
-			return mgr.Build(args, userOnly, dryRun, force)
+			return mgr.Build(args, dryRun, force)
 		},
 	}
 
-	cmd.Flags().BoolVar(&userOnly, "user", false, "Build only user-level tasks")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show what would be generated without writing files")
 	cmd.Flags().BoolVarP(&force, "force", "f", false, "Force overwrite without prompting for confirmation")
 	cmd.Flags().StringVarP(&configPath, "config", "c", ".", "Path to agent-def.yml file or directory containing it")
