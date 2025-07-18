@@ -53,11 +53,12 @@ jobs:
 
       # Upload coverage data to Codecov
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           file: ./coverage.txt
           fail_ci_if_error: false
           verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }} # Set this secret in your repository settings
 
       # Verify that the code builds without errors
       - name: Verify build
