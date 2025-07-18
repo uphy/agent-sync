@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/user/agent-def/internal/log"
+	"github.com/uphy/agent-def/internal/log"
 	"go.uber.org/zap"
 )
 

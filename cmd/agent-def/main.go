@@ -5,10 +5,10 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/user/agent-def/internal/agent"
-	"github.com/user/agent-def/internal/cli"
-	"github.com/user/agent-def/internal/log"
-	"github.com/user/agent-def/internal/util"
+	"github.com/uphy/agent-def/internal/agent"
+	"github.com/uphy/agent-def/internal/cli"
+	"github.com/uphy/agent-def/internal/log"
+	"github.com/uphy/agent-def/internal/util"
 	"go.uber.org/zap"
 )
 

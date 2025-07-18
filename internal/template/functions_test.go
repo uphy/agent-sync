@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/user/agent-def/internal/agent"
+	"github.com/uphy/agent-def/internal/agent"
 )
 
 func TestFileFunc_NotNil(t *testing.T) {

@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/user/agent-def/internal/agent"
-	"github.com/user/agent-def/internal/config"
-	"github.com/user/agent-def/internal/log"
-	"github.com/user/agent-def/internal/model"
-	"github.com/user/agent-def/internal/parser"
-	"github.com/user/agent-def/internal/template"
-	"github.com/user/agent-def/internal/util"
+	"github.com/uphy/agent-def/internal/agent"
+	"github.com/uphy/agent-def/internal/config"
+	"github.com/uphy/agent-def/internal/log"
+	"github.com/uphy/agent-def/internal/model"
+	"github.com/uphy/agent-def/internal/parser"
+	"github.com/uphy/agent-def/internal/template"
+	"github.com/uphy/agent-def/internal/util"
 	"go.uber.org/zap"
 )
 

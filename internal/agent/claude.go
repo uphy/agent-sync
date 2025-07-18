@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/user/agent-def/internal/model"
+	"github.com/uphy/agent-def/internal/model"
 )
 
 // Claude implements the Claude-specific conversion logic

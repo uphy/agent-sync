@@ -1,6 +1,6 @@
 package agent
 
-import "github.com/user/agent-def/internal/model"
+import "github.com/uphy/agent-def/internal/model"
 
 // Agent represents a target AI agent that has specific format requirements
 type Agent interface {

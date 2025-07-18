@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/goccy/go-yaml"
-	"github.com/user/agent-def/internal/frontmatter"
+	"github.com/uphy/agent-def/internal/frontmatter"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )

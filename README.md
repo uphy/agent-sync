@@ -1,6 +1,5 @@
 # Agent Definition (agent-def)
 [![CI](https://github.com/uphy/agent-def/actions/workflows/ci.yml/badge.svg)](https://github.com/uphy/agent-def/actions/workflows/ci.yml)
-[![Build](https://github.com/uphy/agent-def/actions/workflows/build.yml/badge.svg)](https://github.com/uphy/agent-def/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/uphy/agent-def)](https://github.com/uphy/agent-def/releases/latest)
 [![Go Report Card](https://goreportcard.com/badge/github.com/uphy/agent-def)](https://goreportcard.com/report/github.com/uphy/agent-def)
 [![codecov](https://codecov.io/gh/uphy/agent-def/branch/main/graph/badge.svg)](https://codecov.io/gh/uphy/agent-def)
@@ -158,3 +157,7 @@ The release process automatically updates the Homebrew formula in the [homebrew-
 ```bash
 brew install uphy/tap/agent-def
 ```
+
+## License
+
+agent-def is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

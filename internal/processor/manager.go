@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/user/agent-def/internal/config"
-	"github.com/user/agent-def/internal/log"
-	"github.com/user/agent-def/internal/util"
+	"github.com/uphy/agent-def/internal/config"
+	"github.com/uphy/agent-def/internal/log"
+	"github.com/uphy/agent-def/internal/util"
 	"go.uber.org/zap"
 )
 

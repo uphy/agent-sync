@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/user/agent-def/internal/util"
+	"github.com/uphy/agent-def/internal/util"
 )
 
 // FileFunc generates a file reference helper function

@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/user/agent-def/internal/util"
+	"github.com/uphy/agent-def/internal/util"
 )
 
 // Context represents the context definition

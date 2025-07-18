@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/user/agent-def/internal/model"
+	"github.com/uphy/agent-def/internal/model"
 )
 
 // Cline implements the Cline-specific conversion logic

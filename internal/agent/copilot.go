@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/goccy/go-yaml"
-	"github.com/user/agent-def/internal/model"
+	"github.com/uphy/agent-def/internal/model"
 )
 
 // Copilot implements the Copilot-specific conversion logic

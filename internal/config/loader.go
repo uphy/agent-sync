@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/goccy/go-yaml"
-	"github.com/user/agent-def/internal/util"
+	"github.com/uphy/agent-def/internal/util"
 )
 
 // LoadConfig reads and parses the agent-def YAML configuration from the given path.

@@ -1,4 +1,4 @@
-module github.com/user/agent-def
+module github.com/uphy/agent-def
 
 go 1.23.0
 
