@@ -1,10 +1,10 @@
 # Agent Definition (agent-def)
-[![CI](https://github.com/user/agent-def/actions/workflows/ci.yml/badge.svg)](https://github.com/user/agent-def/actions/workflows/ci.yml)  
-[![Build](https://github.com/user/agent-def/actions/workflows/build.yml/badge.svg)](https://github.com/user/agent-def/actions/workflows/build.yml)  
-[![Release](https://img.shields.io/github/v/release/user/agent-def)](https://github.com/user/agent-def/releases/latest)  
-[![Go Report Card](https://goreportcard.com/badge/github.com/user/agent-def)](https://goreportcard.com/report/github.com/user/agent-def)  
-[![codecov](https://codecov.io/gh/user/agent-def/branch/main/graph/badge.svg)](https://codecov.io/gh/user/agent-def)  
-[![Go Reference](https://pkg.go.dev/badge/github.com/user/agent-def.svg)](https://pkg.go.dev/github.com/user/agent-def)  
+[![CI](https://github.com/uphy/agent-def/actions/workflows/ci.yml/badge.svg)](https://github.com/uphy/agent-def/actions/workflows/ci.yml)
+[![Build](https://github.com/uphy/agent-def/actions/workflows/build.yml/badge.svg)](https://github.com/uphy/agent-def/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/uphy/agent-def)](https://github.com/uphy/agent-def/releases/latest)
+[![Go Report Card](https://goreportcard.com/badge/github.com/uphy/agent-def)](https://goreportcard.com/report/github.com/uphy/agent-def)
+[![codecov](https://codecov.io/gh/uphy/agent-def/branch/main/graph/badge.svg)](https://codecov.io/gh/uphy/agent-def)
+[![Go Reference](https://pkg.go.dev/badge/github.com/uphy/agent-def.svg)](https://pkg.go.dev/github.com/uphy/agent-def)
 
 Agent Definition (`agent-def`) is a tool for converting context and command definitions for various AI agents like Claude, Roo, and Cline.
 
@@ -13,7 +13,7 @@ Agent Definition (`agent-def`) is a tool for converting context and command defi
 Install via Go:
 
 ```
-go install github.com/user/agent-def/cmd/agent-def@latest
+go install github.com/uphy/agent-def/cmd/agent-def@latest
 ```
 
 Or download a release from GitHub Releases.
@@ -155,9 +155,5 @@ To set up this secret:
 The release process automatically updates the Homebrew formula in the [homebrew-tap](https://github.com/uphy/homebrew-tap) repository, allowing users to install the latest version of agent-def using Homebrew:
 
 ```bash
-# Add the tap (first time only)
-brew tap uphy/tap
-
-# Install agent-def
-brew install agent-
+brew install uphy/tap/agent-def
 ```
