@@ -220,9 +220,12 @@ func (p *Pipeline) Execute() error {
 					return fmt.Errorf("determine output path: %w", err)
 				}
 
+				// Check if file exists and handle confirmation if needed
+				fileExists := p.fs.FileExists(outPath)
+
 				if p.DryRun {
 					message := fmt.Sprintf("[DRY RUN] Would write output to %s", outPath)
-					if p.fs.FileExists(outPath) {
+					if fileExists {
 						message += " (Will overwrite)"
 					}
 
@@ -234,8 +237,6 @@ func (p *Pipeline) Execute() error {
 						p.output.PrintVerbose(message)
 					}
 				} else {
-					// Check if file exists and handle confirmation if needed
-					fileExists := p.fs.FileExists(outPath)
 					shouldWrite := true
 
 					p.logger.Debug("Preparing to write file",

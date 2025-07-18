@@ -16,6 +16,12 @@ type FileSystem interface {
 	// FileExists checks if a file exists
 	FileExists(path string) bool
 
+	// IsFile checks if a path exists and is a regular file
+	IsFile(path string) bool
+
+	// IsDir checks if a path exists and is a directory
+	IsDir(path string) bool
+
 	// ListFiles lists files matching a pattern
 	ListFiles(dir string, pattern string) ([]string, error)
 
@@ -87,4 +93,22 @@ func (fs *RealFileSystem) ResolvePath(path string) string {
 // GlobWithExcludes expands glob patterns with support for exclusions
 func (fs *RealFileSystem) GlobWithExcludes(patterns []string, baseDir string) ([]string, error) {
 	return GlobWithExcludes(patterns, baseDir)
+}
+
+// IsFile checks if a path exists and is a regular file
+func (fs *RealFileSystem) IsFile(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return !info.IsDir()
+}
+
+// IsDir checks if a path exists and is a directory
+func (fs *RealFileSystem) IsDir(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return info.IsDir()
 }
