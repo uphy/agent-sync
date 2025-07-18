@@ -111,6 +111,22 @@ func (c *Copilot) DefaultCommandPath(outputBaseDir string, userScope bool, fileN
 	return filepath.Join(outputBaseDir, ".github", "prompts", fileName+".md"), nil
 }
 
+// MemoryPath returns the default path for Copilot agent memory files
+func (c *Copilot) MemoryPath(userScope bool) string {
+	if userScope {
+		return filepath.Join(".vscode", "copilot-instructions.md")
+	}
+	return filepath.Join(".github", "copilot-instructions.md")
+}
+
+// CommandPath returns the default path for Copilot agent command files
+func (c *Copilot) CommandPath(userScope bool) string {
+	if userScope {
+		return filepath.Join(".vscode", "prompts") + "/"
+	}
+	return filepath.Join(".github", "prompts") + "/"
+}
+
 // ShouldConcatenate determines whether content should be concatenated
 func (c *Copilot) ShouldConcatenate(taskType string) bool {
 	if taskType == "memory" {

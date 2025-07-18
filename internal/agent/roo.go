@@ -119,25 +119,15 @@ func (r *Roo) FormatCommand(commands []model.Command) (string, error) {
 	return buf.String(), nil
 }
 
-// DefaultMemoryPath determines the output path for Roo agent memory files
-func (r *Roo) DefaultMemoryPath(outputBaseDir string, userScope bool, fileName string) (string, error) {
-	ext := ".md"
-	name := strings.TrimSuffix(fileName, ext)
-
-	return filepath.Join(outputBaseDir, ".roo", "rules", name+ext), nil
+// MemoryPath returns the default path for Roo agent memory files
+func (r *Roo) MemoryPath(userScope bool) string {
+	return ".roo/rules/"
 }
 
-// DefaultCommandPath determines the output path for Roo agent command files
-func (r *Roo) DefaultCommandPath(outputBaseDir string, userScope bool, fileName string) (string, error) {
+// CommandPath returns the default path for Roo agent command files
+func (r *Roo) CommandPath(userScope bool) string {
 	if userScope {
-		return filepath.Join(outputBaseDir, "Library", "Application Support", "Code", "User", "globalStorage", "rooveterinaryinc.roo-cline", "settings", "custom_modes.yaml"), nil
+		return "Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml"
 	}
-
-	// Project scope
-	return filepath.Join(outputBaseDir, ".roomodes"), nil
-}
-
-// ShouldConcatenate determines if content should be concatenated for Roo agent
-func (r *Roo) ShouldConcatenate(taskType string) bool {
-	return taskType == "command"
+	return ".roomodes"
 }

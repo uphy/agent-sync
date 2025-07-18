@@ -2,7 +2,6 @@ package agent
 
 import (
 	"fmt"
-	"path/filepath"
 	"testing"
 )
 
@@ -37,121 +36,7 @@ func TestCline_FormatFile(t *testing.T) {
 	}
 }
 
-func TestCline_ShouldConcatenate(t *testing.T) {
-	c := &Cline{}
-
-	tests := []struct {
-		taskType string
-		expected bool
-	}{
-		{"memory", false},
-		{"command", false},
-		{"unknown", false},
-	}
-
-	for _, tt := range tests {
-		t.Run(fmt.Sprintf("TaskType=%s", tt.taskType), func(t *testing.T) {
-			result := c.ShouldConcatenate(tt.taskType)
-			if result != tt.expected {
-				t.Errorf("Cline.ShouldConcatenate(%q) = %v, want %v", tt.taskType, result, tt.expected)
-			}
-		})
-	}
-}
-
-func TestCline_DefaultMemoryPath(t *testing.T) {
-	c := &Cline{}
-
-	tests := []struct {
-		name        string
-		outputDir   string
-		userScope   bool
-		fileName    string
-		expected    string
-		expectError bool
-	}{
-		{
-			name:      "project scope",
-			outputDir: "/test/path",
-			userScope: false,
-			fileName:  "rules.md",
-			expected:  "/test/path/.clinerules/rules.md",
-		},
-		{
-			name:      "user scope",
-			outputDir: "/home/user",
-			userScope: true,
-			fileName:  "context.md",
-			expected:  filepath.Join("/home/user", "Documents", "Cline", "Rules", "context.md"),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := c.DefaultMemoryPath(tt.outputDir, tt.userScope, tt.fileName)
-
-			if tt.expectError && err == nil {
-				t.Fatal("expected error, got nil")
-			}
-
-			if !tt.expectError && err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-
-			if result != tt.expected {
-				t.Errorf("DefaultMemoryPath(%q, %v, %q) = %q, want %q",
-					tt.outputDir, tt.userScope, tt.fileName, result, tt.expected)
-			}
-		})
-	}
-}
-
-func TestCline_DefaultCommandPath(t *testing.T) {
-	c := &Cline{}
-
-	tests := []struct {
-		name        string
-		outputDir   string
-		userScope   bool
-		fileName    string
-		expected    string
-		expectError bool
-	}{
-		{
-			name:      "project scope",
-			outputDir: "/test/path",
-			userScope: false,
-			fileName:  "workflow.md",
-			expected:  "/test/path/.clinerules/workflows/workflow.md",
-		},
-		{
-			name:      "user scope",
-			outputDir: "/home/user",
-			userScope: true,
-			fileName:  "workflow.md",
-			expected:  filepath.Join("/home/user", "Documents", "Cline", "Workflows", "workflow.md"),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := c.DefaultCommandPath(tt.outputDir, tt.userScope, tt.fileName)
-
-			if tt.expectError && err == nil {
-				t.Fatal("expected error, got nil")
-			}
-
-			if !tt.expectError && err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-
-			if result != tt.expected {
-				t.Errorf("DefaultCommandPath(%q, %v, %q) = %q, want %q",
-					tt.outputDir, tt.userScope, tt.fileName, result, tt.expected)
-			}
-		})
-	}
-}
+// Tests for deprecated methods (ShouldConcatenate, DefaultMemoryPath, DefaultCommandPath) have been removed
 
 func TestCline_FormatMCP(t *testing.T) {
 	c := &Cline{}

@@ -1,9 +1,7 @@
 package processor
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -23,9 +21,9 @@ type Pipeline struct {
 	// including its name, type, inputs, targets, and concatenation settings.
 	Task config.Task
 
-	// SourceRoot is the base directory path for resolving source files and determining
+	// InputRoot is the base directory path for resolving input files and determining
 	// output paths. For user-scoped tasks, it represents the user's home directory.
-	SourceRoot string
+	InputRoot string
 
 	// OutputDirs is a list of output directory paths where the processed
 	// content will be written. Each output directory will receive a copy of the output.
@@ -58,6 +56,11 @@ type Pipeline struct {
 	output log.OutputWriter
 }
 
+type outputFile struct {
+	path    string
+	content string
+}
+
 // fsAdapter bridges util.FileSystem to template.FileResolver.
 type fsAdapter struct {
 	fs util.FileSystem
@@ -76,7 +79,7 @@ func (a *fsAdapter) ResolvePath(path string) string {
 }
 
 // NewPipeline creates a new Pipeline with context and registers built-in agents.
-func NewPipeline(task config.Task, sourceRoot string, destinations []string, userScope bool, dryRun bool, force bool, logger *zap.Logger, output log.OutputWriter) *Pipeline {
+func NewPipeline(task config.Task, inputRoot string, outputDirs []string, userScope bool, dryRun bool, force bool, logger *zap.Logger, output log.OutputWriter) *Pipeline {
 	// Use no-op logger if none provided
 	if logger == nil {
 		logger = zap.NewNop()
@@ -84,8 +87,8 @@ func NewPipeline(task config.Task, sourceRoot string, destinations []string, use
 
 	p := &Pipeline{
 		Task:       task,
-		SourceRoot: sourceRoot,
-		OutputDirs: destinations,
+		InputRoot:  inputRoot,
+		OutputDirs: outputDirs,
 		UserScope:  userScope,
 		DryRun:     dryRun,
 		Force:      force,
@@ -118,7 +121,7 @@ func (p *Pipeline) Execute() error {
 		zap.Bool("userScope", p.UserScope))
 
 	// Resolve input file paths.
-	sources, err := p.resolveInputs()
+	inputs, err := p.resolveInputs()
 	if err != nil {
 		p.logger.Error("Failed to resolve inputs",
 			zap.String("error", err.Error()),
@@ -129,7 +132,7 @@ func (p *Pipeline) Execute() error {
 		return fmt.Errorf("resolve inputs: %w", err)
 	}
 
-	if len(sources) == 0 {
+	if len(inputs) == 0 {
 		p.logger.Error("No source files found", zap.String("task", t.Name))
 		if p.output != nil {
 			p.output.PrintError(fmt.Errorf("no source files found for task %s", t.Name))
@@ -137,7 +140,7 @@ func (p *Pipeline) Execute() error {
 		return fmt.Errorf("no source files for task %s", t.Name)
 	}
 
-	p.logger.Debug("Inputs resolved successfully", zap.Strings("sources", sources))
+	p.logger.Debug("Inputs resolved successfully", zap.Strings("inputs", inputs))
 
 	// For each output agent.
 	for _, output := range t.Outputs {
@@ -145,148 +148,118 @@ func (p *Pipeline) Execute() error {
 		if !ok {
 			return fmt.Errorf("unknown agent %s", output.Agent)
 		}
-		// Determine if inputs should be concatenated.
-		concat := false
-		if output.Concat != nil {
-			// Based on user-defined concat setting.
-			concat = *output.Concat
-		} else {
-			// Default concat behavior based on agent type.
-			agent, ok := p.registry.Get(output.Agent)
-			if ok {
-				concat = agent.ShouldConcatenate(p.Task.Type)
-			}
+		outputPath := ""
+		switch t.Type {
+		case "memory":
+			outputPath = agent.MemoryPath(p.UserScope)
+		case "command":
+			outputPath = agent.CommandPath(p.UserScope)
+		default:
+			return fmt.Errorf("unsupported task type %s", t.Type)
+		}
+		if output.OutputPath != "" {
+			outputPath = output.OutputPath
 		}
 
-		// Group files based on concat setting.
-		var sourceGroups [][]string
-		if concat {
-			// all files are placed in a single group for combined processing
-			sourceGroups = [][]string{sources}
+		// Determine if we should treat this as a directory based on output path
+		isDirectory := strings.HasSuffix(outputPath, "/")
+		if isDirectory {
+			p.logger.Debug("Using directory mode for output (path ends with '/')",
+				zap.String("agent", output.Agent),
+				zap.String("outputPath", output.OutputPath),
+				zap.Bool("isDirectory", isDirectory))
 		} else {
-			// each file gets its own group and is processed separately
-			for _, f := range sources {
-				sourceGroups = append(sourceGroups, []string{f})
-			}
+			p.logger.Debug("Using file mode for output (path does not end with '/')",
+				zap.String("agent", output.Agent),
+				zap.String("outputPath", output.OutputPath),
+				zap.Bool("isDirectory", isDirectory))
 		}
 
-		// Process each group for each target.
-		for _, grp := range sourceGroups {
-			// Template processing.
-			var rendered []string
-			for _, rel := range grp {
-				full := filepath.Join(p.SourceRoot, rel)
-				engine := template.NewEngine(&fsAdapter{p.fs}, output.Agent, p.SourceRoot, p.registry)
-				out, err := engine.ExecuteFile(full, nil)
+		outputFiles := make([]outputFile, 0)
+		switch t.Type {
+		case "memory":
+			var renderedOutputs []string
+			for _, input := range inputs {
+				inputPath := filepath.Join(p.InputRoot, input)
+				engine := template.NewEngine(&fsAdapter{p.fs}, output.Agent, p.InputRoot, p.registry)
+				out, err := engine.ExecuteFile(inputPath, nil)
 				if err != nil {
-					return fmt.Errorf("template execute %s: %w", rel, err)
+					return fmt.Errorf("template execute %s: %w", input, err)
 				}
-				rendered = append(rendered, out)
+				renderedOutputs = append(renderedOutputs, out)
 			}
-			content := strings.Join(rendered, "\n\n")
-
-			// Agent-specific formatting.
-			var formatted string
-			switch t.Type {
-			case "memory":
-				formatted, err = agent.FormatMemory(content)
-			case "command":
-				var cmds []model.Command
-				for i, rel := range grp {
-					full := filepath.Join(p.SourceRoot, rel)
-
-					// Use the already templated content instead of re-reading the file
-					templatedContent := rendered[i]
-
-					// Parse the command from the templated content
-					cmd, err2 := parser.ParseCommandFromContent(full, []byte(templatedContent))
-					if err2 != nil {
-						return fmt.Errorf("parse command %s: %w", rel, err2)
+			memories := make([]string, 0, len(inputs))
+			for i, input := range inputs {
+				memory, err := agent.FormatMemory(renderedOutputs[i])
+				if err != nil {
+					return fmt.Errorf("format memory for agent %s: %w", output.Agent, err)
+				}
+				if isDirectory {
+					out := filepath.Join(outputPath, filepath.Base(input))
+					outputFiles = append(outputFiles, outputFile{path: out, content: memory})
+				}
+				memories = append(memories, memory)
+			}
+			if !isDirectory {
+				memory, err := agent.FormatMemory(strings.Join(memories, "\n\n"))
+				if err != nil {
+					return fmt.Errorf("format memory for agent %s: %w", output.Agent, err)
+				}
+				outputFiles = append(outputFiles, outputFile{path: outputPath, content: memory})
+			}
+		case "command":
+			cmds := make([]model.Command, 0, len(inputs))
+			for _, input := range inputs {
+				inputPath := filepath.Join(p.InputRoot, input)
+				inputContent, err := p.fs.ReadFile(inputPath)
+				if err != nil {
+					return fmt.Errorf("read input file %s: %w", inputPath, err)
+				}
+				cmd, err := parser.ParseCommandFromContent(inputPath, inputContent)
+				if err != nil {
+					return fmt.Errorf("parse command from content %s: %w", inputPath, err)
+				}
+				engine := template.NewEngine(&fsAdapter{p.fs}, output.Agent, p.InputRoot, p.registry)
+				out, err := engine.Execute(cmd.Content, nil)
+				if err != nil {
+					return fmt.Errorf("template execute %s: %w", input, err)
+				}
+				cmd.Content = out
+				if isDirectory {
+					out := filepath.Join(outputPath, filepath.Base(input))
+					formattedCmd, err := agent.FormatCommand([]model.Command{*cmd})
+					if err != nil {
+						return fmt.Errorf("format command for agent %s: %w", output.Agent, err)
 					}
-					cmds = append(cmds, *cmd)
+					outputFiles = append(outputFiles, outputFile{path: out, content: formattedCmd})
 				}
-				formatted, err = agent.FormatCommand(cmds)
-			default:
-				return fmt.Errorf("unsupported task type %s", t.Type)
+				cmds = append(cmds, *cmd)
 			}
-			if err != nil {
-				return fmt.Errorf("format for agent %s: %w", output.Agent, err)
-			}
-
-			// Write outputs to output directories.
-			for _, dest := range p.OutputDirs {
-				outPath, err := p.resolveOutputPath(dest, output, grp, concat)
+			if !isDirectory {
+				formattedCmd, err := agent.FormatCommand(cmds)
 				if err != nil {
-					return fmt.Errorf("determine output path: %w", err)
+					return fmt.Errorf("format command for agent %s: %w", output.Agent, err)
 				}
+				outputFiles = append(outputFiles, outputFile{path: outputPath, content: formattedCmd})
+			}
+		default:
+			return fmt.Errorf("unsupported task type %s", t.Type)
+		}
 
-				// Check if file exists and handle confirmation if needed
-				fileExists := p.fs.FileExists(outPath)
-
+		for _, outputDir := range p.OutputDirs {
+			for _, outFile := range outputFiles {
+				out := filepath.Join(outputDir, outFile.path)
+				content := outFile.content
 				if p.DryRun {
-					message := fmt.Sprintf("[DRY RUN] Would write output to %s", outPath)
-					if fileExists {
-						message += " (Will overwrite)"
-					}
-
-					p.logger.Info("Dry run - would write file",
-						zap.String("path", outPath),
-						zap.Bool("fileExists", p.fs.FileExists(outPath)))
-
+					p.logger.Info("[DRY RUN] Would write file", zap.String("path", out))
 					if p.output != nil {
-						p.output.PrintVerbose(message)
+						p.output.PrintVerbose(fmt.Sprintf("[DRY RUN] Would write file %s", out))
 					}
 				} else {
-					shouldWrite := true
-
-					p.logger.Debug("Preparing to write file",
-						zap.String("path", outPath),
-						zap.Bool("fileExists", fileExists),
-						zap.Bool("force", p.Force))
-
-					if fileExists && !p.Force {
-						// Prompt for confirmation
-						promptMsg := fmt.Sprintf("File already exists: %s. Overwrite? [y/N]: ", outPath)
-						if p.output != nil {
-							p.output.Print(promptMsg)
-						} else {
-							fmt.Print(promptMsg) // Fallback if no output writer
-						}
-
-						reader := bufio.NewReader(os.Stdin)
-						response, _ := reader.ReadString('\n')
-						response = strings.TrimSpace(strings.ToLower(response))
-						shouldWrite = response == "y" || response == "yes"
-
-						p.logger.Debug("User response to overwrite prompt",
-							zap.String("response", response),
-							zap.Bool("shouldWrite", shouldWrite))
+					if err := p.fs.WriteFile(out, []byte(content)); err != nil {
+						return fmt.Errorf("write file %s: %w", out, err)
 					}
-
-					if shouldWrite {
-						if err := p.fs.WriteFile(outPath, []byte(formatted)); err != nil {
-							p.logger.Error("Failed to write output file",
-								zap.String("path", outPath),
-								zap.Error(err))
-							if p.output != nil {
-								p.output.PrintError(fmt.Errorf("failed to write output %s: %w", outPath, err))
-							}
-							return fmt.Errorf("write output %s: %w", outPath, err)
-						}
-
-						p.logger.Info("Successfully wrote output file",
-							zap.String("path", outPath))
-
-						if p.output != nil {
-							p.output.PrintSuccess(fmt.Sprintf("Wrote output to %s", outPath))
-						}
-					} else {
-						p.logger.Info("Skipped writing file", zap.String("path", outPath))
-
-						if p.output != nil {
-							p.output.Print(fmt.Sprintf("Skipped writing to %s", outPath))
-						}
-					}
+					p.logger.Info("Wrote file", zap.String("path", out))
 				}
 			}
 		}
@@ -302,39 +275,9 @@ func (p *Pipeline) Execute() error {
 // resolveInputs expands Task.Inputs with support for glob patterns and exclusions
 func (p *Pipeline) resolveInputs() ([]string, error) {
 	// Use the new GlobWithExcludes function from the filesystem interface
-	paths, err := p.fs.GlobWithExcludes(p.Task.Inputs, p.SourceRoot)
+	paths, err := p.fs.GlobWithExcludes(p.Task.Inputs, p.InputRoot)
 	if err != nil {
 		return nil, fmt.Errorf("failed to expand glob patterns: %w", err)
 	}
 	return paths, nil
-}
-
-// resolveOutputPath computes the final output path based on custom path or default conventions.
-// It prioritizes the custom output path if provided; otherwise, uses agent conventions based on scope and type.
-func (p *Pipeline) resolveOutputPath(outputBaseDir string, output config.Output, sourceFiles []string, concat bool) (string, error) {
-	// Override if output path provided.
-	if output.OutputPath != "" {
-		return filepath.Join(outputBaseDir, output.OutputPath), nil
-	}
-
-	name := filepath.Base(sourceFiles[len(sourceFiles)-1])
-	if concat {
-		name = p.Task.Name
-	}
-
-	// Use the agent's appropriate output path method based on task type
-	agent, ok := p.registry.Get(output.Agent)
-	if !ok {
-		return "", fmt.Errorf("unknown agent %s", output.Agent)
-	}
-
-	// Call the appropriate method based on task type
-	switch p.Task.Type {
-	case "memory":
-		return agent.DefaultMemoryPath(outputBaseDir, p.UserScope, name)
-	case "command":
-		return agent.DefaultCommandPath(outputBaseDir, p.UserScope, name)
-	default:
-		return "", fmt.Errorf("unsupported task type %s", p.Task.Type)
-	}
 }

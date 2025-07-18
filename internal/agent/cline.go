@@ -2,7 +2,6 @@ package agent
 
 import (
 	"path/filepath"
-	"strings"
 
 	"github.com/uphy/agent-def/internal/model"
 )
@@ -54,31 +53,18 @@ func (c *Cline) FormatCommand(commands []model.Command) (string, error) {
 	return commands[0].Content, nil
 }
 
-// DefaultMemoryPath determines the output path for Cline agent memory files
-func (c *Cline) DefaultMemoryPath(outputBaseDir string, userScope bool, fileName string) (string, error) {
-	ext := ".md"
-	name := strings.TrimSuffix(fileName, ext)
-
+// MemoryPath returns the default path for Cline agent memory files
+func (c *Cline) MemoryPath(userScope bool) string {
 	if userScope {
-		return filepath.Join(outputBaseDir, "Documents", "Cline", "Rules", name+ext), nil
+		return "Documents/Cline/Rules/"
 	}
-
-	// Project scope
-	return filepath.Join(outputBaseDir, ".clinerules", name+ext), nil
+	return ".clinerules/"
 }
 
-// DefaultCommandPath determines the output path for Cline agent workflow files
-func (c *Cline) DefaultCommandPath(outputBaseDir string, userScope bool, fileName string) (string, error) {
-	// Keep the original file name as-is
+// CommandPath returns the default path for Cline agent command files
+func (c *Cline) CommandPath(userScope bool) string {
 	if userScope {
-		return filepath.Join(outputBaseDir, "Documents", "Cline", "Workflows", fileName), nil
+		return "Documents/Cline/Workflows/"
 	}
-
-	// Project scope
-	return filepath.Join(outputBaseDir, ".clinerules", "workflows", fileName), nil
-}
-
-// ShouldConcatenate determines if content should be concatenated for Cline agent
-func (c *Cline) ShouldConcatenate(taskType string) bool {
-	return false
+	return ".clinerules/workflows/"
 }

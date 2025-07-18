@@ -2,7 +2,6 @@ package agent
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/uphy/agent-def/internal/model"
@@ -73,23 +72,15 @@ func (c *Claude) FormatCommand(commands []model.Command) (string, error) {
 	return strings.Join(formattedCommands, "\n\n---\n\n"), nil
 }
 
-// DefaultMemoryPath determines the output path for Claude agent memory files
-func (c *Claude) DefaultMemoryPath(outputBaseDir string, userScope bool, fileName string) (string, error) {
+// MemoryPath returns the default path for Claude agent memory files
+func (c *Claude) MemoryPath(userScope bool) string {
 	if userScope {
-		return filepath.Join(outputBaseDir, ".claude", "CLAUDE.md"), nil
+		return ".claude/CLAUDE.md"
 	}
-	return filepath.Join(outputBaseDir, "CLAUDE.md"), nil
+	return "CLAUDE.md"
 }
 
-// DefaultCommandPath determines the output path for Claude agent command files
-func (c *Claude) DefaultCommandPath(outputBaseDir string, userScope bool, fileName string) (string, error) {
-	ext := ".md"
-	name := strings.TrimSuffix(fileName, ext)
-
-	return filepath.Join(outputBaseDir, ".claude", "commands", name+ext), nil
-}
-
-// ShouldConcatenate determines if content should be concatenated for Claude agent
-func (c *Claude) ShouldConcatenate(taskType string) bool {
-	return taskType == "memory"
+// CommandPath returns the default path for Claude agent command files
+func (c *Claude) CommandPath(userScope bool) string {
+	return ".claude/commands/"
 }

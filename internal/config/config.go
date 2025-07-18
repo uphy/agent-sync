@@ -89,9 +89,10 @@ func (t *Task) SetDefaultName(prefix string) {
 type Output struct {
 	// Agent is the target AI agent (e.g., "roo", "claude")
 	Agent string `yaml:"agent"`
-	// Concat indicates whether to concatenate inputs into one output
-	Concat *bool `yaml:"concat,omitempty"`
 	// OutputPath is an optional custom output path
 	// Supports tilde (~) expansion for home directory.
+	// The path format determines concatenation behavior:
+	// - If path ends with "/", it will be treated as a directory (non-concatenated outputs)
+	// - If path doesn't end with "/", it will be treated as a file (concatenated outputs)
 	OutputPath string `yaml:"outputPath,omitempty"`
 }

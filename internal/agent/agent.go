@@ -22,13 +22,9 @@ type Agent interface {
 	// FormatCommand processes a command definition for this agent
 	FormatCommand(commands []model.Command) (string, error)
 
-	// DefaultMemoryPath determines the default output path for memory tasks
-	DefaultMemoryPath(outputBaseDir string, userScope bool, fileName string) (string, error)
+	// MemoryPath returns the default path for memory files based on user scope
+	MemoryPath(userScope bool) string
 
-	// DefaultCommandPath determines the default output path for command tasks
-	DefaultCommandPath(outputBaseDir string, userScope bool, fileName string) (string, error)
-
-	// ShouldConcatenate determines whether content should be concatenated
-	// for this agent based on the task type (memory or command)
-	ShouldConcatenate(taskType string) bool
+	// CommandPath returns the default path for command files based on user scope
+	CommandPath(userScope bool) string
 }

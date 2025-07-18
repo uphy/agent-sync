@@ -72,8 +72,7 @@ Options for each output:
 | Setting | Type | Required | Description |
 |---------|------|----------|-------------|
 | `agent` | String | Yes | Target AI agent (e.g., "roo", "claude", "cline") |
-| `concat` | Boolean | No | When true, concatenates inputs into one output file; when false, preserves individual input files in the output directory |
-| `outputPath` | String | No | Optional custom output path. If not specified, the agent's default path is used. Supports tilde (~) expansion for home directory. The path is interpreted as a file path when `concat` is true, or a directory path when `concat` is false |
+| `outputPath` | String | No | Optional custom output path. If not specified, the agent's default path is used. Supports tilde (~) expansion for home directory. The path format determines concatenation behavior: paths ending with "/" are treated as directories (non-concatenated outputs), while paths without a trailing "/" are treated as files (concatenated outputs) |
 ### Glob Pattern Support in Inputs
 
 The `inputs` field supports glob patterns with doublestar support for recursive matching and exclusions:
@@ -107,10 +106,14 @@ inputs:
 
 ## Output Path Interpretation
 
-How `outputPath` is interpreted depends on the `concat` setting at the output level:
+The format of the `outputPath` determines how files are processed:
 
-- When `concat: true`, `outputPath` refers to a **file** where all input content will be concatenated
-- When `concat: false`, `outputPath` refers to a **directory** where individual files will be placed
+- Paths ending with `/` are treated as **directories** where individual files will be placed
+- Paths not ending with `/` are treated as **files** where all input content will be concatenated
+
+For example:
+- `.roo/rules/` - Treated as a directory, each source file becomes a separate output file
+- `.roo/rules/combined.md` - Treated as a file, all source files are concatenated into one file
 
 If `outputPath` is not specified, the agent's default path is used (see "Default Output Locations" sections below).
 
@@ -167,18 +170,18 @@ Each agent may support specific frontmatter attributes for commands:
 - `roo.whenToUse`: Description of when to use the command
 - `roo.groups`: Permission groups for the command
 
-### Default Concatenation Behavior
+### Default Output Path Behavior
 
-If not explicitly set via the `concat` option at the output level, the following default concatenation behaviors apply:
+When no `outputPath` is specified, the following default paths are used. The path format (with or without trailing slash) determines whether files are concatenated or kept separate:
 
-| Agent | Task Type | Default Concatenation |
-|-------|-----------|----------------------|
-| Claude | memory | Yes (concat = true) |
-| Claude | command | No (concat = false) |
-| Roo | memory | No (concat = false) |
-| Roo | command | Yes (concat = true) |
-| Cline | memory | No (concat = false) |
-| Cline | command | No (concat = false) |
+| Agent | Task Type | Default Path | Concatenation Behavior |
+|-------|-----------|-------------|------------------------|
+| Claude | memory | `CLAUDE.md` or `~/.claude/CLAUDE.md` | Concatenated (file path) |
+| Claude | command | `.claude/commands/` | Non-concatenated (directory path) |
+| Roo | memory | `.roo/rules/` | Non-concatenated (directory path) |
+| Roo | command | `.roomodes` or global settings path | Concatenated (file path) |
+| Cline | memory | `.clinerules/` or `~/Documents/Cline/Rules/` | Non-concatenated (directory path) |
+| Cline | command | `.clinerules/workflows/` or `~/Documents/Cline/Workflows/` | Non-concatenated (directory path) |
 
 ## Path Resolution
 
@@ -211,7 +214,7 @@ tasks:
       - memories/*.md
     outputs:
       - agent: roo
-        concat: false  # Default for Roo memory tasks
+        outputPath: ".roo/rules/"  # Directory path (with trailing slash) for separate files
 ```
 
 **Note**: You cannot mix this simplified format with the traditional `projects` section. Attempting to do so will result in an error.
@@ -240,11 +243,10 @@ projects:
         inputs:
           - ./projects/my-app/memories/
         outputs:
-          # When concat is true, all inputs are combined into one file
+          # File path (no trailing slash) = concatenated output
           - agent: claude  # Outputs to single file CLAUDE.md
-            concat: true
-          - agent: roo     # Outputs to single file .roo/rules/context.md
-            concat: true
+          - agent: roo     # Outputs to single file
+            outputPath: ".roo/rules/context.md"
           
       # Project-specific commands
       - name: "Project Commands"
@@ -252,10 +254,10 @@ projects:
         inputs:
           - ./projects/my-app/commands/
         outputs:
-          - agent: claude  # Outputs to directory .claude/commands/
-            concat: false  # Default for Claude commands is false
-          - agent: roo     # Outputs to single file .roomodes
-            concat: true   # Default for Roo commands is true
+          # Directory path (trailing slash) = separate files
+          - agent: claude
+            outputPath: ".claude/commands/"  # Outputs to directory with separate files
+          - agent: roo  # Outputs to single file .roomodes (default)
 
 # User-level global configuration
 user:
@@ -267,10 +269,9 @@ user:
         - ./user/memories/
       outputs:
         - agent: claude
-          concat: true
-          outputPath: "~/.claude_global_context.md"  # Custom file output path
+          outputPath: "~/.claude_global_context.md"  # Custom file output path (concatenated)
         - agent: roo
-          concat: true
+          outputPath: "~/.roo/rules/global.md"  # Custom file output path (concatenated)
           
     # Global commands
     - name: "User Global Commands"
@@ -278,10 +279,9 @@ user:
       inputs:
         - ./user/commands/
       outputs:
-        - agent: claude  # Individual files in default directory
-          concat: false  # Default for Claude commands is false
-        - agent: roo     # Single file
-          concat: true   # Default for Roo commands is true
+        - agent: claude
+          outputPath: "~/.claude/commands/"  # Directory path (trailing slash) = separate files
+        - agent: roo  # Default path for user commands (concatenated)
 ```
 
 ## Template Functions
