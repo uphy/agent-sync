@@ -215,7 +215,7 @@ func (p *Pipeline) Execute() error {
 
 			// Write outputs to output directories.
 			for _, dest := range p.OutputDirs {
-				outPath, err := p.defaultOutputPath(dest, output, grp, concat)
+				outPath, err := p.resolveOutputPath(dest, output, grp, concat)
 				if err != nil {
 					return fmt.Errorf("determine output path: %w", err)
 				}
@@ -309,8 +309,9 @@ func (p *Pipeline) resolveInputs() ([]string, error) {
 	return paths, nil
 }
 
-// defaultOutputPath computes output path based on scope, type, and agent conventions.
-func (p *Pipeline) defaultOutputPath(outputBaseDir string, output config.Output, sourceFiles []string, concat bool) (string, error) {
+// resolveOutputPath computes the final output path based on custom path or default conventions.
+// It prioritizes the custom output path if provided; otherwise, uses agent conventions based on scope and type.
+func (p *Pipeline) resolveOutputPath(outputBaseDir string, output config.Output, sourceFiles []string, concat bool) (string, error) {
 	// Override if output path provided.
 	if output.OutputPath != "" {
 		return filepath.Join(outputBaseDir, output.OutputPath), nil
