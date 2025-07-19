@@ -83,7 +83,7 @@ agent-def supports two task types:
 1. **Memory** (`type: memory`) - Defines context information for AI agents
 2. **Command** (`type: command`) - Provides custom command definitions for AI agents
 
-For detailed configuration options, output destinations, concatenation behavior, template syntax, and best practices, please refer to the [Configuration Reference](docs/config.md).
+For detailed configuration options, output destinations, concatenation behavior, template syntax, and best practices, please refer to the [Configuration Documentation](docs/config.md) which is organized into several focused guides.
 
 ## Template Syntax
 
@@ -97,7 +97,7 @@ Agent Definition uses Go's `text/template` with `{{` and `}}` delimiters. Some k
 | `mcp "serverName" "toolName" "arg1"` | Formats an MCP command for the target agent |
 | `agent` | Returns the current target agent identifier |
 
-See the [Configuration Reference](docs/config.md) for full details on template functions and path resolution.
+See the [Template System Documentation](docs/templates.md) for full details on template functions and path resolution.
 
 ## Examples
 
