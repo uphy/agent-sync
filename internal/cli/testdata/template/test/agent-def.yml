@@ -3,7 +3,7 @@ projects:
   projectA:
     root: .
     outputDirs:
-      - projectA
+      - build/projectA
     tasks:
       - name: memories
         type: memory

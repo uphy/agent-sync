@@ -1,6 +1,6 @@
 configVersion: "1.0"
 user:
-  home: "home" # Use the relative "home" directory for testing instead of actual user home
+  home: "build/home" # Use the relative "home" directory for testing instead of actual user home
   tasks:
     - name: general-rules
       type: memory

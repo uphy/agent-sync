@@ -1,7 +1,7 @@
 configVersion: "1.0"
 # Using the new simplified format with top-level fields instead of projects section
 outputDirs:
-  - default-project
+  - build/default-project
 tasks:
   - name: default-memories
     type: memory

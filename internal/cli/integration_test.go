@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -55,18 +54,18 @@ func TestAgentDef(t *testing.T) {
 					t.Logf("Failed to remove temporary directory %s: %v", tempDir, err)
 				}
 			}()
+			buildDir := filepath.Join(tempDir, "build")
 
 			// Path to test directory containing agent-def.yml
 			testPath := filepath.Join(testDir, "test")
 
-			// Get absolute path to test directory
-			absTestPath, err := filepath.Abs(testPath)
-			if err != nil {
-				t.Fatalf("Failed to get absolute path for test directory: %v", err)
+			// Copy test files to temporary directory
+			if err := copyDir(testPath, tempDir); err != nil {
+				t.Fatalf("Failed to copy test files to temporary directory: %v", err)
 			}
 
-			// Run the agent-def binary with config flag pointing to test directory
-			cmd := exec.Command(binaryPath, "build", "--force", "--config", absTestPath)
+			// Run the agent-def binary with config flag pointing to the local directory
+			cmd := exec.Command(binaryPath, "build", "--force", "--config", ".")
 			cmd.Dir = tempDir
 			var stderr bytes.Buffer
 			cmd.Stderr = &stderr
@@ -94,7 +93,7 @@ func TestAgentDef(t *testing.T) {
 				}
 				return
 			}
-			diffReport, err := compareDirectories(expectedDir, tempDir)
+			diffReport, err := compareDirectories(expectedDir, buildDir)
 			if err != nil {
 				t.Fatalf("Failed to compare directories: %v", err)
 			}
@@ -267,87 +266,25 @@ func copyFile(src, dst string) error {
 	return nil
 }
 
-// compareDirectories compares two directories recursively.
+// compareDirectories compares two directories recursively using the `diff -r` command.
 func compareDirectories(expected, actual string) (string, error) {
-	var diffReport strings.Builder
+	// Use diff command for directory comparison
+	cmd := exec.Command("diff", "-r", expected, actual)
+	output, err := cmd.CombinedOutput()
 
-	// Walk through expected directory
-	err := filepath.WalkDir(expected, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		// Skip directories
-		if d.IsDir() {
-			return nil
-		}
-
-		// Compute relative path
-		relPath, err := filepath.Rel(expected, path)
-		if err != nil {
-			return fmt.Errorf("failed to get relative path: %w", err)
-		}
-
-		// Check if file exists in actual directory
-		actualPath := filepath.Join(actual, relPath)
-		if _, err := os.Stat(actualPath); os.IsNotExist(err) {
-			fmt.Fprintf(&diffReport, "Missing file: %s\n", relPath)
-			return nil
-		}
-
-		// Compare file contents
-		diff, err := compareFiles(path, actualPath)
-		if err != nil {
-			return fmt.Errorf("failed to compare %s: %w", relPath, err)
-		}
-
-		if diff != "" {
-			fmt.Fprintf(&diffReport, "Differences in %s:\n%s\n", relPath, diff)
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return "", err
+	// If diff command executed successfully with no differences
+	if err == nil {
+		return "", nil
 	}
 
-	// Check for extra files in actual directory
-	err = filepath.WalkDir(actual, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		// Skip directories
-		if d.IsDir() {
-			return nil
-		}
-
-		// Compute relative path
-		relPath, err := filepath.Rel(actual, path)
-		if err != nil {
-			return fmt.Errorf("failed to get relative path: %w", err)
-		}
-
-		// Skip checking agent-def.yml which is a test input
-		if relPath == "agent-def.yml" {
-			return nil
-		}
-
-		// Check if file exists in expected directory
-		expectedPath := filepath.Join(expected, relPath)
-		if _, err := os.Stat(expectedPath); os.IsNotExist(err) {
-			fmt.Fprintf(&diffReport, "Extra file: %s\n", relPath)
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return "", err
+	// Exit status 1 from diff means differences were found (not an error for our purposes)
+	exitErr, ok := err.(*exec.ExitError)
+	if ok && exitErr.ExitCode() == 1 {
+		return string(output), nil
 	}
 
-	return diffReport.String(), nil
+	// Any other error means the diff command failed to run properly
+	return "", fmt.Errorf("error comparing directories with diff command: %w\nOutput: %s", err, string(output))
 }
 
 // compareFiles compares the contents of two files with line ending normalization.
