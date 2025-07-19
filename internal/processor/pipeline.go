@@ -215,6 +215,14 @@ func (p *Pipeline) logError(msg string, err error, fields ...zap.Field) {
 // writeOutputFiles writes the processed files to all output directories
 func (p *Pipeline) writeOutputFiles(files []ProcessedFile) error {
 	for _, outputDir := range p.OutputDirs {
+		if !filepath.IsAbs(outputDir) {
+			outputDir = filepath.Join(p.InputRoot, outputDir)
+			var err error
+			outputDir, err = filepath.Abs(outputDir)
+			if err != nil {
+				return fmt.Errorf("failed to resolve absolute path for output directory %s: %w", outputDir, err)
+			}
+		}
 		for _, file := range files {
 			out := filepath.Join(outputDir, file.Path)
 

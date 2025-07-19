@@ -54,6 +54,24 @@ tasks:
         # ~/projects/my-app-worktree/.roo/rules/
 ```
 
+## Handling of Relative Output Directories
+
+When specifying output directories in the `outputDirs` setting:
+
+- Absolute paths (starting with `/` on Unix or drive letters on Windows) are used as-is
+- Relative paths (not starting with `/` or drive letters) are:
+  - Treated as relative to the agent-def.yml file location
+  - Converted to absolute paths
+
+This allows you to specify output directories relative to your configuration file, making configurations more portable across different environments.
+
+Example:
+```yaml
+# If agent-def.yml is located at /path/to/project/agent-def.yml
+outputDirs:
+  - dist  # Will be resolved to absolute path: /path/to/project/dist
+```
+
 ## Output Path Interpretation
 
 The format of the `outputPath` determines how files are processed:

@@ -33,10 +33,10 @@ agent-def supports the following template functions in source files:
 | Function | Description | Example |
 |----------|-------------|---------|
 | `file "path/to/file"` | Formats a file reference according to the output agent | `{{ file "src/main.go" }}` → `` `src/main.go` `` (Copilot) or `@/src/main.go` (Cline) |
-| `include "path/to/file"` | Includes content from another file with template processing | `{{ include "common/header.md" }}` |
-| `includeRaw "path/to/file"` | Includes content from another file without template processing | `{{ includeRaw "common/header.md" }}` |
-| `reference "path/to/file"` | References another file's content with template processing | `{{ reference "data/config.json" }}` |
-| `referenceRaw "path/to/file"` | References another file's content without template processing | `{{ referenceRaw "data/config.json" }}` |
+| `include "path/to/file" ["path/to/another/file" ...]` | Includes content from one or more files with template processing | `{{ include "common/header.md" }}` or `{{ include "header.md" "footer.md" }}` |
+| `includeRaw "path/to/file" ["path/to/another/file" ...]` | Includes content from one or more files without template processing | `{{ includeRaw "common/header.md" }}` or `{{ includeRaw "header.md" "footer.md" }}` |
+| `reference "path/to/file" ["path/to/another/file" ...]` | References content from one or more files with template processing | `{{ reference "data/config.json" }}` or `{{ reference "config.json" "settings.json" }}` |
+| `referenceRaw "path/to/file" ["path/to/another/file" ...]` | References content from one or more files without template processing | `{{ referenceRaw "data/config.json" }}` or `{{ referenceRaw "config.json" "settings.json" }}` |
 | `mcp "agent" "command" "arg1" "arg2"` | Formats an MCP command for the output agent | `{{ mcp "github" "get-issue" "owner" "repo" "123" }}` |
 | `agent` | Returns the current output agent identifier | `{{ if eq agent "claude" }}Claude-specific content{{ end }}` |
 | `ifAGENT "content"` | Conditionally includes content only for the specified agent | `{{ ifRoo "This will only appear in Roo output" }}` |
@@ -57,11 +57,23 @@ For Copilot: {{ file "src/main.go" }} → `src/main.go`
 ```
 This will include and process the content of `header.md`, executing any template directives it contains.
 
+**Including multiple templates:**
+```
+{{ include "header.md" "content.md" "footer.md" }}
+```
+This will include and process the content of all specified files in the given order, executing any template directives they contain.
+
 **Including content without template processing:**
 ```
 {{ includeRaw "header.md" }}
 ```
 This will include the content of `header.md` exactly as it is, without executing any template directives it contains.
+
+**Including multiple files without template processing:**
+```
+{{ includeRaw "header.md" "content.md" "footer.md" }}
+```
+This will include the content of all specified files in the given order, without executing any template directives they contain.
 
 **Referencing files with template processing:**
 ```
@@ -69,11 +81,23 @@ This will include the content of `header.md` exactly as it is, without executing
 ```
 This will include the content of `data.json` with template processing.
 
+**Referencing multiple files with template processing:**
+```
+{{ reference "config.json" "settings.json" "defaults.json" }}
+```
+This will include the content of all specified files in the given order, with template processing applied to each file.
+
 **Referencing files without template processing:**
 ```
 {{ referenceRaw "data.json" }}
 ```
 This will include the raw content of `data.json` without any template processing.
+
+**Referencing multiple files without template processing:**
+```
+{{ referenceRaw "config.json" "settings.json" "defaults.json" }}
+```
+This will include the raw content of all specified files in the given order, without any template processing.
 
 **MCP commands:**
 ```

@@ -1,9 +1,11 @@
-{{ includeRaw "../../docs/config.md" }}
-{{ includeRaw "../../docs/config-reference.md" }}
-{{ includeRaw "../../docs/input-output.md" }}
-{{ includeRaw "../../docs/task-types.md" }}
-{{ includeRaw "../../docs/templates.md" }}
-{{ includeRaw "../../docs/cli.md" }}
-{{ includeRaw "../../docs/troubleshooting.md" }}
-{{ includeRaw "../../docs/examples.md" }}
-{{ includeRaw "../../docs/logging.md" }}
+{{ includeRaw 
+  "../../docs/config.md"
+  "../../docs/config-reference.md"
+  "../../docs/input-output.md"
+  "../../docs/task-types.md"
+  "../../docs/templates.md"
+  "../../docs/cli.md"
+  "../../docs/troubleshooting.md"
+  "../../docs/examples.md"
+  "../../docs/logging.md"
+}}
