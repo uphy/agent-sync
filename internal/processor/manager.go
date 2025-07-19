@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/uphy/agent-def/internal/config"
 	"github.com/uphy/agent-def/internal/log"
@@ -51,6 +52,7 @@ func NewManager(cfgPath string, logger *zap.Logger, output log.OutputWriter) (*M
 }
 
 // Build executes the build pipeline for the specified projects or user scope.
+// If no projects are specified, all projects will be processed.
 func (m *Manager) Build(projects []string, dryRun, force bool) error {
 	m.force = force
 
@@ -60,7 +62,8 @@ func (m *Manager) Build(projects []string, dryRun, force bool) error {
 		zap.Bool("force", force))
 	// Process project-level tasks
 	for name, proj := range m.cfg.Projects {
-		if len(projects) > 0 && !contains(projects, name) {
+		// If `projects` is specified, only process those projects
+		if len(projects) > 0 && !slices.Contains(projects, name) {
 			continue
 		}
 		// determine project root
@@ -153,26 +156,4 @@ func (m *Manager) Build(projects []string, dryRun, force bool) error {
 	}
 
 	return nil
-}
-
-// Validate checks the configuration for correctness.
-func (m *Manager) Validate() error {
-	m.logger.Info("Validating configuration")
-
-	// TODO: implement full schema and semantic validation
-	if m.output != nil {
-		m.output.Print("Configuration validation not fully implemented yet")
-	}
-
-	return nil
-}
-
-// contains returns true if str is in list.
-func contains(list []string, str string) bool {
-	for _, v := range list {
-		if v == str {
-			return true
-		}
-	}
-	return false
 }
