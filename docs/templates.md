@@ -6,28 +6,25 @@ agent-def provides a powerful templating system that allows you to create dynami
 
 Within templates, paths are resolved using special rules:
 
-1. Paths starting with `/` are relative to the configuration file directory with the leading slash removed
-   - Example: `/shared/template.md` → `<config-dir>/shared/template.md`
+1. Absolute paths (like `/root` on Unix or `C:\` on Windows) are not allowed and will return an error
+
+2. Paths starting with `@/` are relative to the configuration file directory (BasePath) with the `@/` prefix removed
+   - Example: `@/shared/template.md` → `<config-dir>/shared/template.md`
    
-2. Paths starting with `./` or `../` are relative to the including file's directory
+3. All other paths (including those with `./` or `../` prefix) are relative to the including file's directory
    - Example from file `/templates/main.md`: `./partial.md` → `/templates/partial.md`
    - Example from file `/templates/main.md`: `../shared/partial.md` → `/shared/partial.md`
-   
-3. Other paths without `./` or `../` prefix are relative to the configuration file directory
-   - Example: `shared/template.md` → `<config-dir>/shared/template.md`
-   
-4. OS-absolute paths (like C:\ on Windows) are preserved as-is
-   - Example: `C:\templates\file.md` remains unchanged
+   - Example from file `/templates/main.md`: `common.md` → `/templates/common.md`
 
 Examples assuming config file is at `/project/agent-def.yml`:
 
 | Template Path | Including File | Resolved Path |
 |---------------|----------------|---------------|
-| `/shared/template.md` | Any file | `/project/shared/template.md` |
+| `@/shared/template.md` | Any file | `/project/shared/template.md` |
 | `./partial.md` | `/project/templates/main.md` | `/project/templates/partial.md` |
 | `../shared/common.md` | `/project/templates/main.md` | `/project/shared/common.md` |
-| `utils/helper.md` | Any file | `/project/utils/helper.md` |
-| `C:\absolute\path.md` | Any file (Windows) | `C:\absolute\path.md` |
+| `utils/helper.md` | `/project/templates/main.md` | `/project/templates/utils/helper.md` |
+| `/absolute/path.md` | Any file | Error: absolute paths are not allowed |
 
 ## Template Functions
 

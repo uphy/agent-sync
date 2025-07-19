@@ -1,6 +1,7 @@
 package template
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -25,7 +26,10 @@ func (e *Engine) FileFunc() any {
 func (e *Engine) IncludeFunc(processTemplate bool) any {
 	return func(path string) (string, error) {
 		// Resolve path relative to the base path
-		fullPath := e.resolveTemplatePath(path)
+		fullPath, err := e.resolveTemplatePath(path)
+		if err != nil {
+			return "", err
+		}
 
 		// Check if file exists
 		if !e.FileResolver.Exists(fullPath) {
@@ -41,7 +45,10 @@ func (e *Engine) IncludeFunc(processTemplate bool) any {
 func (e *Engine) ReferenceFunc(processTemplate bool) any {
 	return func(path string) (string, error) {
 		// Resolve path relative to the base path
-		fullPath := e.resolveTemplatePath(path)
+		fullPath, err := e.resolveTemplatePath(path)
+		if err != nil {
+			return "", err
+		}
 
 		// Check if file exists
 		if !e.FileResolver.Exists(fullPath) {
@@ -74,37 +81,23 @@ func (e *Engine) Agent() string {
 
 // resolveTemplatePath resolves paths for template includes and references
 // using the special template path resolution rules:
-// 1. Paths starting with "/" are relative to agent-def.yml's directory (BasePath) with the leading slash removed
-// 2. Paths starting with "./" or "../" are relative to the including file's directory
-// 3. Other paths (without "./" or "../" prefix) are relative to agent-def.yml's directory (BasePath)
-// 4. OS-absolute paths (like C:\ on Windows) are preserved as-is
-func (e *Engine) resolveTemplatePath(path string) string {
-	// 1. Handle Windows-style absolute paths (e.g., C:\path\to\file)
-	// Check for drive letter pattern which is a strong indicator of Windows path
-	if len(path) >= 2 && path[1] == ':' && ((path[0] >= 'A' && path[0] <= 'Z') || (path[0] >= 'a' && path[0] <= 'z')) {
-		return path
-	}
-
-	// 2. Handle "/"-prefixed paths as relative to BasePath
-	if strings.HasPrefix(path, "/") {
-		trimmed := strings.TrimPrefix(path, "/")
-		return filepath.Join(e.BasePath, trimmed)
-	}
-
-	// 3. Handle other absolute paths
+// 1. Absolute paths (like C:\ on Windows or /root on Unix) are not allowed and will return an error
+// 2. Paths starting with "@/" are relative to agent-def.yml's directory (BasePath) with the "@/" prefix removed
+// 3. All other paths (including those with "./" or "../" prefix) are relative to the including file's directory (CurrentFilePath)
+//
+// Returns the resolved absolute path and an error if the path is invalid.
+func (e *Engine) resolveTemplatePath(path string) (string, error) {
 	if filepath.IsAbs(path) {
-		return path
+		return "", fmt.Errorf("absolute paths are not allowed in template includes or references: %s", path)
 	}
 
-	// 3. Handle explicitly relative paths (./ or ../) relative to current file
-	if strings.HasPrefix(path, "./") || strings.HasPrefix(path, "../") {
-		if e.CurrentFilePath != "" {
-			return filepath.Join(filepath.Dir(e.CurrentFilePath), path)
-		}
+	// Handle "@/"-prefixed paths as relative to BasePath
+	if trimmed, ok := strings.CutPrefix(path, "@/"); ok {
+		return filepath.Join(e.BasePath, trimmed), nil
 	}
 
-	// 4. All other paths are relative to BasePath
-	return filepath.Join(e.BasePath, path)
+	// Handle explicitly relative paths (./ or ../) relative to current file
+	return filepath.Join(filepath.Dir(e.CurrentFilePath), path), nil
 }
 
 // normalizePath normalizes a path for the current OS

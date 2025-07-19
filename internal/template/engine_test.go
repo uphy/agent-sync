@@ -110,7 +110,7 @@ func TestIncludeFunc(t *testing.T) {
 
 	// Test the include function
 	fn := engine.IncludeFunc(true).(func(string) (string, error))
-	result, err := fn("testdata/content.md")
+	result, err := fn("@/testdata/content.md")
 
 	// Verify
 	if err != nil {
@@ -142,7 +142,7 @@ func TestReferenceFunc(t *testing.T) {
 
 	// Test the reference function
 	fn := engine.ReferenceFunc(true).(func(string) (string, error))
-	result, err := fn("testdata/content.md")
+	result, err := fn("@/testdata/content.md")
 
 	// Verify
 	if err != nil {
@@ -150,14 +150,14 @@ func TestReferenceFunc(t *testing.T) {
 	}
 
 	// Check if the reference is stored
-	if content, ok := engine.References["testdata/content.md"]; !ok {
+	if content, ok := engine.References["@/testdata/content.md"]; !ok {
 		t.Error("reference was not stored in the engine")
 	} else if content != "# Referenced Content\n\nThis is content from a referenced file." {
 		t.Errorf("stored reference content doesn't match expected")
 	}
 
 	// Check the reference marker
-	expected := "[参考: testdata/content.md]"
+	expected := "[参考: @/testdata/content.md]"
 	if result != expected {
 		t.Errorf("expected result %q, got %q", expected, result)
 	}
@@ -222,8 +222,8 @@ func TestRecursiveTemplateProcessing(t *testing.T) {
 	// Setup
 	mockResolver := NewMockFileResolver("/base")
 	mockResolver.AddFile("/base/testdata/content.md", "# Included Content\n\nThis is content from an included file.")
-	mockResolver.AddFile("/base/testdata/include_template.md", "# Template with Include\n\nThis template includes another file:\n\n{{include \"testdata/content.md\"}}\n\nEnd of template.")
-	mockResolver.AddFile("/base/testdata/recursive_template.md", "# Recursive Template\n\nThis template includes another template that also has an include:\n\n{{include \"testdata/include_template.md\"}}\n\nEnd of recursive template.")
+	mockResolver.AddFile("/base/testdata/include_template.md", "# Template with Include\n\nThis template includes another file:\n\n{{include \"@/testdata/content.md\"}}\n\nEnd of template.")
+	mockResolver.AddFile("/base/testdata/recursive_template.md", "# Recursive Template\n\nThis template includes another template that also has an include:\n\n{{include \"@/testdata/include_template.md\"}}\n\nEnd of recursive template.")
 
 	registry := agent.NewRegistry()
 	registry.Register(&agent.Claude{})
@@ -238,7 +238,7 @@ func TestRecursiveTemplateProcessing(t *testing.T) {
 	}
 
 	// Test the recursive include
-	output, err := engine.Execute("{{include \"testdata/recursive_template.md\"}}", nil)
+	output, err := engine.Execute("{{include \"@/testdata/recursive_template.md\"}}", nil)
 
 	// Verify
 	if err != nil {
@@ -273,7 +273,7 @@ func TestReferenceCollection(t *testing.T) {
 	}
 
 	// Process a template with multiple references
-	output, err := engine.Execute("# Template with References\n\nFirst: {{reference \"testdata/content1.md\"}}\n\nSecond: {{reference \"testdata/content2.md\"}}", nil)
+	output, err := engine.Execute("# Template with References\n\nFirst: {{reference \"@/testdata/content1.md\"}}\n\nSecond: {{reference \"@/testdata/content2.md\"}}", nil)
 
 	// Verify
 	if err != nil {
@@ -286,8 +286,8 @@ func TestReferenceCollection(t *testing.T) {
 	}
 
 	// Check that both references are included
-	if !strings.Contains(output, "### testdata/content1.md") ||
-		!strings.Contains(output, "### testdata/content2.md") {
+	if !strings.Contains(output, "### @/testdata/content1.md") ||
+		!strings.Contains(output, "### @/testdata/content2.md") {
 		t.Error("expected output to contain both references")
 	}
 
@@ -332,7 +332,7 @@ func TestIncludeRawFunc(t *testing.T) {
 		"# Template with Syntax\n\n"+
 			"This file contains template syntax that should not be processed by raw functions:\n\n"+
 			"{{.Value}} - This is a variable\n"+
-			"{{include \"testdata/content.md\"}} - This is an include directive\n"+
+			"{{include \"@/testdata/content.md\"}} - This is an include directive\n"+
 			"{{agent}} - This is a function call\n\n"+
 			"The raw functions should preserve these as-is.")
 
@@ -350,7 +350,7 @@ func TestIncludeRawFunc(t *testing.T) {
 
 	// Test the includeRaw function
 	fn := engine.IncludeFunc(false).(func(string) (string, error))
-	result, err := fn("testdata/template_with_syntax.md")
+	result, err := fn("@/testdata/template_with_syntax.md")
 
 	// Verify
 	if err != nil {
@@ -362,7 +362,7 @@ func TestIncludeRawFunc(t *testing.T) {
 		t.Errorf("includeRaw did not preserve template variable syntax")
 	}
 
-	if !strings.Contains(result, "{{include \"testdata/content.md\"}}") {
+	if !strings.Contains(result, "{{include \"@/testdata/content.md\"}}") {
 		t.Errorf("includeRaw did not preserve include directive syntax")
 	}
 
@@ -396,7 +396,7 @@ func TestReferenceRawFunc(t *testing.T) {
 
 	// Test the referenceRaw function
 	fn := engine.ReferenceFunc(false).(func(string) (string, error))
-	result, err := fn("testdata/template_with_syntax.md")
+	result, err := fn("@/testdata/template_with_syntax.md")
 
 	// Verify
 	if err != nil {
@@ -404,13 +404,13 @@ func TestReferenceRawFunc(t *testing.T) {
 	}
 
 	// Check reference marker
-	expected := "[参考: testdata/template_with_syntax.md]"
+	expected := "[参考: @/testdata/template_with_syntax.md]"
 	if result != expected {
 		t.Errorf("expected result %q, got %q", expected, result)
 	}
 
 	// Check that the stored reference contains the template syntax as-is
-	storedContent, exists := engine.References["testdata/template_with_syntax.md"]
+	storedContent, exists := engine.References["@/testdata/template_with_syntax.md"]
 	if !exists {
 		t.Error("reference was not stored in engine")
 	}
@@ -454,12 +454,12 @@ func TestCompareIncludeAndIncludeRaw(t *testing.T) {
 	includeRawFunc := engine.IncludeFunc(false).(func(string) (string, error))
 
 	// Get results from the template file with syntax
-	includeResult, err := includeFunc("testdata/with_template_syntax.md")
+	includeResult, err := includeFunc("@/testdata/with_template_syntax.md")
 	if err != nil {
 		t.Fatalf("expected no error for include, got %v", err)
 	}
 
-	includeRawResult, err := includeRawFunc("testdata/with_template_syntax.md")
+	includeRawResult, err := includeRawFunc("@/testdata/with_template_syntax.md")
 	if err != nil {
 		t.Fatalf("expected no error for includeRaw, got %v", err)
 	}
@@ -500,18 +500,18 @@ func TestCompareReferenceAndReferenceRaw(t *testing.T) {
 	}
 
 	refFunc := engine1.ReferenceFunc(true).(func(string) (string, error))
-	refResult, err := refFunc("testdata/with_template_syntax.md")
+	refResult, err := refFunc("@/testdata/with_template_syntax.md")
 	if err != nil {
 		t.Fatalf("expected no error for reference, got %v", err)
 	}
 
 	// Verify reference marker format
-	if refResult != "[参考: testdata/with_template_syntax.md]" {
+	if refResult != "[参考: @/testdata/with_template_syntax.md]" {
 		t.Errorf("expected reference marker format, got %q", refResult)
 	}
 
 	// Check stored content for the regular reference
-	refContent, exists := engine1.References["testdata/with_template_syntax.md"]
+	refContent, exists := engine1.References["@/testdata/with_template_syntax.md"]
 	if !exists {
 		t.Error("reference content not stored for regular reference")
 	}
@@ -526,18 +526,18 @@ func TestCompareReferenceAndReferenceRaw(t *testing.T) {
 	}
 
 	refRawFunc := engine2.ReferenceFunc(false).(func(string) (string, error))
-	refRawResult, err := refRawFunc("testdata/with_template_syntax.md")
+	refRawResult, err := refRawFunc("@/testdata/with_template_syntax.md")
 	if err != nil {
 		t.Fatalf("expected no error for referenceRaw, got %v", err)
 	}
 
 	// Verify reference marker format (should be the same)
-	if refRawResult != "[参考: testdata/with_template_syntax.md]" {
+	if refRawResult != "[参考: @/testdata/with_template_syntax.md]" {
 		t.Errorf("expected reference marker format, got %q", refRawResult)
 	}
 
 	// Check stored content for the raw reference
-	refRawContent, exists := engine2.References["testdata/with_template_syntax.md"]
+	refRawContent, exists := engine2.References["@/testdata/with_template_syntax.md"]
 	if !exists {
 		t.Error("reference content not stored for raw reference")
 	}
