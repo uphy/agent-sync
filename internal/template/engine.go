@@ -3,6 +3,7 @@ package template
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
 	"text/template"
 
 	"github.com/uphy/agent-def/internal/agent"
@@ -78,6 +79,23 @@ func NewEngineWithFilePath(fileResolver FileResolver, agentType, basePath, curre
 
 // Execute processes a template with the given data
 func (e *Engine) Execute(content string, data interface{}) (string, error) {
+	result, err := e.executeWithoutReferences(content, data)
+	if err != nil {
+		return "", err
+	}
+	// Append references if any
+	if len(e.References) > 0 {
+		result += "\n\n## References\n\n"
+		for path, content := range e.References {
+			result += fmt.Sprintf("### %s\n\n%s\n\n", path, content)
+		}
+	}
+
+	return result, nil
+}
+
+// Execute processes a template with the given data
+func (e *Engine) executeWithoutReferences(content string, data interface{}) (string, error) {
 	// Create a new template
 	t := template.New("template").Delims("{{", "}}")
 
@@ -102,17 +120,7 @@ func (e *Engine) Execute(content string, data interface{}) (string, error) {
 		}
 	}
 
-	result := buf.String()
-
-	// Append references if any
-	if len(e.References) > 0 {
-		result += "\n\n## References\n\n"
-		for path, content := range e.References {
-			result += fmt.Sprintf("### %s\n\n%s\n\n", path, content)
-		}
-	}
-
-	return result, nil
+	return buf.String(), nil
 }
 
 // ExecuteFile processes a template file with the given data
@@ -202,7 +210,7 @@ func (e *Engine) processInclude(path string, processTemplate bool) (string, erro
 	var processed string
 	if processTemplate {
 		// Process the content as a template recursively
-		processed, err = e.Execute(string(content), nil)
+		processed, err = e.executeWithoutReferences(string(content), nil)
 		if err != nil {
 			// Restore previous path before returning error
 			e.CurrentFilePath = previousPath
@@ -223,7 +231,12 @@ func (e *Engine) processInclude(path string, processTemplate bool) (string, erro
 }
 
 // processReference adds a reference to be appended at the end
-func (e *Engine) processReference(originalPath, fullPath string, processTemplate bool) (string, error) {
+func (e *Engine) processReference(fullPath string, processTemplate bool) (string, error) {
+	originalPath, err := filepath.Rel(e.BasePath, fullPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to get relative path for %q: %w", fullPath, err)
+	}
+
 	// Save previous current file path
 	previousPath := e.CurrentFilePath
 

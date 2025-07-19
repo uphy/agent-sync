@@ -1,6 +1,7 @@
 package template
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -123,7 +124,7 @@ func TestIncludeFunc_ErrorOnInvalidUsage(t *testing.T) {
 		FileResolver:  mockResolver,
 		BasePath:      "/base",
 	}
-	fn := engine.IncludeFunc(true).(func(string) (string, error))
+	fn := engine.IncludeFunc(true).(func(...string) (string, error))
 	_, err := fn("path")
 	if err == nil {
 		t.Fatal("expected error on invalid IncludeFunc usage, got nil")
@@ -147,7 +148,7 @@ func TestReferenceFunc_ErrorOnInvalidUsage(t *testing.T) {
 		BasePath:      "/base",
 		References:    make(map[string]string),
 	}
-	fn := engine.ReferenceFunc(true).(func(string) (string, error))
+	fn := engine.ReferenceFunc(true).(func(...string) (string, error))
 	_, err := fn("path")
 	if err == nil {
 		t.Fatal("expected error on invalid ReferenceFunc usage, got nil")
@@ -170,7 +171,7 @@ func TestIncludeRawFunc_ErrorOnInvalidUsage(t *testing.T) {
 		FileResolver:  mockResolver,
 		BasePath:      "/base",
 	}
-	fn := engine.IncludeFunc(false).(func(string) (string, error))
+	fn := engine.IncludeFunc(false).(func(...string) (string, error))
 	_, err := fn("path")
 	if err == nil {
 		t.Fatal("expected error on invalid IncludeFunc(false) usage, got nil")
@@ -194,7 +195,7 @@ func TestReferenceRawFunc_ErrorOnInvalidUsage(t *testing.T) {
 		BasePath:      "/base",
 		References:    make(map[string]string),
 	}
-	fn := engine.ReferenceFunc(false).(func(string) (string, error))
+	fn := engine.ReferenceFunc(false).(func(...string) (string, error))
 	_, err := fn("path")
 	if err == nil {
 		t.Fatal("expected error on invalid ReferenceRawFunc usage, got nil")
@@ -248,7 +249,8 @@ func TestIncludeFunc_WithMockFileResolver(t *testing.T) {
 	// Setup mock file resolver
 	mockResolver := &MockFileResolver{
 		files: map[string]string{
-			"/base/test.md": "Test content",
+			"/base/test.md":  "Test content",
+			"/base/test2.md": "Test content2",
 		},
 		base: "/base",
 	}
@@ -264,16 +266,16 @@ func TestIncludeFunc_WithMockFileResolver(t *testing.T) {
 	}
 
 	// Test with existing file
-	fn := engine.IncludeFunc(true).(func(string) (string, error))
-	result, err := fn("@/test.md")
+	fn := engine.IncludeFunc(true).(func(...string) (string, error))
+	result, err := fn("@/test.md", "@/test2.md")
 
 	// Verify
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	if result != "Test content" {
-		t.Errorf("expected result %q, got %q", "Test content", result)
+	if result != "Test content\n\nTest content2" {
+		t.Errorf("expected result %q, got %q", "Test content\n\nTest content2", result)
 	}
 
 	// Test with non-existent file
@@ -287,7 +289,8 @@ func TestReferenceFunc_WithMockFileResolver(t *testing.T) {
 	// Setup mock file resolver
 	mockResolver := &MockFileResolver{
 		files: map[string]string{
-			"/base/ref.md": "Reference content",
+			"/base/ref.md":  "Reference content",
+			"/base/ref2.md": "Reference content2",
 		},
 		base: "/base",
 	}
@@ -304,8 +307,8 @@ func TestReferenceFunc_WithMockFileResolver(t *testing.T) {
 	}
 
 	// Test with existing file
-	fn := engine.ReferenceFunc(true).(func(string) (string, error))
-	result, err := fn("@/ref.md")
+	fn := engine.ReferenceFunc(true).(func(...string) (string, error))
+	result, err := fn("@/ref.md", "@/ref2.md")
 
 	// Verify
 	if err != nil {
@@ -313,15 +316,21 @@ func TestReferenceFunc_WithMockFileResolver(t *testing.T) {
 	}
 
 	// Check reference marker
-	if result != "[参考: @/ref.md]" {
-		t.Errorf("expected result %q, got %q", "[参考: @/ref.md]", result)
+	if result != "[参考: ref.md], [参考: ref2.md]" {
+		t.Errorf("expected result %q, got %q", "[参考: ref.md], [参考: ref2.md]", result)
 	}
 
 	// Check stored reference
-	if content, ok := engine.References["@/ref.md"]; !ok {
+	if content, ok := engine.References["ref.md"]; !ok {
 		t.Error("reference was not stored in engine")
 	} else if content != "Reference content" {
 		t.Errorf("expected stored content %q, got %q", "Reference content", content)
+	}
+	if content, ok := engine.References["ref2.md"]; !ok {
+		t.Error("reference was not stored in engine")
+	} else if content != "Reference content2" {
+		fmt.Println(content)
+		t.Errorf("expected stored content %q, got %q", "Reference content2", content)
 	}
 }
 
@@ -345,7 +354,7 @@ func TestIncludeRawFunc_WithMockFileResolver(t *testing.T) {
 	}
 
 	// Test with existing file
-	fn := engine.IncludeFunc(false).(func(string) (string, error))
+	fn := engine.IncludeFunc(false).(func(...string) (string, error))
 	result, err := fn("@/template_file.md")
 
 	// Verify
@@ -387,7 +396,7 @@ func TestReferenceRawFunc_WithMockFileResolver(t *testing.T) {
 	}
 
 	// Test with existing file
-	fn := engine.ReferenceFunc(false).(func(string) (string, error))
+	fn := engine.ReferenceFunc(false).(func(...string) (string, error))
 	result, err := fn("@/template_ref.md")
 
 	// Verify
@@ -396,13 +405,13 @@ func TestReferenceRawFunc_WithMockFileResolver(t *testing.T) {
 	}
 
 	// Check reference marker
-	if result != "[参考: @/template_ref.md]" {
-		t.Errorf("expected result %q, got %q", "[参考: @/template_ref.md]", result)
+	if result != "[参考: template_ref.md]" {
+		t.Errorf("expected result %q, got %q", "[参考: template_ref.md]", result)
 	}
 
 	// Check stored raw reference with template syntax preserved
 	expected := "Reference with {{template}} syntax that should remain as-is"
-	if content, ok := engine.References["@/template_ref.md"]; !ok {
+	if content, ok := engine.References["template_ref.md"]; !ok {
 		t.Error("reference was not stored in engine")
 	} else if content != expected {
 		t.Errorf("expected raw content %q, got %q", expected, content)
@@ -484,6 +493,119 @@ func TestResolveTemplatePath(t *testing.T) {
 	// Test cases
 	testCases := []struct {
 		name            string
+		paths           []string
+		currentFilePath string
+		expected        []string
+		expectError     bool
+	}{
+		{
+			name:            "Unix-style absolute path",
+			paths:           []string{"/absolute/path"},
+			currentFilePath: "/current/file/path",
+			expected:        nil,
+			expectError:     true,
+		},
+		{
+			name:            "@/-prefixed path",
+			paths:           []string{"@/relative/to/base"},
+			currentFilePath: "/current/file/path",
+			expected:        []string{filepath.Join(basePath, "relative/to/base")},
+			expectError:     false,
+		},
+		{
+			name:            "Dot-prefixed path (with current file)",
+			paths:           []string{"./relative/to/current"},
+			currentFilePath: "/current/file/path",
+			expected:        []string{filepath.Join("/current/file", "relative/to/current")},
+			expectError:     false,
+		},
+		{
+			name:            "Parent path (with current file)",
+			paths:           []string{"../sibling/directory"},
+			currentFilePath: "/current/file/path",
+			expected:        []string{filepath.Join("/current", "sibling/directory")},
+			expectError:     false,
+		},
+		{
+			name:            "Parent-parent path (with current file)",
+			paths:           []string{"../../grandparent/directory"},
+			currentFilePath: "/current/file/path",
+			expected:        []string{filepath.Join("/", "grandparent/directory")},
+			expectError:     false,
+		},
+		{
+			name:            "Parent-parent with additional directories",
+			paths:           []string{"../../x/y/z"},
+			currentFilePath: "/a/b/c/d/file.md",
+			expected:        []string{filepath.Join("/a/b", "x/y/z")},
+			expectError:     false,
+		},
+		{
+			name:            "Plain relative path (no prefix)",
+			paths:           []string{"relative/to/current"},
+			currentFilePath: "/current/file/path",
+			expected:        []string{filepath.Join("/current/file", "relative/to/current")},
+			expectError:     false,
+		},
+		{
+			name:            "Plain relative path (without current file)",
+			paths:           []string{"relative/to/current"},
+			currentFilePath: "",
+			expected:        []string{filepath.Join("", "relative/to/current")},
+			expectError:     false,
+		},
+		{
+			name:            "Multiple paths mixed",
+			paths:           []string{"@/file1.md", "./file2.md", "../file3.md"},
+			currentFilePath: "/current/file/path",
+			expected: []string{
+				filepath.Join(basePath, "file1.md"),
+				filepath.Join("/current/file", "file2.md"),
+				filepath.Join("/current", "file3.md"),
+			},
+			expectError: false,
+		},
+	}
+
+	// Run test cases
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			engine.CurrentFilePath = tc.currentFilePath
+			result, err := engine.resolveTemplatePath(tc.paths)
+
+			// Check error expectation
+			if tc.expectError && err == nil {
+				t.Errorf("Expected error but got none")
+			} else if !tc.expectError && err != nil {
+				t.Errorf("Expected no error but got: %v", err)
+			}
+
+			// Check result only if no error is expected
+			if !tc.expectError {
+				if len(result) != len(tc.expected) {
+					t.Errorf("Expected %d results, got %d", len(tc.expected), len(result))
+				} else {
+					for i, exp := range tc.expected {
+						if result[i] != exp {
+							t.Errorf("Expected result[%d] to be %q, got %q", i, exp, result[i])
+						}
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestResolveTemplatePathSingle(t *testing.T) {
+	// Create a test engine
+	basePath := "/base/path"
+	engine := &Engine{
+		BasePath: basePath,
+	}
+
+	// Test cases
+	testCases := []struct {
+		name            string
 		path            string
 		currentFilePath string
 		expected        string
@@ -517,41 +639,13 @@ func TestResolveTemplatePath(t *testing.T) {
 			expected:        filepath.Join("/current", "sibling/directory"),
 			expectError:     false,
 		},
-		{
-			name:            "Parent-parent path (with current file)",
-			path:            "../../grandparent/directory",
-			currentFilePath: "/current/file/path",
-			expected:        filepath.Join("/", "grandparent/directory"),
-			expectError:     false,
-		},
-		{
-			name:            "Parent-parent with additional directories",
-			path:            "../../x/y/z",
-			currentFilePath: "/a/b/c/d/file.md",
-			expected:        filepath.Join("/a/b", "x/y/z"),
-			expectError:     false,
-		},
-		{
-			name:            "Plain relative path (no prefix)",
-			path:            "relative/to/current",
-			currentFilePath: "/current/file/path",
-			expected:        filepath.Join("/current/file", "relative/to/current"),
-			expectError:     false,
-		},
-		{
-			name:            "Plain relative path (without current file)",
-			path:            "relative/to/current",
-			currentFilePath: "",
-			expected:        filepath.Join("", "relative/to/current"),
-			expectError:     false,
-		},
 	}
 
 	// Run test cases
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			engine.CurrentFilePath = tc.currentFilePath
-			result, err := engine.resolveTemplatePath(tc.path)
+			result, err := engine.resolveTemplatePathSingle(tc.path)
 
 			// Check error expectation
 			if tc.expectError && err == nil {
