@@ -23,8 +23,7 @@ run = "go install ./cmd/agent-def"
 alias = "deploy"
 
 [tasks.agent-def]
-run = "agent-def build -f"
-dir = ".agent-def"
+run = "go run ./cmd/agent-def build -f -c .agent-def/agent-def.yml"
 
 [tasks.lint]
 run = "golangci-lint run ./..."
@@ -37,4 +36,4 @@ run = "gofmt -w ."
 run = "go build ./..."
 
 [tasks.pre-commit]
-depends = ["build", "lint", "format", "test"]
+depends = ["build", "lint", "format", "test", "agent-def"]

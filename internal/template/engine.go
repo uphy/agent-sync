@@ -148,11 +148,13 @@ func (e *Engine) Process(content string) (string, error) {
 // RegisterHelperFunctions registers all template helper functions
 func (e *Engine) RegisterHelperFunctions(t *template.Template) *template.Template {
 	funcMap := template.FuncMap{
-		"file":      e.FileFunc(),
-		"include":   e.IncludeFunc(),
-		"reference": e.ReferenceFunc(),
-		"mcp":       e.MCPFunc(),
-		"agent":     e.Agent,
+		"file":         e.FileFunc(),
+		"include":      e.IncludeFunc(true),
+		"reference":    e.ReferenceFunc(true),
+		"includeRaw":   e.IncludeFunc(false),
+		"referenceRaw": e.ReferenceFunc(false),
+		"mcp":          e.MCPFunc(),
+		"agent":        e.Agent,
 	}
 	caser := cases.Title(language.English)
 	for _, agent := range e.AgentRegistry.List() {
@@ -181,8 +183,8 @@ func (e *Engine) RegisterHelperFunctions(t *template.Template) *template.Templat
 	return t.Funcs(funcMap)
 }
 
-// processInclude processes an included file recursively
-func (e *Engine) processInclude(path string) (string, error) {
+// processInclude processes an included file with optional template processing
+func (e *Engine) processInclude(path string, processTemplate bool) (string, error) {
 	// Save previous current file path
 	previousPath := e.CurrentFilePath
 
@@ -197,15 +199,21 @@ func (e *Engine) processInclude(path string) (string, error) {
 		return "", &util.ErrFileNotFound{Path: path}
 	}
 
-	// Process the content as a template recursively
-	processed, err := e.Execute(string(content), nil)
-	if err != nil {
-		// Restore previous path before returning error
-		e.CurrentFilePath = previousPath
-		return "", &util.ErrTemplateExecution{
-			Template: path,
-			Cause:    err,
+	var processed string
+	if processTemplate {
+		// Process the content as a template recursively
+		processed, err = e.Execute(string(content), nil)
+		if err != nil {
+			// Restore previous path before returning error
+			e.CurrentFilePath = previousPath
+			return "", &util.ErrTemplateExecution{
+				Template: path,
+				Cause:    err,
+			}
 		}
+	} else {
+		// Return the raw content without template processing
+		processed = string(content)
 	}
 
 	// Restore previous current file path before returning
@@ -215,15 +223,15 @@ func (e *Engine) processInclude(path string) (string, error) {
 }
 
 // processReference adds a reference to be appended at the end
-func (e *Engine) processReference(originalPath, fullPath string) (string, error) {
+func (e *Engine) processReference(originalPath, fullPath string, processTemplate bool) (string, error) {
 	// Save previous current file path
 	previousPath := e.CurrentFilePath
 
 	// Set current file path to the file being referenced
 	e.CurrentFilePath = fullPath
 
-	// Process the file content recursively
-	content, err := e.processInclude(fullPath)
+	// Process the file content with or without template processing
+	content, err := e.processInclude(fullPath, processTemplate)
 	if err != nil {
 		// Restore previous path before returning error
 		e.CurrentFilePath = previousPath
@@ -239,3 +247,6 @@ func (e *Engine) processReference(originalPath, fullPath string) (string, error)
 	// Return a reference marker with original relative path
 	return fmt.Sprintf("[参考: %s]", originalPath), nil
 }
+
+// Note: The processIncludeRaw and processReferenceRaw functions have been removed
+// in favor of the unified processInclude and processReference functions with a boolean parameter.

@@ -1,1 +1,1 @@
-{{ include "../../docs/config.md" }}
+{{ includeRaw "../../docs/config.md" }}

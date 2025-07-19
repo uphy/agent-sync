@@ -30,7 +30,7 @@ func TestIncludeFunc_NotNil(t *testing.T) {
 	engine := &Engine{
 		AgentRegistry: registry,
 	}
-	fn := engine.IncludeFunc()
+	fn := engine.IncludeFunc(true)
 	if fn == nil {
 		t.Fatal("expected IncludeFunc to return a function, got nil")
 	}
@@ -44,9 +44,37 @@ func TestReferenceFunc_NotNil(t *testing.T) {
 	engine := &Engine{
 		AgentRegistry: registry,
 	}
-	fn := engine.ReferenceFunc()
+	fn := engine.ReferenceFunc(true)
 	if fn == nil {
 		t.Fatal("expected ReferenceFunc to return a function, got nil")
+	}
+}
+
+func TestIncludeRawFunc_NotNil(t *testing.T) {
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	engine := &Engine{
+		AgentRegistry: registry,
+	}
+	fn := engine.IncludeFunc(false)
+	if fn == nil {
+		t.Fatal("expected IncludeRawFunc to return a function, got nil")
+	}
+}
+
+func TestReferenceRawFunc_NotNil(t *testing.T) {
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	engine := &Engine{
+		AgentRegistry: registry,
+	}
+	fn := engine.ReferenceFunc(false)
+	if fn == nil {
+		t.Fatal("expected ReferenceRawFunc to return a function, got nil")
 	}
 }
 
@@ -95,7 +123,7 @@ func TestIncludeFunc_ErrorOnInvalidUsage(t *testing.T) {
 		FileResolver:  mockResolver,
 		BasePath:      "/base",
 	}
-	fn := engine.IncludeFunc().(func(string) (string, error))
+	fn := engine.IncludeFunc(true).(func(string) (string, error))
 	_, err := fn("path")
 	if err == nil {
 		t.Fatal("expected error on invalid IncludeFunc usage, got nil")
@@ -119,10 +147,57 @@ func TestReferenceFunc_ErrorOnInvalidUsage(t *testing.T) {
 		BasePath:      "/base",
 		References:    make(map[string]string),
 	}
-	fn := engine.ReferenceFunc().(func(string) (string, error))
+	fn := engine.ReferenceFunc(true).(func(string) (string, error))
 	_, err := fn("path")
 	if err == nil {
 		t.Fatal("expected error on invalid ReferenceFunc usage, got nil")
+	}
+}
+
+func TestIncludeRawFunc_ErrorOnInvalidUsage(t *testing.T) {
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	// Create mock file resolver for non-existent file testing
+	mockResolver := &MockFileResolver{
+		files: map[string]string{},
+		base:  "/base",
+	}
+
+	engine := &Engine{
+		AgentRegistry: registry,
+		FileResolver:  mockResolver,
+		BasePath:      "/base",
+	}
+	fn := engine.IncludeFunc(false).(func(string) (string, error))
+	_, err := fn("path")
+	if err == nil {
+		t.Fatal("expected error on invalid IncludeFunc(false) usage, got nil")
+	}
+}
+
+func TestReferenceRawFunc_ErrorOnInvalidUsage(t *testing.T) {
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	// Create mock file resolver for non-existent file testing
+	mockResolver := &MockFileResolver{
+		files: map[string]string{},
+		base:  "/base",
+	}
+
+	engine := &Engine{
+		AgentRegistry: registry,
+		FileResolver:  mockResolver,
+		BasePath:      "/base",
+		References:    make(map[string]string),
+	}
+	fn := engine.ReferenceFunc(false).(func(string) (string, error))
+	_, err := fn("path")
+	if err == nil {
+		t.Fatal("expected error on invalid ReferenceRawFunc usage, got nil")
 	}
 }
 
@@ -189,7 +264,7 @@ func TestIncludeFunc_WithMockFileResolver(t *testing.T) {
 	}
 
 	// Test with existing file
-	fn := engine.IncludeFunc().(func(string) (string, error))
+	fn := engine.IncludeFunc(true).(func(string) (string, error))
 	result, err := fn("test.md")
 
 	// Verify
@@ -229,7 +304,7 @@ func TestReferenceFunc_WithMockFileResolver(t *testing.T) {
 	}
 
 	// Test with existing file
-	fn := engine.ReferenceFunc().(func(string) (string, error))
+	fn := engine.ReferenceFunc(true).(func(string) (string, error))
 	result, err := fn("ref.md")
 
 	// Verify
@@ -247,6 +322,90 @@ func TestReferenceFunc_WithMockFileResolver(t *testing.T) {
 		t.Error("reference was not stored in engine")
 	} else if content != "Reference content" {
 		t.Errorf("expected stored content %q, got %q", "Reference content", content)
+	}
+}
+
+func TestIncludeRawFunc_WithMockFileResolver(t *testing.T) {
+	// Setup mock file resolver with a file containing template syntax
+	mockResolver := &MockFileResolver{
+		files: map[string]string{
+			"/base/template_file.md": "Content with {{template}} syntax that should remain as-is",
+		},
+		base: "/base",
+	}
+
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	engine := &Engine{
+		FileResolver:  mockResolver,
+		BasePath:      "/base",
+		AgentRegistry: registry,
+	}
+
+	// Test with existing file
+	fn := engine.IncludeFunc(false).(func(string) (string, error))
+	result, err := fn("template_file.md")
+
+	// Verify
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Check that template syntax is preserved as-is (not processed)
+	expected := "Content with {{template}} syntax that should remain as-is"
+	if result != expected {
+		t.Errorf("expected raw content %q, got %q", expected, result)
+	}
+
+	// Test with non-existent file
+	_, err = fn("missing.md")
+	if err == nil {
+		t.Error("expected error for non-existent file, got nil")
+	}
+}
+
+func TestReferenceRawFunc_WithMockFileResolver(t *testing.T) {
+	// Setup mock file resolver with a file containing template syntax
+	mockResolver := &MockFileResolver{
+		files: map[string]string{
+			"/base/template_ref.md": "Reference with {{template}} syntax that should remain as-is",
+		},
+		base: "/base",
+	}
+
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	engine := &Engine{
+		FileResolver:  mockResolver,
+		References:    make(map[string]string),
+		BasePath:      "/base",
+		AgentRegistry: registry,
+	}
+
+	// Test with existing file
+	fn := engine.ReferenceFunc(false).(func(string) (string, error))
+	result, err := fn("template_ref.md")
+
+	// Verify
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Check reference marker
+	if result != "[参考: template_ref.md]" {
+		t.Errorf("expected result %q, got %q", "[参考: template_ref.md]", result)
+	}
+
+	// Check stored raw reference with template syntax preserved
+	expected := "Reference with {{template}} syntax that should remain as-is"
+	if content, ok := engine.References["template_ref.md"]; !ok {
+		t.Error("reference was not stored in engine")
+	} else if content != expected {
+		t.Errorf("expected raw content %q, got %q", expected, content)
 	}
 }
 

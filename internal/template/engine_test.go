@@ -109,7 +109,7 @@ func TestIncludeFunc(t *testing.T) {
 	}
 
 	// Test the include function
-	fn := engine.IncludeFunc().(func(string) (string, error))
+	fn := engine.IncludeFunc(true).(func(string) (string, error))
 	result, err := fn("testdata/content.md")
 
 	// Verify
@@ -141,7 +141,7 @@ func TestReferenceFunc(t *testing.T) {
 	}
 
 	// Test the reference function
-	fn := engine.ReferenceFunc().(func(string) (string, error))
+	fn := engine.ReferenceFunc(true).(func(string) (string, error))
 	result, err := fn("testdata/content.md")
 
 	// Verify
@@ -320,5 +320,236 @@ func TestExecute_ErrorHandling(t *testing.T) {
 	// Verify
 	if err == nil {
 		t.Error("expected error for non-existent include file, got nil")
+	}
+}
+
+// Tests for the new includeRaw and referenceRaw functions
+
+func TestIncludeRawFunc(t *testing.T) {
+	// Setup
+	mockResolver := NewMockFileResolver("/base")
+	mockResolver.AddFile("/base/testdata/template_with_syntax.md",
+		"# Template with Syntax\n\n"+
+			"This file contains template syntax that should not be processed by raw functions:\n\n"+
+			"{{.Value}} - This is a variable\n"+
+			"{{include \"testdata/content.md\"}} - This is an include directive\n"+
+			"{{agent}} - This is a function call\n\n"+
+			"The raw functions should preserve these as-is.")
+
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	engine := &Engine{
+		FileResolver:  mockResolver,
+		References:    make(map[string]string),
+		AgentType:     "claude",
+		BasePath:      "/base",
+		AgentRegistry: registry,
+	}
+
+	// Test the includeRaw function
+	fn := engine.IncludeFunc(false).(func(string) (string, error))
+	result, err := fn("testdata/template_with_syntax.md")
+
+	// Verify
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Check that template syntax is preserved as-is (not processed)
+	if !strings.Contains(result, "{{.Value}}") {
+		t.Errorf("includeRaw did not preserve template variable syntax")
+	}
+
+	if !strings.Contains(result, "{{include \"testdata/content.md\"}}") {
+		t.Errorf("includeRaw did not preserve include directive syntax")
+	}
+
+	if !strings.Contains(result, "{{agent}}") {
+		t.Errorf("includeRaw did not preserve function call syntax")
+	}
+}
+
+func TestReferenceRawFunc(t *testing.T) {
+	// Setup
+	mockResolver := NewMockFileResolver("/base")
+	mockResolver.AddFile("/base/testdata/template_with_syntax.md",
+		"# Template with Syntax\n\n"+
+			"This file contains template syntax that should not be processed by raw functions:\n\n"+
+			"{{.Value}} - This is a variable\n"+
+			"{{include \"testdata/content.md\"}} - This is an include directive\n"+
+			"{{agent}} - This is a function call\n\n"+
+			"The raw functions should preserve these as-is.")
+
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	engine := &Engine{
+		FileResolver:  mockResolver,
+		References:    make(map[string]string),
+		AgentType:     "claude",
+		BasePath:      "/base",
+		AgentRegistry: registry,
+	}
+
+	// Test the referenceRaw function
+	fn := engine.ReferenceFunc(false).(func(string) (string, error))
+	result, err := fn("testdata/template_with_syntax.md")
+
+	// Verify
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Check reference marker
+	expected := "[参考: testdata/template_with_syntax.md]"
+	if result != expected {
+		t.Errorf("expected result %q, got %q", expected, result)
+	}
+
+	// Check that the stored reference contains the template syntax as-is
+	storedContent, exists := engine.References["testdata/template_with_syntax.md"]
+	if !exists {
+		t.Error("reference was not stored in engine")
+	}
+
+	// Check that template syntax is preserved as-is in the stored reference
+	if !strings.Contains(storedContent, "{{.Value}}") {
+		t.Errorf("referenceRaw did not preserve template variable syntax")
+	}
+
+	if !strings.Contains(storedContent, "{{include \"testdata/content.md\"}}") {
+		t.Errorf("referenceRaw did not preserve include directive syntax")
+	}
+
+	if !strings.Contains(storedContent, "{{agent}}") {
+		t.Errorf("referenceRaw did not preserve function call syntax")
+	}
+}
+
+func TestCompareIncludeAndIncludeRaw(t *testing.T) {
+	// Setup with test files
+	mockResolver := NewMockFileResolver("/base")
+
+	// Add simple files without template syntax for direct comparison
+	mockResolver.AddFile("/base/testdata/simple.md", "Simple content")
+	mockResolver.AddFile("/base/testdata/with_template_syntax.md", "Content with {{.Value}} and {{agent}}")
+
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	engine := &Engine{
+		FileResolver:  mockResolver,
+		References:    make(map[string]string),
+		AgentType:     "claude",
+		BasePath:      "/base",
+		AgentRegistry: registry,
+	}
+
+	// Test direct function calls
+	includeFunc := engine.IncludeFunc(true).(func(string) (string, error))
+	includeRawFunc := engine.IncludeFunc(false).(func(string) (string, error))
+
+	// Get results from the template file with syntax
+	includeResult, err := includeFunc("testdata/with_template_syntax.md")
+	if err != nil {
+		t.Fatalf("expected no error for include, got %v", err)
+	}
+
+	includeRawResult, err := includeRawFunc("testdata/with_template_syntax.md")
+	if err != nil {
+		t.Fatalf("expected no error for includeRaw, got %v", err)
+	}
+
+	// Verify - the important part is that includeRaw preserves template syntax
+	// while include attempts to process it (which may fail or leave it as-is)
+	if !strings.Contains(includeRawResult, "{{.Value}}") || !strings.Contains(includeRawResult, "{{agent}}") {
+		t.Errorf("includeRaw should preserve template syntax as-is")
+	}
+
+	// Different from regular include in that it doesn't attempt to process templates
+	if includeResult == includeRawResult && strings.Contains(includeResult, "{{") {
+		t.Logf("Note: In this test, regular include didn't modify templates because they're processed at a different time")
+	}
+}
+
+func TestCompareReferenceAndReferenceRaw(t *testing.T) {
+	// Setup with test files
+	mockResolver := NewMockFileResolver("/base")
+
+	// Add a file with template syntax
+	mockResolver.AddFile("/base/testdata/with_template_syntax.md",
+		"Content with {{.Value}} and {{agent}}")
+
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	// Test both functions separately
+
+	// First test with reference function
+	engine1 := &Engine{
+		FileResolver:  mockResolver,
+		References:    make(map[string]string),
+		AgentType:     "claude",
+		BasePath:      "/base",
+		AgentRegistry: registry,
+	}
+
+	refFunc := engine1.ReferenceFunc(true).(func(string) (string, error))
+	refResult, err := refFunc("testdata/with_template_syntax.md")
+	if err != nil {
+		t.Fatalf("expected no error for reference, got %v", err)
+	}
+
+	// Verify reference marker format
+	if refResult != "[参考: testdata/with_template_syntax.md]" {
+		t.Errorf("expected reference marker format, got %q", refResult)
+	}
+
+	// Check stored content for the regular reference
+	refContent, exists := engine1.References["testdata/with_template_syntax.md"]
+	if !exists {
+		t.Error("reference content not stored for regular reference")
+	}
+
+	// Then test with referenceRaw function
+	engine2 := &Engine{
+		FileResolver:  mockResolver,
+		References:    make(map[string]string),
+		AgentType:     "claude",
+		BasePath:      "/base",
+		AgentRegistry: registry,
+	}
+
+	refRawFunc := engine2.ReferenceFunc(false).(func(string) (string, error))
+	refRawResult, err := refRawFunc("testdata/with_template_syntax.md")
+	if err != nil {
+		t.Fatalf("expected no error for referenceRaw, got %v", err)
+	}
+
+	// Verify reference marker format (should be the same)
+	if refRawResult != "[参考: testdata/with_template_syntax.md]" {
+		t.Errorf("expected reference marker format, got %q", refRawResult)
+	}
+
+	// Check stored content for the raw reference
+	refRawContent, exists := engine2.References["testdata/with_template_syntax.md"]
+	if !exists {
+		t.Error("reference content not stored for raw reference")
+	}
+
+	// Now verify the key difference: raw reference preserves template syntax
+	if !strings.Contains(refRawContent, "{{.Value}}") || !strings.Contains(refRawContent, "{{agent}}") {
+		t.Error("raw reference did not preserve template syntax")
+	}
+
+	// Regular reference might preserve template syntax too depending on implementation
+	// The important thing is that raw references MUST preserve it
+	if refContent == refRawContent && strings.Contains(refContent, "{{") {
+		t.Logf("Note: In this test, regular reference didn't modify templates because they're processed at a different time")
 	}
 }
