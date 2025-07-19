@@ -36,10 +36,9 @@ func GlobWithExcludes(patterns []string, baseDir string) ([]string, error) {
 		return []string{}, nil
 	}
 
-	// Process include patterns
-	matchedFiles := make(map[string]struct{})
-	for _, pattern := range includePatterns {
-		// Use doublestar.Glob directly for pattern matching
+	// Helper function to collect files matching a pattern
+	collectFiles := func(pattern string) (map[string]struct{}, error) {
+		result := make(map[string]struct{})
 		matches, err := doublestar.Glob(os.DirFS(baseDir), pattern)
 		if err != nil {
 			return nil, fmt.Errorf("error expanding pattern '%s': %w", pattern, err)
@@ -57,24 +56,37 @@ func GlobWithExcludes(patterns []string, baseDir string) ([]string, error) {
 
 			if !info.IsDir() {
 				// Store relative path
-				matchedFiles[match] = struct{}{}
+				result[match] = struct{}{}
 			}
+		}
+		return result, nil
+	}
+
+	// Process include patterns
+	matchedFiles := make(map[string]struct{})
+	for _, pattern := range includePatterns {
+		includedFiles, err := collectFiles(pattern)
+		if err != nil {
+			return nil, fmt.Errorf("error processing include pattern '%s': %w", pattern, err)
+		}
+
+		// Add included files to the result set
+		for path := range includedFiles {
+			matchedFiles[path] = struct{}{}
 		}
 	}
 
-	// Apply exclude patterns
+	// Apply exclude patterns - use doublestar.Glob for exclude patterns too
 	if len(excludePatterns) > 0 {
-		for path := range matchedFiles {
-			excluded := false
-			for _, pattern := range excludePatterns {
-				// Use doublestar.Match for each exclude pattern
-				matched, err := doublestar.Match(pattern, path)
-				if err == nil && matched {
-					excluded = true
-					break
-				}
+		// Collect files matching exclude patterns
+		for _, pattern := range excludePatterns {
+			excludedFiles, err := collectFiles(pattern)
+			if err != nil {
+				return nil, fmt.Errorf("error processing exclude pattern '%s': %w", pattern, err)
 			}
-			if excluded {
+
+			// Remove excluded files from included files
+			for path := range excludedFiles {
 				delete(matchedFiles, path)
 			}
 		}
