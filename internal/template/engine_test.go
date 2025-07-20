@@ -18,7 +18,7 @@ func TestExecute_ReturnsRawContent(t *testing.T) {
 		AgentRegistry: registry,
 	}
 	input := "plain text content"
-	output, err := engine.Execute(input, nil)
+	output, err := engine.Execute("test/path", input, nil)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -37,7 +37,7 @@ func TestExecute_WithTemplateVariable(t *testing.T) {
 	}
 	templateContent := "hello {{.Name}}"
 	data := map[string]interface{}{"Name": "World"}
-	output, err := engine.Execute(templateContent, data)
+	output, err := engine.Execute("test/path", templateContent, data)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -238,7 +238,7 @@ func TestRecursiveTemplateProcessing(t *testing.T) {
 	}
 
 	// Test the recursive include
-	output, err := engine.Execute("{{include \"@/testdata/recursive_template.md\"}}", nil)
+	output, err := engine.Execute("/base/test.md", "{{include \"@/testdata/recursive_template.md\"}}", nil)
 
 	// Verify
 	if err != nil {
@@ -273,7 +273,7 @@ func TestReferenceCollection(t *testing.T) {
 	}
 
 	// Process a template with multiple references
-	output, err := engine.Execute("# Template with References\n\nFirst: {{reference \"@/testdata/content1.md\"}}\n\nSecond: {{reference \"@/testdata/content2.md\"}}", nil)
+	output, err := engine.Execute("/base/test.md", "# Template with References\n\nFirst: {{reference \"@/testdata/content1.md\"}}\n\nSecond: {{reference \"@/testdata/content2.md\"}}", nil)
 
 	// Verify
 	if err != nil {
@@ -315,7 +315,7 @@ func TestExecute_ErrorHandling(t *testing.T) {
 	}
 
 	// Test include with non-existent file
-	_, err := engine.Execute("{{include \"non-existent-file.md\"}}", nil)
+	_, err := engine.Execute("/base/test.md", "{{include \"non-existent-file.md\"}}", nil)
 
 	// Verify
 	if err == nil {
@@ -551,5 +551,94 @@ func TestCompareReferenceAndReferenceRaw(t *testing.T) {
 	// The important thing is that raw references MUST preserve it
 	if refContent == refRawContent && strings.Contains(refContent, "{{") {
 		t.Logf("Note: In this test, regular reference didn't modify templates because they're processed at a different time")
+	}
+}
+
+func TestExecuteWithPath(t *testing.T) {
+	// Setup
+	mockResolver := NewMockFileResolver("/base")
+	mockResolver.AddFile("/base/testdata/referenced.md", "Content from referenced file")
+	mockResolver.AddFile("/base/testdata/main.md", "Main content with reference: {{reference \"@/testdata/referenced.md\"}}")
+
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	engine := &Engine{
+		FileResolver:       mockResolver,
+		References:         make(map[string]string),
+		AgentType:          "claude",
+		absTemplateBaseDir: "/base",
+		AgentRegistry:      registry,
+	}
+
+	// Test ExecuteWithPath directly
+	result, err := engine.Execute("/base/testdata/main.md", "Content from {{agent}} with path: {{.Path}}", map[string]string{
+		"Path": "/base/testdata/main.md",
+	})
+
+	// Verify
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Check content was processed correctly
+	if !strings.Contains(result, "Content from claude with path: /base/testdata/main.md") {
+		t.Errorf("expected template to be processed with agent and path, got %q", result)
+	}
+
+	// Test path management by nesting templates
+	complexContent := "{{include \"@/testdata/main.md\"}}"
+	complexResult, err := engine.Execute("/base/nested.md", complexContent, nil)
+
+	if err != nil {
+		t.Fatalf("expected no error for nested template, got %v", err)
+	}
+
+	// Check that nested content was processed and paths were maintained properly
+	if !strings.Contains(complexResult, "Main content with reference") {
+		t.Errorf("expected nested template content to be included, got %q", complexResult)
+	}
+
+	// Check that references section is included
+	if !strings.Contains(complexResult, "## References") {
+		t.Errorf("expected references section, got %q", complexResult)
+	}
+
+	if !strings.Contains(complexResult, "testdata/referenced.md") {
+		t.Errorf("expected referenced content path to be included, got %q", complexResult)
+	}
+}
+
+func TestPathManagement(t *testing.T) {
+	// Setup a more complex scenario to test path management
+	mockResolver := NewMockFileResolver("/base")
+	mockResolver.AddFile("/base/file1.md", "Content from file1 referencing {{include \"file2.md\"}}")
+	mockResolver.AddFile("/base/file2.md", "Content from file2 with CurrentPath: {{include \"subdir/file3.md\"}}")
+	mockResolver.AddFile("/base/subdir/file3.md", "Content from file3")
+
+	registry := agent.NewRegistry()
+	registry.Register(&agent.Claude{})
+	registry.Register(&agent.Roo{})
+
+	engine := &Engine{
+		FileResolver:       mockResolver,
+		References:         make(map[string]string),
+		AgentType:          "claude",
+		absTemplateBaseDir: "/base",
+		AgentRegistry:      registry,
+	}
+
+	// Execute file1 which includes file2 which includes file3
+	result, err := engine.ExecuteFile("/base/file1.md", nil)
+
+	if err != nil {
+		t.Fatalf("expected no error for nested includes, got %v", err)
+	}
+
+	// Check that all content is included properly
+	expectedContent := "Content from file1 referencing Content from file2 with CurrentPath: Content from file3"
+	if !strings.Contains(result, expectedContent) {
+		t.Errorf("expected all files to be included properly, got %q", result)
 	}
 }

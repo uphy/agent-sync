@@ -65,12 +65,14 @@ func NewEngine(fileResolver FileResolver, agentType, absTemplateBaseDir string, 
 	}
 }
 
-// Execute processes a template with the given data
-func (e *Engine) Execute(content string, data any) (string, error) {
-	result, err := e.executeWithoutReferences(content, data)
+// Execute processes a template with the given data while managing CurrentFilePath
+func (e *Engine) Execute(path string, content string, data any) (string, error) {
+	// Process the template content with proper path management
+	result, err := e.executeWithoutReferencesWithPath(path, content, data)
 	if err != nil {
 		return "", err
 	}
+
 	// Append references if any
 	if len(e.References) > 0 {
 		result += "\n\n## References\n\n"
@@ -80,6 +82,22 @@ func (e *Engine) Execute(content string, data any) (string, error) {
 	}
 
 	return result, nil
+}
+
+// ExecuteFile processes a template file with the given data
+func (e *Engine) ExecuteFile(absFilePath string, data any) (string, error) {
+	if !filepath.IsAbs(absFilePath) {
+		return "", fmt.Errorf("absolute file path is required: %s", absFilePath)
+	}
+
+	// Read the file
+	content, err := e.FileResolver.Read(absFilePath)
+	if err != nil {
+		return "", &util.ErrFileNotFound{Path: absFilePath}
+	}
+
+	// Use the new ExecuteWithPath method which handles path management
+	return e.Execute(absFilePath, string(content), data)
 }
 
 // Execute processes a template with the given data
@@ -111,32 +129,22 @@ func (e *Engine) executeWithoutReferences(content string, data any) (string, err
 	return buf.String(), nil
 }
 
-// ExecuteFile processes a template file with the given data
-func (e *Engine) ExecuteFile(absFilePath string, data any) (string, error) {
-	if !filepath.IsAbs(absFilePath) {
-		return "", fmt.Errorf("absolute file path is required: %s", absFilePath)
-	}
-	// Save previous current file path
+// executeWithoutReferencesWithPath processes a template with the given data, ensuring CurrentFilePath
+// is properly managed during execution. This method uses defer to guarantee path restoration.
+func (e *Engine) executeWithoutReferencesWithPath(path string, content string, data any) (string, error) {
+	// Save the current path
 	previousPath := e.CurrentFilePath
 
-	// Set current file path to the file being processed
-	e.CurrentFilePath = absFilePath
+	// Set the current path to the path being processed
+	e.CurrentFilePath = path
 
-	// Read the file
-	content, err := e.FileResolver.Read(absFilePath)
-	if err != nil {
-		// Restore previous path before returning error
+	// Use defer to ensure path restoration happens regardless of execution result
+	defer func() {
 		e.CurrentFilePath = previousPath
-		return "", &util.ErrFileNotFound{Path: absFilePath}
-	}
+	}()
 
 	// Execute the template
-	result, err := e.Execute(string(content), data)
-
-	// Restore previous current file path before returning
-	e.CurrentFilePath = previousPath
-
-	return result, err
+	return e.executeWithoutReferences(content, data)
 }
 
 // RegisterHelperFunctions registers all template helper functions
@@ -179,41 +187,27 @@ func (e *Engine) RegisterHelperFunctions(t *template.Template) *template.Templat
 
 // processInclude processes an included file with optional template processing
 func (e *Engine) processInclude(path string, processTemplate bool) (string, error) {
-	// Save previous current file path
-	previousPath := e.CurrentFilePath
-
-	// Set current file path to the file being included
-	e.CurrentFilePath = path
-
 	// Read the file
 	content, err := e.FileResolver.Read(path)
 	if err != nil {
-		// Restore previous path before returning error
-		e.CurrentFilePath = previousPath
 		return "", &util.ErrFileNotFound{Path: path}
 	}
 
-	var processed string
 	if processTemplate {
-		// Process the content as a template recursively
-		processed, err = e.executeWithoutReferences(string(content), nil)
+		// Process the content as a template recursively using path management
+		processed, err := e.executeWithoutReferencesWithPath(path, string(content), nil)
 		if err != nil {
-			// Restore previous path before returning error
-			e.CurrentFilePath = previousPath
 			return "", &util.ErrTemplateExecution{
 				Template: path,
 				Cause:    err,
 			}
 		}
+		return processed, nil
 	} else {
 		// Return the raw content without template processing
-		processed = string(content)
+		// No need for path management as we're not processing templates
+		return string(content), nil
 	}
-
-	// Restore previous current file path before returning
-	e.CurrentFilePath = previousPath
-
-	return processed, nil
 }
 
 // processReference adds a reference to be appended at the end
@@ -223,25 +217,15 @@ func (e *Engine) processReference(fullPath string, processTemplate bool) (string
 		return "", fmt.Errorf("failed to get relative path for %q: %w", fullPath, err)
 	}
 
-	// Save previous current file path
-	previousPath := e.CurrentFilePath
-
-	// Set current file path to the file being referenced
-	e.CurrentFilePath = fullPath
-
 	// Process the file content with or without template processing
+	// The path management will be handled by processInclude
 	content, err := e.processInclude(fullPath, processTemplate)
 	if err != nil {
-		// Restore previous path before returning error
-		e.CurrentFilePath = previousPath
 		return "", err
 	}
 
 	// Store the content to be appended at the end
 	e.References[originalPath] = content
-
-	// Restore previous current file path before returning
-	e.CurrentFilePath = previousPath
 
 	// Return a reference marker with original relative path
 	return fmt.Sprintf("[参考: %s]", originalPath), nil

@@ -30,22 +30,22 @@ func (p *CommandProcessor) Process(inputs []string, cfg *OutputConfig) (*TaskRes
 
 	// Process each input file
 	for _, input := range inputs {
-		inputPath := filepath.Join(p.absInputRoot, input)
+		absInputFilePath := filepath.Join(p.absInputRoot, input)
 
 		// Read and parse the command
-		inputContent, err := p.fs.ReadFile(inputPath)
+		inputContent, err := p.fs.ReadFile(absInputFilePath)
 		if err != nil {
-			return nil, fmt.Errorf("read input file %s: %w", inputPath, err)
+			return nil, fmt.Errorf("read input file %s: %w", absInputFilePath, err)
 		}
-		cmd, err := parser.ParseCommandFromContent(inputPath, inputContent)
+		cmd, err := parser.ParseCommandFromContent(absInputFilePath, inputContent)
 		if err != nil {
-			return nil, fmt.Errorf("parse command from content %s: %w", inputPath, err)
+			return nil, fmt.Errorf("parse command from content %s: %w", absInputFilePath, err)
 		}
 
 		// Apply template processing
 		adapter := NewFSAdapter(p.fs)
 		engine := template.NewEngine(adapter, cfg.AgentName, p.absInputRoot, p.registry)
-		out, err := engine.Execute(cmd.Content, nil)
+		out, err := engine.Execute(absInputFilePath, cmd.Content, nil)
 		if err != nil {
 			return nil, fmt.Errorf("template execute %s: %w", input, err)
 		}
