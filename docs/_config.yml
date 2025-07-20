@@ -1,0 +1,35 @@
+# Jekyll configuration for agent-sync documentation
+
+# Site settings
+title: agent-sync Documentation
+description: Documentation for the agent-sync tool
+baseurl: "/agent-sync" # The subpath of your site, e.g. /blog
+url: "https://uphy.github.io" # The base hostname & protocol for your site
+
+# Build settings
+markdown: kramdown
+kramdown:
+  template_engine: liquid
+
+# Exclude unnecessary files from processing
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+
+# Set the default Liquid rendering mode to strict
+liquid:
+  error_mode: strict
+  strict_filters: true
+
+# Output settings
+permalink: pretty
+
+# Plugins
+plugins:
+  - jekyll-relative-links
+
+# Relative links settings
+relative_links:
+  enabled: true
+  collections: true

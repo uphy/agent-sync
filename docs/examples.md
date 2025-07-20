@@ -117,12 +117,16 @@ tasks:
 
 5. **Use Templates**: Leverage template functions to maintain DRY (Don't Repeat Yourself) principles
    ```markdown
+{% raw %}
    {{ include "common/header.md" }}
+{% endraw %}
    ```
 
 6. **Agent-Specific Content**: Use the `ifAGENT` function to include content specific to certain agents
    ```markdown
+{% raw %}
    {{ ifRoo "This appears only in Roo output" }}
+{% endraw %}
    ```
 
 7. **Version Control**: Keep your agent-sync configuration and template files under version control

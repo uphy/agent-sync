@@ -1,5 +1,8 @@
 [tools]
+"gem:jekyll" = "latest"
 "go:github.com/golangci/golangci-lint/v2/cmd/golangci-lint" = "v2.2.2"
+ruby = "3.4.5"
+
 
 [tasks.test]
 run = "go test -timeout 30s ./..."
@@ -37,3 +40,7 @@ run = "go build ./..."
 
 [tasks.pre-commit]
 depends = ["build", "lint", "format", "test", "agent-sync"]
+
+[tasks.pages-dev]
+run = "bundle exec jekyll serve"
+dir = "docs"
