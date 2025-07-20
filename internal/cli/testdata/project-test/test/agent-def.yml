@@ -1,7 +1,6 @@
 configVersion: "1.0"
 projects:
   projectA:
-    root: .
     outputDirs:
       - build/projectA
     tasks:

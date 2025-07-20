@@ -1,7 +1,6 @@
 # This is an invalid configuration missing the required configVersion field
 projects:
   projectA:
-    root: .
     outputDirs:
       - projectA
     tasks:

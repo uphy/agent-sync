@@ -87,14 +87,6 @@ func expandTildeInConfig(cfg *Config) error {
 	for projName, proj := range cfg.Projects {
 		var err error
 
-		// Expand tilde in Project.Root
-		if proj.Root != "" {
-			proj.Root, err = util.ExpandTilde(proj.Root)
-			if err != nil {
-				return fmt.Errorf("failed to expand tilde in project %s root: %w", projName, err)
-			}
-		}
-
 		// Expand tilde in Project.OutputDirs
 		for i, dest := range proj.OutputDirs {
 			expanded, err := util.ExpandTilde(dest)

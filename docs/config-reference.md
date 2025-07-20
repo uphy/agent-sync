@@ -18,7 +18,7 @@ Each project can be configured with the following settings:
 
 | Setting | Type | Required | Description |
 |---------|------|----------|-------------|
-| `root` | String | No | Base path for inputs relative to the agent-def.yml location. Supports tilde (~) expansion for home directory |
+| ~~`root`~~ | ~~String~~ | ~~No~~ | ~~Base path for inputs relative to the agent-def.yml location. Supports tilde (~) expansion for home directory~~ **Removed: Project inputs are always relative to the agent-def.yml directory** |
 | `outputDirs` | String Array | Yes | Output directories where generated files will be placed. Supports tilde (~) expansion for home directory. Multiple directories can be specified to support scenarios like git worktree |
 | `tasks` | Task Array | Yes | List of generation tasks for this project |
 

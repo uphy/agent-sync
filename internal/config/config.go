@@ -33,9 +33,6 @@ func (c *Config) SetDefaultNames() {
 
 // Project represents a project-specific configuration block
 type Project struct {
-	// Root is the base path for inputs relative to agent-def.yml location
-	// Supports tilde (~) expansion for home directory.
-	Root string `yaml:"root,omitempty"`
 	// OutputDirs are the output directories for generated files
 	// Supports tilde (~) expansion for home directory.
 	OutputDirs []string `yaml:"outputDirs"`

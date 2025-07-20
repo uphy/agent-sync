@@ -3,7 +3,6 @@ package processor
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"slices"
 
 	"github.com/uphy/agent-def/internal/config"
@@ -66,19 +65,9 @@ func (m *Manager) Build(projects []string, dryRun, force bool) error {
 		if len(projects) > 0 && !slices.Contains(projects, name) {
 			continue
 		}
-		// determine project root
-		root := proj.Root
-		if root == "" {
-			// If no root is specified, use config directory
-			root = m.configDir
-			m.logger.Debug("Using config directory as project root", zap.String("project", name))
-		} else if !filepath.IsAbs(root) {
-			// If root is relative, make it relative to config directory
-			root = filepath.Join(m.configDir, root)
-			m.logger.Debug("Resolved relative project root",
-				zap.String("project", name),
-				zap.String("root", root))
-		}
+		// Always use config directory as the project root
+		root := m.configDir
+		m.logger.Debug("Using config directory as project root", zap.String("project", name))
 		m.logger.Info("Processing project",
 			zap.String("name", name),
 			zap.Int("taskCount", len(proj.Tasks)),

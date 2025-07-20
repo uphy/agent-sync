@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -285,75 +284,6 @@ func compareDirectories(expected, actual string) (string, error) {
 
 	// Any other error means the diff command failed to run properly
 	return "", fmt.Errorf("error comparing directories with diff command: %w\nOutput: %s", err, string(output))
-}
-
-// compareFiles compares the contents of two files with line ending normalization.
-func compareFiles(expectedPath, actualPath string) (string, error) {
-	// Read expected file
-	expectedBytes, err := os.ReadFile(expectedPath)
-	if err != nil {
-		return "", fmt.Errorf("error reading expected file: %w", err)
-	}
-
-	// Read actual file
-	actualBytes, err := os.ReadFile(actualPath)
-	if err != nil {
-		return "", fmt.Errorf("error reading actual file: %w", err)
-	}
-
-	// Normalize line endings
-	expectedContent := normalizeLineEndings(string(expectedBytes))
-	actualContent := normalizeLineEndings(string(actualBytes))
-
-	// Compare contents
-	if expectedContent == actualContent {
-		return "", nil
-	}
-
-	// Generate diff report
-	return createDiffReport(expectedContent, actualContent), nil
-}
-
-// normalizeLineEndings converts all line endings to Unix style (LF).
-func normalizeLineEndings(s string) string {
-	// Replace Windows style (CRLF) with Unix style (LF)
-	s = strings.ReplaceAll(s, "\r\n", "\n")
-	// Replace old Mac style (CR) with Unix style (LF)
-	s = strings.ReplaceAll(s, "\r", "\n")
-	return s
-}
-
-// createDiffReport generates a detailed diff report between expected and actual content.
-func createDiffReport(expected, actual string) string {
-	var diffReport strings.Builder
-
-	expectedLines := strings.Split(expected, "\n")
-	actualLines := strings.Split(actual, "\n")
-
-	maxLines := len(expectedLines)
-	if len(actualLines) > maxLines {
-		maxLines = len(actualLines)
-	}
-
-	for i := 0; i < maxLines; i++ {
-		expectedLine := ""
-		if i < len(expectedLines) {
-			expectedLine = expectedLines[i]
-		}
-
-		actualLine := ""
-		if i < len(actualLines) {
-			actualLine = actualLines[i]
-		}
-
-		if expectedLine != actualLine {
-			fmt.Fprintf(&diffReport, "Line %d:\n", i+1)
-			fmt.Fprintf(&diffReport, "  Expected: %s\n", expectedLine)
-			fmt.Fprintf(&diffReport, "  Actual:   %s\n", actualLine)
-		}
-	}
-
-	return diffReport.String()
 }
 
 // buildAgentDefBinary builds the agent-def binary to a temporary location and returns the path.
