@@ -66,22 +66,17 @@ This command:
 
 ### Apply Command
 
-The `apply` command processes your source files and generates agent-specific output files based on your configuration:
+The `apply` command processes your input files and generates agent-specific output files based on your configuration:
 
 ```bash
-agent-sync apply [project-names...] [flags]
+agent-sync apply [flags]
 ```
 
 What it does:
-1. Reads your source files (memories and commands)
+1. Reads your input files (memories and commands)
 2. Processes any templates in those files
 3. Converts the content to formats compatible with each target agent
-4. Writes the output files to their specified destinations
-
-**Project Selection:**
-- If you run `agent-sync apply` with no arguments, it processes ALL projects defined in your configuration
-- If you specify project names like `agent-sync apply project1 project2`, it only processes those specific projects
-- User-level tasks (from the `user` section of config) are always processed unless you use the `--no-user` flag
+4. Writes the output files to their specified output paths
 
 **Important Flags:**
 - `-c, --config string`: Specify a custom path to your configuration file
@@ -157,7 +152,7 @@ This shows what files would be generated without actually writing them.
 
 ## Configuration
 
-agent-sync uses a YAML configuration file (`agent-sync.yml`) to define the sources and destinations for your agent definitions.
+agent-sync uses a YAML configuration file (`agent-sync.yml`) to define the inputs and outputs for your agent definitions.
 
 ### Basic Structure
 

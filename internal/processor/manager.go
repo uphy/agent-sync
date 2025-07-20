@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"slices"
 
 	"github.com/uphy/agent-sync/internal/config"
 	"github.com/uphy/agent-sync/internal/log"
@@ -55,21 +54,15 @@ func NewManager(cfgPath string, logger *zap.Logger, output log.OutputWriter) (*M
 	}, nil
 }
 
-// Apply executes the apply pipeline for the specified projects or user scope.
-// If no projects are specified, all projects will be processed.
-func (m *Manager) Apply(projects []string, dryRun, force bool) error {
+// Apply executes the apply pipeline for all projects and user scope.
+func (m *Manager) Apply(dryRun, force bool) error {
 	m.force = force
 
 	m.logger.Info("Starting apply process",
-		zap.Strings("projects", projects),
 		zap.Bool("dryRun", dryRun),
 		zap.Bool("force", force))
 	// Process project-level tasks
 	for name, proj := range m.cfg.Projects {
-		// If `projects` is specified, only process those projects
-		if len(projects) > 0 && !slices.Contains(projects, name) {
-			continue
-		}
 		// Resolve absolute paths for input root and output directories
 		absInputRoot := m.absConfigDir
 		absOutputDirs := proj.OutputDirs

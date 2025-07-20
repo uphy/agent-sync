@@ -20,9 +20,9 @@ These flags can be used with any command:
 
 Generates files based on agent-sync.yml configuration.
 
-Usage: `agent-sync apply [project...]`
+Usage: `agent-sync apply`
 
-If no project names are provided, all projects will be processed.
+All projects will be processed.
 
 Flags:
 - `--config, -c`: Path to agent-sync.yml file or directory containing it (default: ".")
@@ -40,14 +40,9 @@ Flags:
 
 ## Examples
 
-**Applying to all projects with verbose output:**
+**Applying with verbose output:**
 ```bash
 agent-sync apply --verbose
-```
-
-**Applying to specific projects:**
-```bash
-agent-sync apply project1 project2 --verbose
 ```
 
 **Initializing a new configuration:**

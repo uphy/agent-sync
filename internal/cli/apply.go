@@ -26,10 +26,9 @@ func NewApplyCommandWithContext(ctx *Context) *cobra.Command {
 	var configPath string
 
 	cmd := &cobra.Command{
-		Use:   "apply [project...]",
+		Use:   "apply",
 		Short: "Generate files based on agent-sync.yml",
-		Long: `Generate files for one or more projects or user-level tasks as defined in agent-sync.yml.
-If no project names are provided, all projects will be processed.`,
+		Long:  `Generate files for projects and user-level tasks as defined in agent-sync.yml.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Use the context if available
 			var logger *zap.Logger
@@ -42,7 +41,6 @@ If no project names are provided, all projects will be processed.`,
 				// Log command execution
 				logger.Info("Executing apply command",
 					zap.String("configPath", configPath),
-					zap.Strings("projects", args),
 					zap.Bool("dryRun", dryRun),
 					zap.Bool("force", force))
 			}
@@ -59,7 +57,7 @@ If no project names are provided, all projects will be processed.`,
 			}
 
 			// Execute apply
-			return mgr.Apply(args, dryRun, force)
+			return mgr.Apply(dryRun, force)
 		},
 	}
 

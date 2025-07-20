@@ -55,7 +55,7 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
-          file: ./coverage.txt
+          files: ./coverage.txt
           fail_ci_if_error: false
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }} # Set this secret in your repository settings
