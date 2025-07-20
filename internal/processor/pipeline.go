@@ -230,6 +230,12 @@ func (p *Pipeline) writeOutputFiles(files []ProcessedFile) error {
 		for _, file := range files {
 			absOutputFile := filepath.Join(absOutputDir, file.relPath)
 
+			if isSub, err := util.IsSub(absOutputDir, absOutputFile); err != nil {
+				return fmt.Errorf("check if output path is subdirectory: %w", err)
+			} else if !isSub {
+				return fmt.Errorf("output path %s is not a subdirectory of %s", absOutputFile, absOutputDir)
+			}
+
 			if p.DryRun {
 				p.logger.Info("[DRY RUN] Would write file", zap.String("path", absOutputFile))
 				if p.output != nil {

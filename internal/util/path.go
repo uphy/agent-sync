@@ -94,3 +94,18 @@ func ExpandTilde(path string) (string, error) {
 	// ~something - path without separator (less common)
 	return filepath.Join(homeDir, path[1:]), nil
 }
+
+func IsSub(base, path string) (bool, error) {
+	// Get the absolute paths
+	absBase, err := filepath.Abs(base)
+	if err != nil {
+		return false, fmt.Errorf("failed to get absolute path for base: %w", err)
+	}
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return false, fmt.Errorf("failed to get absolute path for path: %w", err)
+	}
+
+	// Check if absPath starts with absBase
+	return strings.HasPrefix(absPath, absBase+string(filepath.Separator)), nil
+}
