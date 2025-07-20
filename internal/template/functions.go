@@ -135,7 +135,7 @@ func (e *Engine) resolveTemplatePath(paths []string) ([]string, error) {
 		}
 
 		// Handle explicitly relative paths (./ or ../) relative to current file
-		resolved = append(resolved, filepath.Join(filepath.Dir(e.CurrentFilePath), path))
+		resolved = append(resolved, filepath.Join(filepath.Dir(e.absCurrentFilePath), path))
 	}
 
 	return resolved, nil

@@ -18,7 +18,7 @@ func TestExecute_ReturnsRawContent(t *testing.T) {
 		AgentRegistry: registry,
 	}
 	input := "plain text content"
-	output, err := engine.Execute("test/path", input, nil)
+	output, err := engine.Execute("/test/path", input, nil)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -37,7 +37,7 @@ func TestExecute_WithTemplateVariable(t *testing.T) {
 	}
 	templateContent := "hello {{.Name}}"
 	data := map[string]interface{}{"Name": "World"}
-	output, err := engine.Execute("test/path", templateContent, data)
+	output, err := engine.Execute("/test/path", templateContent, data)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}

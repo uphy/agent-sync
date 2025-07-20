@@ -570,7 +570,7 @@ func TestResolveTemplatePath(t *testing.T) {
 	// Run test cases
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			engine.CurrentFilePath = tc.currentFilePath
+			engine.absCurrentFilePath = tc.currentFilePath
 			result, err := engine.resolveTemplatePath(tc.paths)
 
 			// Check error expectation
@@ -644,7 +644,7 @@ func TestResolveTemplatePathSingle(t *testing.T) {
 	// Run test cases
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			engine.CurrentFilePath = tc.currentFilePath
+			engine.absCurrentFilePath = tc.currentFilePath
 			result, err := engine.resolveTemplatePathSingle(tc.path)
 
 			// Check error expectation

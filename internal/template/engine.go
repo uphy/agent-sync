@@ -38,11 +38,11 @@ type Engine struct {
 	// AgentType determines the output format
 	AgentType string
 
-	// absTemplateBaseDir is the base path for resolving relative paths
+	// absTemplateBaseDir is the absolute base path for resolving relative paths
 	absTemplateBaseDir string
 
-	// CurrentFilePath is the path of the file currently being processed
-	CurrentFilePath string
+	// absCurrentFilePath is the absolute path of the file currently being processed
+	absCurrentFilePath string
 
 	// AgentRegistry provides access to registered agents
 	AgentRegistry *agent.Registry
@@ -66,9 +66,9 @@ func NewEngine(fileResolver FileResolver, agentType, absTemplateBaseDir string, 
 }
 
 // Execute processes a template with the given data while managing CurrentFilePath
-func (e *Engine) Execute(path string, content string, data any) (string, error) {
+func (e *Engine) Execute(absFilePath string, content string, data any) (string, error) {
 	// Process the template content with proper path management
-	result, err := e.executeWithoutReferencesWithPath(path, content, data)
+	result, err := e.executeWithoutReferencesWithPath(absFilePath, content, data)
 	if err != nil {
 		return "", err
 	}
@@ -131,16 +131,20 @@ func (e *Engine) executeWithoutReferences(content string, data any) (string, err
 
 // executeWithoutReferencesWithPath processes a template with the given data, ensuring CurrentFilePath
 // is properly managed during execution. This method uses defer to guarantee path restoration.
-func (e *Engine) executeWithoutReferencesWithPath(path string, content string, data any) (string, error) {
+func (e *Engine) executeWithoutReferencesWithPath(absFilePath string, content string, data any) (string, error) {
+	if !filepath.IsAbs(absFilePath) {
+		return "", fmt.Errorf("absolute file path is required: %s", absFilePath)
+	}
+
 	// Save the current path
-	previousPath := e.CurrentFilePath
+	previousPath := e.absCurrentFilePath
 
 	// Set the current path to the path being processed
-	e.CurrentFilePath = path
+	e.absCurrentFilePath = absFilePath
 
 	// Use defer to ensure path restoration happens regardless of execution result
 	defer func() {
-		e.CurrentFilePath = previousPath
+		e.absCurrentFilePath = previousPath
 	}()
 
 	// Execute the template
