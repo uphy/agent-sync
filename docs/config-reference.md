@@ -7,8 +7,8 @@ This document details all configuration parameters available in the `agent-sync.
 | Setting | Type | Required | Description |
 |---------|------|----------|-------------|
 | `configVersion` | String | Yes | Schema version of the configuration file (e.g., "1.0") |
-| `projects` | Map | No* | Map of named project configurations where keys are project identifiers (arbitrary names) and values are project configuration objects. *Required in standard format, omitted in simplified format. |
-| `user` | Object | No* | Global user-level configuration. *Required in standard format. |
+| `projects` | Map | No | Map of named project configurations where keys are project identifiers (arbitrary names) and values are project configuration objects. *Typically used in standard format, omitted in simplified format. |
+| `user` | Object | No | Global user-level configuration. *Typically used in standard format. |
 | `outputDirs` | String Array | No* | Output directories where generated files will be placed. *Only used in simplified format. |
 | `tasks` | Task Array | No* | List of generation tasks. *Only used in simplified format. |
 

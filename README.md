@@ -1,29 +1,61 @@
 # Agent Sync (agent-sync)
+
 [![CI](https://github.com/uphy/agent-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/uphy/agent-sync/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/uphy/agent-sync)](https://github.com/uphy/agent-sync/releases/latest)
 [![Go Report Card](https://goreportcard.com/badge/github.com/uphy/agent-sync)](https://goreportcard.com/report/github.com/uphy/agent-sync)
 [![codecov](https://codecov.io/gh/uphy/agent-sync/branch/main/graph/badge.svg)](https://codecov.io/gh/uphy/agent-sync)
 [![Go Reference](https://pkg.go.dev/badge/github.com/uphy/agent-sync.svg)](https://pkg.go.dev/github.com/uphy/agent-sync)
 
-Agent Sync (`agent-sync`) is a tool for converting context and command definitions for various AI agents like Claude, Roo, and Cline.
+## What is Agent Sync?
+
+Agent Sync (`agent-sync`) is a tool that streamlines working with multiple AI assistants by letting you write your context and commands once and automatically converting them to formats compatible with different AI agents.
+
+### Key Features:
+
+- **Write Once, Deploy Everywhere**: Maintain a single source of truth for AI instructions instead of separate files for each assistant
+- **Multi-Agent Support**: Convert context (memory) and commands to formats compatible with Claude, Roo, Cline, Copilot, and more
+- **Template System**: Use powerful templating to dynamically generate content with agent-specific formatting
+- **Project and User Separation**: Maintain both project-specific and global user-level configurations
+- **Flexible Output**: Control how content is organized (concatenated into single files or split into multiple files)
+
+### How It Works:
+
+1. You write context (memory) and commands in standard markdown files
+2. You configure how these files should be processed in `agent-sync.yml`
+3. You run `agent-sync apply` to generate agent-specific files in the correct formats and locations
+4. Your AI assistants now have the same knowledge and capabilities across platforms
 
 ## Installation
 
+### Homebrew Installation (macOS)
+
+You can install `agent-sync` using Homebrew:
+
+```bash
+brew install uphy/tap/agent-sync
+```
+
+### Go Installation
+
 Install via Go:
 
-```
+```bash
 go install github.com/uphy/agent-sync/cmd/agent-sync@latest
 ```
 
-Or download a release from GitHub Releases.
+### Binary Downloads
 
-## Usage
+Or download a release from [GitHub Releases](https://github.com/uphy/agent-sync/releases).
+
+## Getting Started
 
 ### Init Command
 
 Initialize a new agent-sync project with sample configuration and directory structure:
 
-```
+```bash
+mkdir my-ai-instructions
+cd my-ai-instructions
 agent-sync init
 ```
 
@@ -32,34 +64,96 @@ This command:
 - Sets up the `memories/` and `commands/` directories
 - Adds sample template files to help you get started
 
-Example:
-
-```
-mkdir my-new-project
-cd my-new-project
-agent-sync init
-```
-
 ### Apply Command
 
-Process the agent definitions according to the configuration:
+The `apply` command processes your source files and generates agent-specific output files based on your configuration:
 
-```
-agent-sync apply [flags]
-```
-
-Flags:
-- `-c, --config string` Path to agent-sync.yml file or directory containing it (default ".")
-- `--dry-run` Show what would be generated without writing files
-- `-f, --force` Force overwrite without prompting for confirmation
-
-Example:
-
-```
-agent-sync apply --config ./configs/agent-sync.yml my-app
+```bash
+agent-sync apply [project-names...] [flags]
 ```
 
-The apply command processes both project-specific and user-level tasks by default. If you specify project names as arguments, only those projects will be processed, but user-level tasks will still be processed.
+What it does:
+1. Reads your source files (memories and commands)
+2. Processes any templates in those files
+3. Converts the content to formats compatible with each target agent
+4. Writes the output files to their specified destinations
+
+**Project Selection:**
+- If you run `agent-sync apply` with no arguments, it processes ALL projects defined in your configuration
+- If you specify project names like `agent-sync apply project1 project2`, it only processes those specific projects
+- User-level tasks (from the `user` section of config) are always processed unless you use the `--no-user` flag
+
+**Important Flags:**
+- `-c, --config string`: Specify a custom path to your configuration file
+- `--dry-run`: Preview what would be generated without actually writing any files (useful for testing)
+- `-f, --force`: Skip confirmation prompts when overwriting existing files
+- `--verbose`: Show detailed output about what's happening
+
+## Common Usage Patterns
+
+### Example 1: Project with Multiple Agents
+
+For a project where you want to use the same instructions with Claude, Roo, and Cline:
+
+```yaml
+# agent-sync.yml
+configVersion: "1.0"
+projects:
+  my-project:
+    outputDirs:
+      - ~/projects/my-app
+    tasks:
+      - type: memory
+        inputs:
+          - ./memories/*.md
+        outputs:
+          - agent: claude  # Will generate CLAUDE.md
+          - agent: roo     # Will generate files in .roo/rules/
+          - agent: cline   # Will generate files in .clinerules/
+```
+
+Run: `agent-sync apply` to generate all formats.
+
+### Example 2: Shared Context and Project-Specific Commands
+
+For maintaining shared context information but project-specific commands:
+
+```yaml
+# agent-sync.yml
+configVersion: "1.0"
+user:
+  tasks:
+    - type: memory
+      name: "Global Rules"
+      inputs:
+        - ./global-rules/*.md
+      outputs:
+        - agent: claude
+        - agent: roo
+projects:
+  project-a:
+    outputDirs:
+      - ~/projects/project-a
+    tasks:
+      - type: command
+        inputs:
+          - ./project-a/commands/*.md
+        outputs:
+          - agent: claude
+          - agent: roo
+```
+
+Run: `agent-sync apply` to generate both global context and project-specific commands.
+
+### Example 3: Testing Changes with Dry Run
+
+Before applying changes, you can preview what would be generated:
+
+```bash
+agent-sync apply --dry-run --verbose
+```
+
+This shows what files would be generated without actually writing them.
 
 ## Configuration
 
@@ -80,14 +174,14 @@ user:
 
 agent-sync supports two task types:
 
-1. **Memory** (`type: memory`) - Defines context information for AI agents
-2. **Command** (`type: command`) - Provides custom command definitions for AI agents
+1. **Memory** (`type: memory`) - Defines context information for AI agents (rules, architecture, guidelines, etc.)
+2. **Command** (`type: command`) - Provides custom command definitions for AI agents (specialized modes, workflows, etc.)
 
 For detailed configuration options, output destinations, concatenation behavior, template syntax, and best practices, please refer to the [Configuration Documentation](docs/config.md) which is organized into several focused guides.
 
 ## Template Syntax
 
-Agent Definition uses Go's `text/template` with `{{` and `}}` delimiters. Some key template functions include:
+Agent Sync uses Go's `text/template` with `{{` and `}}` delimiters. Some key template functions include:
 
 | Function | Description |
 |----------|-------------|
@@ -98,10 +192,6 @@ Agent Definition uses Go's `text/template` with `{{` and `}}` delimiters. Some k
 | `agent` | Returns the current target agent identifier |
 
 See the [Template System Documentation](docs/templates.md) for full details on template functions and path resolution.
-
-## Examples
-
-See the `examples/` directory for sample memory context and command definition files, and example outputs for different agents.
 
 ## Release Process
 
