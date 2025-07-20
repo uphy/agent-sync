@@ -41,7 +41,12 @@
         {
             "required": [
                 "configVersion",
-                "projects",
+                "projects"
+            ]
+        },
+        {
+            "required": [
+                "configVersion",
                 "user"
             ]
         },
