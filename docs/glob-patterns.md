@@ -1,3 +1,10 @@
+---
+layout: default
+title: Glob Patterns
+---
+
+[Back to index](index.md)
+
 # Glob Pattern Support
 
 agent-sync uses glob patterns in multiple contexts:
@@ -74,3 +81,23 @@ src/**/*.{js,ts}  # All JavaScript and TypeScript files in src directory and sub
 - When no files match a glob pattern, the result is an empty list (no error)
 - File paths are always returned in alphabetical order
 - Pattern matching is case-sensitive on Unix-like systems and case-insensitive on Windows
+
+## Navigation
+
+- [Main Configuration Guide](config.md)
+- [Configuration Reference](config-reference.md)
+- [Task Types](task-types.md)
+- [Template System](templates.md)
+- [Input and Output Processing](input-output.md)
+- [Command Line Interface](cli.md)
+- [Logging](logging.md)
+- [Examples and Best Practices](examples.md)
+- [Troubleshooting](troubleshooting.md)
+
+---
+
+| Previous | Next |
+|----------|------|
+| [Input and Output Processing](input-output.md) | [Logging](logging.md) |
+
+[Back to index](index.md)

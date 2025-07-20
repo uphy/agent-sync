@@ -1,3 +1,10 @@
+---
+layout: default
+title: Command Line Interface
+---
+
+[Back to index](index.md)
+
 # Command Line Interface
 
 agent-sync provides a command-line interface (CLI) with several commands and options to control its behavior.
@@ -71,3 +78,11 @@ For more information about logging configuration, see the [Logging Guide](loggin
 - [Template System](templates.md)
 - [Troubleshooting](troubleshooting.md)
 - [Examples and Best Practices](examples.md)
+
+---
+
+| Previous | Next |
+|----------|------|
+| [Task Types](task-types.md) | [Template System](templates.md) |
+
+[Back to index](index.md)

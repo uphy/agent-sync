@@ -1,3 +1,10 @@
+---
+layout: default
+title: Examples and Best Practices
+---
+
+[Back to index](index.md)
+
 # Examples and Best Practices
 
 This document provides configuration examples and best practices for using agent-sync effectively.
@@ -175,3 +182,13 @@ inputs:
 - [Template System](templates.md)
 - [Command Line Interface](cli.md)
 - [Troubleshooting](troubleshooting.md)
+- [Glob Patterns](glob-patterns.md)
+- [Logging](logging.md)
+
+---
+
+| Previous | Next |
+|----------|------|
+| [Logging](logging.md) | [Troubleshooting](troubleshooting.md) |
+
+[Back to index](index.md)

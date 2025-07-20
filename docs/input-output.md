@@ -1,3 +1,10 @@
+---
+layout: default
+title: Input and Output Processing
+---
+
+[Back to index](index.md)
+
 # Input and Output Processing
 
 This document details how agent-sync processes input files and generates output files.
@@ -131,3 +138,11 @@ When the `agent-sync apply` command is executed, the following workflow occurs:
 - [Command Line Interface](cli.md)
 - [Troubleshooting](troubleshooting.md)
 - [Examples and Best Practices](examples.md)
+
+---
+
+| Previous | Next |
+|----------|------|
+| [Template System](templates.md) | [Glob Patterns](glob-patterns.md) |
+
+[Back to index](index.md)

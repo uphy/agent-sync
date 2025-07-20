@@ -1,3 +1,10 @@
+---
+layout: default
+title: Configuration Reference
+---
+
+[Back to index](index.md)
+
 # Configuration Reference
 
 This document details all configuration parameters available in the `agent-sync.yml` file, their types, requirements, and descriptions.
@@ -59,3 +66,11 @@ Options for each output:
 - [Command Line Interface](cli.md)
 - [Troubleshooting](troubleshooting.md)
 - [Examples and Best Practices](examples.md)
+
+---
+
+| Previous | Next |
+|----------|------|
+| [Configuration Guide](config.md) | [Task Types](task-types.md) |
+
+[Back to index](index.md)

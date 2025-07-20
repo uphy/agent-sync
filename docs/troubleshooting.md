@@ -1,3 +1,10 @@
+---
+layout: default
+title: Troubleshooting
+---
+
+[Back to index](index.md)
+
 # Error Handling and Troubleshooting
 
 This document covers common errors, environment variables, debugging tips, and OS-specific considerations for agent-sync.
@@ -81,3 +88,13 @@ For more information about logging configuration, see the [Logging Guide](loggin
 - [Template System](templates.md)
 - [Command Line Interface](cli.md)
 - [Examples and Best Practices](examples.md)
+- [Glob Patterns](glob-patterns.md)
+- [Logging](logging.md)
+
+---
+
+| Previous | Next |
+|----------|------|
+| [Examples and Best Practices](examples.md) | |
+
+[Back to index](index.md)

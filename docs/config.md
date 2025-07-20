@@ -1,3 +1,10 @@
+---
+layout: default
+title: Configuration Guide
+---
+
+[Back to index](index.md)
+
 # agent-sync Configuration Reference
 
 ## Overview
@@ -59,3 +66,11 @@ tasks:
 - [Troubleshooting](troubleshooting.md)
 - [Examples and Best Practices](examples.md)
 - [Logging Guide](logging.md)
+
+---
+
+| Previous | Next |
+|----------|------|
+| | [Configuration Reference](config-reference.md) |
+
+[Back to index](index.md)

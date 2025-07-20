@@ -1,3 +1,10 @@
+---
+layout: default
+title: Template System
+---
+
+[Back to index](index.md)
+
 # Template System
 
 agent-sync provides a powerful templating system that allows you to create dynamic content, include files, and handle agent-specific formatting.
@@ -155,3 +162,11 @@ Roo-specific content here
 - [Command Line Interface](cli.md)
 - [Troubleshooting](troubleshooting.md)
 - [Examples and Best Practices](examples.md)
+
+---
+
+| Previous | Next |
+|----------|------|
+| [Command Line Interface](cli.md) | [Input and Output Processing](input-output.md) |
+
+[Back to index](index.md)

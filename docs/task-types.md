@@ -1,3 +1,10 @@
+---
+layout: default
+title: Task Types
+---
+
+[Back to index](index.md)
+
 # Task Types
 
 agent-sync supports the following two task types:
@@ -77,3 +84,11 @@ Each agent may support specific frontmatter attributes for commands:
 - [Command Line Interface](cli.md)
 - [Troubleshooting](troubleshooting.md)
 - [Examples and Best Practices](examples.md)
+
+---
+
+| Previous | Next |
+|----------|------|
+| [Configuration Reference](config-reference.md) | [Command Line Interface](cli.md) |
+
+[Back to index](index.md)

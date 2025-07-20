@@ -1,3 +1,10 @@
+---
+layout: default
+title: Logging Guide
+---
+
+[Back to index](index.md)
+
 # agent-sync Logging Guide
 
 ## Overview
@@ -215,3 +222,23 @@ This command is valuable for developers who need to verify the logging system is
 | Log Level | `--log-level` | `AGENT_DEF_LOG_LEVEL` | Logging detail (debug, info, warn, error) | `info` |
 | Log File | `--log-file` | `AGENT_DEF_LOG_FILE` | Path to save logs | - |
 | Verbose | `--verbose` | - | Show detailed messages | `false` |
+
+## Navigation
+
+- [Main Configuration Guide](config.md)
+- [Configuration Reference](config-reference.md)
+- [Task Types](task-types.md)
+- [Template System](templates.md)
+- [Input and Output Processing](input-output.md)
+- [Glob Patterns](glob-patterns.md)
+- [Command Line Interface](cli.md)
+- [Examples and Best Practices](examples.md)
+- [Troubleshooting](troubleshooting.md)
+
+---
+
+| Previous | Next |
+|----------|------|
+| [Glob Patterns](glob-patterns.md) | [Examples and Best Practices](examples.md) |
+
+[Back to index](index.md)
