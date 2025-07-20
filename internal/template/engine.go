@@ -139,11 +139,6 @@ func (e *Engine) ExecuteFile(absFilePath string, data any) (string, error) {
 	return result, err
 }
 
-// Process implements the model.TemplateProcessor interface
-func (e *Engine) Process(content string) (string, error) {
-	return e.Execute(content, nil)
-}
-
 // RegisterHelperFunctions registers all template helper functions
 func (e *Engine) RegisterHelperFunctions(t *template.Template) *template.Template {
 	funcMap := template.FuncMap{
@@ -251,6 +246,3 @@ func (e *Engine) processReference(fullPath string, processTemplate bool) (string
 	// Return a reference marker with original relative path
 	return fmt.Sprintf("[参考: %s]", originalPath), nil
 }
-
-// Note: The processIncludeRaw and processReferenceRaw functions have been removed
-// in favor of the unified processInclude and processReference functions with a boolean parameter.
