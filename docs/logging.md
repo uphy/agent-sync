@@ -17,7 +17,7 @@ By default, agent-sync operates silently with no console output. To enable outpu
 1. Use the `--verbose` flag to show output in your terminal:
 
 ```bash
-agent-sync build --verbose
+agent-sync apply --verbose
 ```
 
 The `--verbose` flag does two important things:
@@ -27,7 +27,7 @@ The `--verbose` flag does two important things:
 2. Use the `--log-file` flag to save logs to a file:
 
 ```bash
-agent-sync build --log-file build.log
+agent-sync apply --log-file apply.log
 ```
 
 When enabled, output includes visual indicators:
@@ -48,13 +48,13 @@ These flags provide immediate control for a single command:
 
 ```bash
 # Increase logging detail
-agent-sync build --log-level debug
+agent-sync apply --log-level debug
 
 # Save logs to a file
-agent-sync build --log-file ./logs/agent-sync.log
+agent-sync apply --log-file ./logs/agent-sync.log
 
 # Display more detailed messages
-agent-sync build --verbose
+agent-sync apply --verbose
 ```
 
 ### 2. Environment Variables
@@ -106,7 +106,7 @@ When logging to a file, you can control:
 When something isn't working as expected:
 
 ```bash
-agent-sync build --log-level debug --log-file debug.log --verbose
+agent-sync apply --log-level debug --log-file debug.log --verbose
 ```
 
 This will:
@@ -118,12 +118,12 @@ This will:
 When using agent-sync in automated scripts:
 
 ```bash
-agent-sync build --log-level error --log-file build.log
+agent-sync apply --log-level error --log-file apply.log
 ```
 
 This will:
 1. Only show errors in the terminal
-2. Save all logs to build.log
+2. Save all logs to apply.log
 
 ### Development Environment
 
@@ -133,7 +133,7 @@ For day-to-day development work:
 # Set environment variables
 export AGENT_DEF_LOG_LEVEL=info
 # Or use command-line flags
-agent-sync build --verbose
+agent-sync apply --verbose
 ```
 
 ### Production Environment
@@ -145,7 +145,7 @@ For server or CI/CD environments:
 export AGENT_DEF_LOG_LEVEL=info
 export AGENT_DEF_LOG_FILE=/var/log/agent-sync/agent-sync.log
 # Or use command-line flags
-agent-sync build --log-level info --log-file /var/log/agent-sync/agent-sync.log
+agent-sync apply --log-level info --log-file /var/log/agent-sync/agent-sync.log
 ```
 
 ### Silent Operation
@@ -176,7 +176,7 @@ For minimal output when running in scripts or automated environments, simply don
 If you encounter issues with logging, try running with debug level to get more information:
 
 ```bash
-agent-sync --log-level debug --verbose build
+agent-sync --log-level debug --verbose apply
 ```
 
 ## Testing Logs

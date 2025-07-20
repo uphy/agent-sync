@@ -64,7 +64,7 @@ func TestAgentDef(t *testing.T) {
 			}
 
 			// Run the agent-sync binary with config flag pointing to the local directory
-			cmd := exec.Command(binaryPath, "build", "--force", "--config", ".")
+			cmd := exec.Command(binaryPath, "apply", "--force", "--config", ".")
 			cmd.Dir = tempDir
 			var stderr bytes.Buffer
 			cmd.Stderr = &stderr

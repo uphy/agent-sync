@@ -16,11 +16,11 @@ These flags can be used with any command:
 
 ## Commands
 
-### `build`
+### `apply`
 
 Generates files based on agent-sync.yml configuration.
 
-Usage: `agent-sync build [project...]`
+Usage: `agent-sync apply [project...]`
 
 If no project names are provided, all projects will be processed.
 
@@ -28,21 +28,6 @@ Flags:
 - `--config, -c`: Path to agent-sync.yml file or directory containing it (default: ".")
 - `--dry-run`: Show what would be generated without writing files
 - `--force, -f`: Force overwrite without prompting for confirmation
-
-### `validate`
-
-Validates the agent-sync.yml configuration without generating files.
-
-Usage: `agent-sync validate`
-
-Flags:
-- `--config, -c`: Path to agent-sync.yml file or directory containing it (default: ".")
-
-### `list`
-
-Lists available agents or project configurations.
-
-Usage: `agent-sync list [agents|projects]`
 
 ### `init`
 
@@ -55,19 +40,14 @@ Flags:
 
 ## Examples
 
-**Building all projects with verbose output:**
+**Applying to all projects with verbose output:**
 ```bash
-agent-sync build --verbose
+agent-sync apply --verbose
 ```
 
-**Building specific projects:**
+**Applying to specific projects:**
 ```bash
-agent-sync build project1 project2 --verbose
-```
-
-**Validating configuration:**
-```bash
-agent-sync validate --config /path/to/agent-sync.yml
+agent-sync apply project1 project2 --verbose
 ```
 
 **Initializing a new configuration:**
@@ -75,19 +55,14 @@ agent-sync validate --config /path/to/agent-sync.yml
 agent-sync init
 ```
 
-**Listing supported agents:**
+**Applying with debug logs:**
 ```bash
-agent-sync list agents
-```
-
-**Building with debug logs:**
-```bash
-agent-sync build --debug --log-file build.log
+agent-sync apply --debug --log-file apply.log
 ```
 
 **Dry run to preview changes:**
 ```bash
-agent-sync build --dry-run
+agent-sync apply --dry-run
 ```
 
 For more information about logging configuration, see the [Logging Guide](logging.md).

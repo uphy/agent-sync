@@ -20,9 +20,9 @@ type Context struct {
 // This function wires up the command handlers with the shared CLI context.
 func SetupCommands(rootCmd *cobra.Command, ctx *Context) {
 	// Create command instances with context
-	buildCmd := NewBuildCommandWithContext(ctx)
+	applyCmd := NewApplyCommandWithContext(ctx)
 	initCmd := NewInitCommandWithContext(ctx)
 
 	// Add commands to root
-	rootCmd.AddCommand(buildCmd, initCmd)
+	rootCmd.AddCommand(applyCmd, initCmd)
 }

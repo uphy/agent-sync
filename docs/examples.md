@@ -124,7 +124,7 @@ tasks:
 
 9. **Test Changes**: Use `--dry-run` to preview changes before applying them
    ```bash
-   agent-sync build --dry-run
+   agent-sync apply --dry-run
    ```
 
 10. **Document Configuration**: Add comments to your configuration file to explain complex setups

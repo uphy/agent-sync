@@ -55,12 +55,12 @@ func NewManager(cfgPath string, logger *zap.Logger, output log.OutputWriter) (*M
 	}, nil
 }
 
-// Build executes the build pipeline for the specified projects or user scope.
+// Apply executes the apply pipeline for the specified projects or user scope.
 // If no projects are specified, all projects will be processed.
-func (m *Manager) Build(projects []string, dryRun, force bool) error {
+func (m *Manager) Apply(projects []string, dryRun, force bool) error {
 	m.force = force
 
-	m.logger.Info("Starting build process",
+	m.logger.Info("Starting apply process",
 		zap.Strings("projects", projects),
 		zap.Bool("dryRun", dryRun),
 		zap.Bool("force", force))

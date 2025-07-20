@@ -23,7 +23,7 @@ run = "go install ./cmd/agent-sync"
 alias = "deploy"
 
 [tasks.agent-sync]
-run = "go run ./cmd/agent-sync build -f -c .agent-sync/agent-sync.yml"
+run = "go run ./cmd/agent-sync apply -f -c .agent-sync/agent-sync.yml"
 
 [tasks.lint]
 run = "golangci-lint run ./..."

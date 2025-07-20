@@ -108,8 +108,7 @@ When no `outputPath` is specified, the following default paths are used. The pat
 | Copilot | command | `.github/prompts/` or `~/.vscode/prompts/` | Non-concatenated (directory path) |
 
 ## Task Processing Workflow
-
-When the `agent-sync build` command is executed, the following workflow occurs:
+When the `agent-sync apply` command is executed, the following workflow occurs:
 
 1. **Configuration Loading**: The configuration file is loaded and validated.
 2. **Task Selection**: If specific projects are provided as command arguments, only those projects' tasks are processed. Otherwise, all projects and user tasks are processed.

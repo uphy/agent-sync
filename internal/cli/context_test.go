@@ -68,9 +68,9 @@ func TestSetupCommands(t *testing.T) {
 		t.Error("Expected commands to be added to the root command")
 	}
 
-	// Verify that buildContext and initContext were set
-	if buildContext != ctx {
-		t.Error("Expected buildContext to be set to the provided context")
+	// Verify that applyContext and initContext were set
+	if applyContext != ctx {
+		t.Error("Expected applyContext to be set to the provided context")
 	}
 	if initContext != ctx {
 		t.Error("Expected initContext to be set to the provided context")

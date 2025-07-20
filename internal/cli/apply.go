@@ -9,24 +9,24 @@ import (
 	"go.uber.org/zap"
 )
 
-// buildContext holds the CLI context for the build command
-var buildContext *Context
+// applyContext holds the CLI context for the apply command
+var applyContext *Context
 
-// NewBuildCommand returns the 'build' command for the CLI.
-func NewBuildCommand() *cobra.Command {
-	return NewBuildCommandWithContext(nil)
+// NewApplyCommand returns the 'apply' command for the CLI.
+func NewApplyCommand() *cobra.Command {
+	return NewApplyCommandWithContext(nil)
 }
 
-// NewBuildCommandWithContext returns the 'build' command with the specified context.
-func NewBuildCommandWithContext(ctx *Context) *cobra.Command {
+// NewApplyCommandWithContext returns the 'apply' command with the specified context.
+func NewApplyCommandWithContext(ctx *Context) *cobra.Command {
 	// Store context for command execution
-	buildContext = ctx
+	applyContext = ctx
 	var dryRun bool
 	var force bool
 	var configPath string
 
 	cmd := &cobra.Command{
-		Use:   "build [project...]",
+		Use:   "apply [project...]",
 		Short: "Generate files based on agent-sync.yml",
 		Long: `Generate files for one or more projects or user-level tasks as defined in agent-sync.yml.
 If no project names are provided, all projects will be processed.`,
@@ -35,12 +35,12 @@ If no project names are provided, all projects will be processed.`,
 			var logger *zap.Logger
 			var output log.OutputWriter
 
-			if buildContext != nil {
-				logger = buildContext.Logger
-				output = buildContext.Output
+			if applyContext != nil {
+				logger = applyContext.Logger
+				output = applyContext.Output
 
 				// Log command execution
-				logger.Info("Executing build command",
+				logger.Info("Executing apply command",
 					zap.String("configPath", configPath),
 					zap.Strings("projects", args),
 					zap.Bool("dryRun", dryRun),
@@ -58,8 +58,8 @@ If no project names are provided, all projects will be processed.`,
 				return err
 			}
 
-			// Execute build
-			return mgr.Build(args, dryRun, force)
+			// Execute apply
+			return mgr.Apply(args, dryRun, force)
 		},
 	}
 

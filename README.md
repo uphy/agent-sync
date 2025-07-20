@@ -40,12 +40,12 @@ cd my-new-project
 agent-sync init
 ```
 
-### Build Command
+### Apply Command
 
 Process the agent definitions according to the configuration:
 
 ```
-agent-sync build [flags]
+agent-sync apply [flags]
 ```
 
 Flags:
@@ -56,10 +56,10 @@ Flags:
 Example:
 
 ```
-agent-sync build --config ./configs/agent-sync.yml my-app
+agent-sync apply --config ./configs/agent-sync.yml my-app
 ```
 
-The build command processes both project-specific and user-level tasks by default. If you specify project names as arguments, only those projects will be processed, but user-level tasks will still be processed.
+The apply command processes both project-specific and user-level tasks by default. If you specify project names as arguments, only those projects will be processed, but user-level tasks will still be processed.
 
 ## Configuration
 

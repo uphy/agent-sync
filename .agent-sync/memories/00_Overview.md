@@ -26,7 +26,7 @@ agent-sync is a tool for converting context and command definitions for various 
 
 1. **Command Line Interface** (`/cmd/agent-sync/main.go`, `/internal/cli/`)
    - Uses Cobra for CLI implementation
-   - Main commands: build, validate, list, init
+   - Main commands: apply, init
    - Supports global flags for logging, output format, etc.
 
 2. **Configuration System** (`/internal/config/`)

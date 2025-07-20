@@ -26,11 +26,10 @@ agent-sync recognizes the following environment variables:
 1. **Use `--dry-run`**: Preview what would be generated without writing files
 2. **Enable debug logging**: Use `--debug` or `--log-level=debug` for detailed logs
 3. **Check output path formatting**: Remember that paths ending with `/` are treated as directories, while paths without are treated as files
-4. **Validate configuration**: Run `agent-sync validate` to check your configuration before building
+4. **Dry-run**: Run `agent-sync apply --dry-run` to check your configuration before applying
 5. **Check file permissions**: Ensure you have read permissions for input files and write permissions for output directories
-6. **Use `list` commands**: Run `agent-sync list agents` and `agent-sync list projects` to verify your configuration
-7. **Examine template processing**: If you suspect issues with templates, try creating simpler templates first to isolate the problem
-8. **Check for conflicting paths**: Make sure you're not writing to the same output file from different tasks
+6. **Examine template processing**: If you suspect issues with templates, try creating simpler templates first to isolate the problem
+7. **Check for conflicting paths**: Make sure you're not writing to the same output file from different tasks
 
 ## OS-Specific Considerations
 
