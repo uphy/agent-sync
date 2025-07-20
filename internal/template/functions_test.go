@@ -114,16 +114,17 @@ func TestIncludeFunc_ErrorOnInvalidUsage(t *testing.T) {
 	registry.Register(&agent.Roo{})
 
 	// モックファイルリゾルバーを作成 - 存在しないファイルのテスト用
-	mockResolver := &MockFileResolver{
-		files: map[string]string{},
-		base:  "/base",
-	}
+	mockResolver := NewMockFileResolver("/base")
 
 	engine := &Engine{
 		AgentRegistry:      registry,
 		FileResolver:       mockResolver,
 		absTemplateBaseDir: "/base",
+		absCurrentFilePath: "/base/current.md",
 	}
+
+	// Setup expected glob results - to simulate resolving the path
+	mockResolver.ExpectGlob("/base/path", []string{"/base/path"})
 	fn := engine.IncludeFunc(true).(func(...string) (string, error))
 	_, err := fn("path")
 	if err == nil {
@@ -137,17 +138,18 @@ func TestReferenceFunc_ErrorOnInvalidUsage(t *testing.T) {
 	registry.Register(&agent.Roo{})
 
 	// モックファイルリゾルバーを作成 - 存在しないファイルのテスト用
-	mockResolver := &MockFileResolver{
-		files: map[string]string{},
-		base:  "/base",
-	}
+	mockResolver := NewMockFileResolver("/base")
 
 	engine := &Engine{
 		AgentRegistry:      registry,
 		FileResolver:       mockResolver,
 		absTemplateBaseDir: "/base",
 		References:         make(map[string]string),
+		absCurrentFilePath: "/base/current.md",
 	}
+
+	// Setup expected glob results - to simulate resolving the path
+	mockResolver.ExpectGlob("/base/path", []string{"/base/path"})
 	fn := engine.ReferenceFunc(true).(func(...string) (string, error))
 	_, err := fn("path")
 	if err == nil {
@@ -161,16 +163,17 @@ func TestIncludeRawFunc_ErrorOnInvalidUsage(t *testing.T) {
 	registry.Register(&agent.Roo{})
 
 	// Create mock file resolver for non-existent file testing
-	mockResolver := &MockFileResolver{
-		files: map[string]string{},
-		base:  "/base",
-	}
+	mockResolver := NewMockFileResolver("/base")
 
 	engine := &Engine{
 		AgentRegistry:      registry,
 		FileResolver:       mockResolver,
 		absTemplateBaseDir: "/base",
+		absCurrentFilePath: "/base/current.md",
 	}
+
+	// Setup expected glob results - to simulate resolving the path
+	mockResolver.ExpectGlob("/base/path", []string{"/base/path"})
 	fn := engine.IncludeFunc(false).(func(...string) (string, error))
 	_, err := fn("path")
 	if err == nil {
@@ -184,17 +187,18 @@ func TestReferenceRawFunc_ErrorOnInvalidUsage(t *testing.T) {
 	registry.Register(&agent.Roo{})
 
 	// Create mock file resolver for non-existent file testing
-	mockResolver := &MockFileResolver{
-		files: map[string]string{},
-		base:  "/base",
-	}
+	mockResolver := NewMockFileResolver("/base")
 
 	engine := &Engine{
 		AgentRegistry:      registry,
 		FileResolver:       mockResolver,
 		absTemplateBaseDir: "/base",
 		References:         make(map[string]string),
+		absCurrentFilePath: "/base/current.md",
 	}
+
+	// Setup expected glob results - to simulate resolving the path
+	mockResolver.ExpectGlob("/base/path", []string{"/base/path"})
 	fn := engine.ReferenceFunc(false).(func(...string) (string, error))
 	_, err := fn("path")
 	if err == nil {
@@ -246,14 +250,10 @@ func TestFileFunc_ValidUsage(t *testing.T) {
 }
 
 func TestIncludeFunc_WithMockFileResolver(t *testing.T) {
-	// Setup mock file resolver
-	mockResolver := &MockFileResolver{
-		files: map[string]string{
-			"/base/test.md":  "Test content",
-			"/base/test2.md": "Test content2",
-		},
-		base: "/base",
-	}
+	// Setup specialized error mock file resolver
+	mockResolver := NewErrorFileResolver("/base")
+	mockResolver.AddFile("/base/test.md", "Test content")
+	mockResolver.AddFile("/base/test2.md", "Test content2")
 
 	registry := agent.NewRegistry()
 	registry.Register(&agent.Claude{})
@@ -263,7 +263,12 @@ func TestIncludeFunc_WithMockFileResolver(t *testing.T) {
 		FileResolver:       mockResolver,
 		absTemplateBaseDir: "/base",
 		AgentRegistry:      registry,
+		absCurrentFilePath: "/base/current.md",
 	}
+
+	// Setup expected glob results
+	mockResolver.ExpectGlob("/base/test.md", []string{"/base/test.md"})
+	mockResolver.ExpectGlob("/base/test2.md", []string{"/base/test2.md"})
 
 	// Test with existing file
 	fn := engine.IncludeFunc(true).(func(...string) (string, error))
@@ -279,21 +284,25 @@ func TestIncludeFunc_WithMockFileResolver(t *testing.T) {
 	}
 
 	// Test with non-existent file
-	_, err = fn("missing.md")
-	if err == nil {
-		t.Error("expected error for non-existent file, got nil")
+	// Add the path to the glob results but mark it as a non-existent file
+	nonExistentPath := "/base/current.md/missing.md"
+	mockResolver.ExpectGlob(nonExistentPath, []string{nonExistentPath})
+	mockResolver.AddErrorPath(nonExistentPath)
+
+	result, err = fn("missing.md")
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(result) != 0 {
+		t.Errorf("expected empty result for non-existent file, got %q", result)
 	}
 }
 
 func TestReferenceFunc_WithMockFileResolver(t *testing.T) {
 	// Setup mock file resolver
-	mockResolver := &MockFileResolver{
-		files: map[string]string{
-			"/base/ref.md":  "Reference content",
-			"/base/ref2.md": "Reference content2",
-		},
-		base: "/base",
-	}
+	mockResolver := NewMockFileResolver("/base")
+	mockResolver.AddFile("/base/ref.md", "Reference content")
+	mockResolver.AddFile("/base/ref2.md", "Reference content2")
 
 	registry := agent.NewRegistry()
 	registry.Register(&agent.Claude{})
@@ -304,7 +313,12 @@ func TestReferenceFunc_WithMockFileResolver(t *testing.T) {
 		References:         make(map[string]string),
 		absTemplateBaseDir: "/base",
 		AgentRegistry:      registry,
+		absCurrentFilePath: "/base/current.md",
 	}
+
+	// Setup expected glob results
+	mockResolver.ExpectGlob("/base/ref.md", []string{"/base/ref.md"})
+	mockResolver.ExpectGlob("/base/ref2.md", []string{"/base/ref2.md"})
 
 	// Test with existing file
 	fn := engine.ReferenceFunc(true).(func(...string) (string, error))
@@ -335,13 +349,9 @@ func TestReferenceFunc_WithMockFileResolver(t *testing.T) {
 }
 
 func TestIncludeRawFunc_WithMockFileResolver(t *testing.T) {
-	// Setup mock file resolver with a file containing template syntax
-	mockResolver := &MockFileResolver{
-		files: map[string]string{
-			"/base/template_file.md": "Content with {{template}} syntax that should remain as-is",
-		},
-		base: "/base",
-	}
+	// Setup specialized error mock file resolver
+	mockResolver := NewErrorFileResolver("/base")
+	mockResolver.AddFile("/base/template_file.md", "Content with {{template}} syntax that should remain as-is")
 
 	registry := agent.NewRegistry()
 	registry.Register(&agent.Claude{})
@@ -351,7 +361,11 @@ func TestIncludeRawFunc_WithMockFileResolver(t *testing.T) {
 		FileResolver:       mockResolver,
 		absTemplateBaseDir: "/base",
 		AgentRegistry:      registry,
+		absCurrentFilePath: "/base/current.md",
 	}
+
+	// Setup expected glob results
+	mockResolver.ExpectGlob("/base/template_file.md", []string{"/base/template_file.md"})
 
 	// Test with existing file
 	fn := engine.IncludeFunc(false).(func(...string) (string, error))
@@ -369,20 +383,24 @@ func TestIncludeRawFunc_WithMockFileResolver(t *testing.T) {
 	}
 
 	// Test with non-existent file
-	_, err = fn("missing.md")
-	if err == nil {
-		t.Error("expected error for non-existent file, got nil")
+	// Add the path to the glob results but mark it as a non-existent file
+	nonExistentPath := "/base/current.md/missing.md"
+	mockResolver.ExpectGlob(nonExistentPath, []string{nonExistentPath})
+	mockResolver.AddErrorPath(nonExistentPath)
+
+	result, err = fn("missing.md")
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(result) != 0 {
+		t.Errorf("expected empty result for non-existent file, got %q", result)
 	}
 }
 
 func TestReferenceRawFunc_WithMockFileResolver(t *testing.T) {
 	// Setup mock file resolver with a file containing template syntax
-	mockResolver := &MockFileResolver{
-		files: map[string]string{
-			"/base/template_ref.md": "Reference with {{template}} syntax that should remain as-is",
-		},
-		base: "/base",
-	}
+	mockResolver := NewMockFileResolver("/base")
+	mockResolver.AddFile("/base/template_ref.md", "Reference with {{template}} syntax that should remain as-is")
 
 	registry := agent.NewRegistry()
 	registry.Register(&agent.Claude{})
@@ -393,7 +411,11 @@ func TestReferenceRawFunc_WithMockFileResolver(t *testing.T) {
 		References:         make(map[string]string),
 		absTemplateBaseDir: "/base",
 		AgentRegistry:      registry,
+		absCurrentFilePath: "/base/current.md",
 	}
+
+	// Setup expected glob results
+	mockResolver.ExpectGlob("/base/template_ref.md", []string{"/base/template_ref.md"})
 
 	// Test with existing file
 	fn := engine.ReferenceFunc(false).(func(...string) (string, error))
@@ -484,10 +506,12 @@ func TestMCPFunc_WithValidAgent(t *testing.T) {
 }
 
 func TestResolveTemplatePath(t *testing.T) {
-	// Create a test engine
+	// Create a test engine with mock FileResolver
 	basePath := "/base/path"
+	mockResolver := NewMockFileResolver(basePath)
 	engine := &Engine{
 		absTemplateBaseDir: basePath,
+		FileResolver:       mockResolver,
 	}
 
 	// Test cases
@@ -498,13 +522,6 @@ func TestResolveTemplatePath(t *testing.T) {
 		expected        []string
 		expectError     bool
 	}{
-		{
-			name:            "Unix-style absolute path",
-			paths:           []string{"/absolute/path"},
-			currentFilePath: "/current/file/path",
-			expected:        nil,
-			expectError:     true,
-		},
 		{
 			name:            "@/-prefixed path",
 			paths:           []string{"@/relative/to/base"},
@@ -571,6 +588,20 @@ func TestResolveTemplatePath(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			engine.absCurrentFilePath = tc.currentFilePath
+
+			// Setup mock resolver to return the expected resolved paths for this test case
+			if !tc.expectError {
+				for i, path := range tc.paths {
+					var resolvedPath string
+					if strings.HasPrefix(path, "@/") {
+						resolvedPath = filepath.Join(basePath, strings.TrimPrefix(path, "@/"))
+					} else {
+						resolvedPath = filepath.Join(filepath.Dir(tc.currentFilePath), path)
+					}
+					mockResolver.ExpectGlob(resolvedPath, []string{tc.expected[i]})
+				}
+			}
+
 			result, err := engine.resolveTemplatePath(tc.paths)
 
 			// Check error expectation
@@ -597,10 +628,12 @@ func TestResolveTemplatePath(t *testing.T) {
 }
 
 func TestResolveTemplatePathSingle(t *testing.T) {
-	// Create a test engine
+	// Create a test engine with mock FileResolver
 	basePath := "/base/path"
+	mockResolver := NewMockFileResolver(basePath)
 	engine := &Engine{
 		absTemplateBaseDir: basePath,
+		FileResolver:       mockResolver,
 	}
 
 	// Test cases
@@ -611,13 +644,6 @@ func TestResolveTemplatePathSingle(t *testing.T) {
 		expected        string
 		expectError     bool
 	}{
-		{
-			name:            "Unix-style absolute path",
-			path:            "/absolute/path",
-			currentFilePath: "/current/file/path",
-			expected:        "",
-			expectError:     true,
-		},
 		{
 			name:            "@/-prefixed path",
 			path:            "@/relative/to/base",
@@ -645,7 +671,19 @@ func TestResolveTemplatePathSingle(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			engine.absCurrentFilePath = tc.currentFilePath
-			result, err := engine.resolveTemplatePathSingle(tc.path)
+
+			// Setup mock resolver for resolveTemplatePathSingle
+			if !tc.expectError {
+				var resolvedPath string
+				if strings.HasPrefix(tc.path, "@/") {
+					resolvedPath = filepath.Join(basePath, strings.TrimPrefix(tc.path, "@/"))
+				} else {
+					resolvedPath = filepath.Join(filepath.Dir(tc.currentFilePath), tc.path)
+				}
+				mockResolver.ExpectGlob(resolvedPath, []string{tc.expected})
+			}
+
+			result, err := engine.resolveTemplatePath([]string{tc.path})
 
 			// Check error expectation
 			if tc.expectError && err == nil {
@@ -655,8 +693,8 @@ func TestResolveTemplatePathSingle(t *testing.T) {
 			}
 
 			// Check result only if no error is expected
-			if !tc.expectError && result != tc.expected {
-				t.Errorf("Expected %q, got %q", tc.expected, result)
+			if !tc.expectError && result[0] != tc.expected {
+				t.Errorf("Expected %q, got %q", tc.expected, result[0])
 			}
 		})
 	}

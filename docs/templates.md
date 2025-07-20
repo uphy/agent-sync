@@ -26,6 +26,19 @@ Examples assuming config file is at `/project/agent-def.yml`:
 | `utils/helper.md` | `/project/templates/main.md` | `/project/templates/utils/helper.md` |
 | `/absolute/path.md` | Any file | Error: absolute paths are not allowed |
 
+## Glob Pattern Support
+
+All path-based template functions (`include`, `includeRaw`, `reference`, and `referenceRaw`) support glob patterns for dynamic file selection. This allows you to include multiple files that match a specified pattern without having to list them individually.
+
+For example:
+```
+{{ includeRaw "docs/*.md" }}           // All .md files in the docs directory
+{{ include "templates/**/*.md" }}      // All .md files in templates directory and its subdirectories
+{{ reference "configs/{dev,prod}.json" }} // Both dev.json and prod.json from the configs directory
+```
+
+For detailed information about glob pattern syntax and behavior, see the [Glob Patterns](glob-patterns.md) documentation.
+
 ## Template Functions
 
 agent-def supports the following template functions in source files:
@@ -33,10 +46,10 @@ agent-def supports the following template functions in source files:
 | Function | Description | Example |
 |----------|-------------|---------|
 | `file "path/to/file"` | Formats a file reference according to the output agent | `{{ file "src/main.go" }}` → `` `src/main.go` `` (Copilot) or `@/src/main.go` (Cline) |
-| `include "path/to/file" ["path/to/another/file" ...]` | Includes content from one or more files with template processing | `{{ include "common/header.md" }}` or `{{ include "header.md" "footer.md" }}` |
-| `includeRaw "path/to/file" ["path/to/another/file" ...]` | Includes content from one or more files without template processing | `{{ includeRaw "common/header.md" }}` or `{{ includeRaw "header.md" "footer.md" }}` |
-| `reference "path/to/file" ["path/to/another/file" ...]` | References content from one or more files with template processing | `{{ reference "data/config.json" }}` or `{{ reference "config.json" "settings.json" }}` |
-| `referenceRaw "path/to/file" ["path/to/another/file" ...]` | References content from one or more files without template processing | `{{ referenceRaw "data/config.json" }}` or `{{ referenceRaw "config.json" "settings.json" }}` |
+| `include "path/to/file" ["path/to/another/file" ...]` | Includes content from one or more files with template processing. Supports glob patterns. | `{{ include "common/header.md" }}` or `{{ include "common/*.md" }}` |
+| `includeRaw "path/to/file" ["path/to/another/file" ...]` | Includes content from one or more files without template processing. Supports glob patterns. | `{{ includeRaw "common/header.md" }}` or `{{ includeRaw "templates/**/*.md" }}` |
+| `reference "path/to/file" ["path/to/another/file" ...]` | References content from one or more files with template processing. Supports glob patterns. | `{{ reference "data/config.json" }}` or `{{ reference "config/*.json" }}` |
+| `referenceRaw "path/to/file" ["path/to/another/file" ...]` | References content from one or more files without template processing. Supports glob patterns. | `{{ referenceRaw "data/config.json" }}` or `{{ referenceRaw "**/*.json" }}` |
 | `mcp "agent" "command" "arg1" "arg2"` | Formats an MCP command for the output agent | `{{ mcp "github" "get-issue" "owner" "repo" "123" }}` |
 | `agent` | Returns the current output agent identifier | `{{ if eq agent "claude" }}Claude-specific content{{ end }}` |
 | `ifAGENT "content"` | Conditionally includes content only for the specified agent | `{{ ifRoo "This will only appear in Roo output" }}` |
@@ -57,6 +70,12 @@ For Copilot: {{ file "src/main.go" }} → `src/main.go`
 ```
 This will include and process the content of `header.md`, executing any template directives it contains.
 
+**Including multiple templates with glob pattern:**
+```
+{{ include "sections/*.md" }}
+```
+This will include and process all `.md` files in the `sections` directory in alphabetical order, executing any template directives they contain.
+
 **Including multiple templates:**
 ```
 {{ include "header.md" "content.md" "footer.md" }}
@@ -69,11 +88,17 @@ This will include and process the content of all specified files in the given or
 ```
 This will include the content of `header.md` exactly as it is, without executing any template directives it contains.
 
-**Including multiple files without template processing:**
+**Including multiple files without template processing using glob:**
 ```
-{{ includeRaw "header.md" "content.md" "footer.md" }}
+{{ includeRaw "docs/**/*.md" }}
 ```
-This will include the content of all specified files in the given order, without executing any template directives they contain.
+This will include the content of all `.md` files in the `docs` directory and its subdirectories, without executing any template directives they contain.
+
+**Including files with exclusion pattern:**
+```
+{{ include "src/*.go" "!src/*_test.go" }}
+```
+This will include all `.go` files in the `src` directory, excluding test files that match the `*_test.go` pattern.
 
 **Referencing files with template processing:**
 ```
@@ -81,11 +106,11 @@ This will include the content of all specified files in the given order, without
 ```
 This will include the content of `data.json` with template processing.
 
-**Referencing multiple files with template processing:**
+**Referencing multiple files with template processing using glob:**
 ```
-{{ reference "config.json" "settings.json" "defaults.json" }}
+{{ reference "configs/{production,staging,development}.json" }}
 ```
-This will include the content of all specified files in the given order, with template processing applied to each file.
+This will include the content of `production.json`, `staging.json`, and `development.json` from the `configs` directory, with template processing applied to each file.
 
 **Referencing files without template processing:**
 ```
@@ -126,6 +151,7 @@ Roo-specific content here
 - [Configuration Reference](config-reference.md)
 - [Input and Output Processing](input-output.md)
 - [Task Types](task-types.md)
+- [Glob Patterns](glob-patterns.md)
 - [Command Line Interface](cli.md)
 - [Troubleshooting](troubleshooting.md)
 - [Examples and Best Practices](examples.md)

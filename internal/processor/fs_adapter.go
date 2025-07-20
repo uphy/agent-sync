@@ -26,3 +26,7 @@ func (a *FSAdapter) Exists(path string) bool {
 func (a *FSAdapter) ResolvePath(path string) string {
 	return a.fs.ResolvePath(path)
 }
+
+func (a *FSAdapter) Glob(patterns []string) ([]string, error) {
+	return util.GlobWithExcludesNoBaseDir(patterns)
+}

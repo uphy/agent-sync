@@ -12,6 +12,8 @@ The `inputs` field supports glob patterns with doublestar support for recursive 
 | `**/*.md` | All Markdown files in any subdirectory (recursive) |
 | `!*_test.md` | Exclude all test Markdown files |
 
+For detailed information about glob pattern syntax and behavior, see the [Glob Patterns](glob-patterns.md) documentation.
+
 ### Examples
 
 ```yaml
@@ -126,6 +128,7 @@ When the `agent-def build` command is executed, the following workflow occurs:
 - [Configuration Reference](config-reference.md)
 - [Task Types](task-types.md)
 - [Template System](templates.md)
+- [Glob Patterns](glob-patterns.md)
 - [Command Line Interface](cli.md)
 - [Troubleshooting](troubleshooting.md)
 - [Examples and Best Practices](examples.md)

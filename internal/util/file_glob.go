@@ -103,3 +103,31 @@ func GlobWithExcludes(patterns []string, baseDir string) ([]string, error) {
 
 	return result, nil
 }
+
+func GlobWithExcludesNoBaseDir(patterns []string) ([]string, error) {
+	baseToPatterns := make(map[string][]string)
+	for _, path := range patterns {
+		// Temporarily remove the '!' prefix for negative patterns
+		var prefix string
+		if after, found := strings.CutPrefix(path, "!"); found {
+			path = after // Remove the '!' prefix for negative patterns
+			prefix = "!"
+		}
+
+		base, pattern := doublestar.SplitPattern(path)
+		baseToPatterns[base] = append(baseToPatterns[base], prefix+pattern)
+	}
+
+	result := make([]string, 0)
+	for base, patterns := range baseToPatterns {
+		paths, err := GlobWithExcludes(patterns, base)
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve template paths for base %q: %w", base, err)
+		}
+		for i, p := range paths {
+			paths[i] = filepath.Join(base, p)
+		}
+		result = append(result, paths...)
+	}
+	return result, nil
+}

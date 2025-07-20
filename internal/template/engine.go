@@ -22,6 +22,8 @@ type FileResolver interface {
 
 	// ResolvePath resolves a relative path to absolute
 	ResolvePath(path string) string
+
+	Glob(patterns []string) ([]string, error)
 }
 
 // Engine represents the template engine wrapper

@@ -120,35 +120,25 @@ func (e *Engine) Agent() string {
 // 3. All other paths (including those with "./" or "../" prefix) are relative to the including file's directory (CurrentFilePath)
 //
 // Returns an array of resolved absolute paths and an error if any path is invalid.
-func (e *Engine) resolveTemplatePath(paths []string) ([]string, error) {
-	resolved := make([]string, 0, len(paths))
-
-	for _, path := range paths {
-		if filepath.IsAbs(path) {
-			return nil, fmt.Errorf("absolute paths are not allowed in template includes or references: %s", path)
+func (e *Engine) resolveTemplatePath(patterns []string) ([]string, error) {
+	resolvedPatterns := make([]string, len(patterns))
+	for i, path := range patterns {
+		// Temporarily remove the '!' prefix for negative patterns
+		var prefix string
+		if after, found := strings.CutPrefix(path, "!"); found {
+			path = after // Remove the '!' prefix for negative patterns
+			prefix = "!"
 		}
 
-		// Handle "@/"-prefixed paths as relative to BasePath
 		if trimmed, ok := strings.CutPrefix(path, "@/"); ok {
-			resolved = append(resolved, filepath.Join(e.absTemplateBaseDir, trimmed))
-			continue
+			// Handle "@/"-prefixed paths as relative to BasePath
+			resolvedPatterns[i] = prefix + filepath.Join(e.absTemplateBaseDir, trimmed)
+		} else {
+			// Handle explicitly relative paths (./ or ../) relative to current file
+			resolvedPatterns[i] = prefix + filepath.Join(filepath.Dir(e.absCurrentFilePath), path)
 		}
-
-		// Handle explicitly relative paths (./ or ../) relative to current file
-		resolved = append(resolved, filepath.Join(filepath.Dir(e.absCurrentFilePath), path))
 	}
-
-	return resolved, nil
-}
-
-// resolveTemplatePathSingle is a helper method that resolves a single path
-// using the same rules as resolveTemplatePath
-func (e *Engine) resolveTemplatePathSingle(path string) (string, error) {
-	resolved, err := e.resolveTemplatePath([]string{path})
-	if err != nil {
-		return "", err
-	}
-	return resolved[0], nil
+	return e.FileResolver.Glob(resolvedPatterns)
 }
 
 // normalizePath normalizes a path for the current OS

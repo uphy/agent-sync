@@ -13,6 +13,9 @@ mise run integration-test
 
 # Run linter
 mise run lint
+
+# Run pre-commit checks
+mise run pre-commit
 ```
 
 ## Project Architecture
@@ -24,15 +27,20 @@ Agent-def is a tool for converting context and command definitions for various A
 1. **Command Line Interface** (`/cmd/agent-def/main.go`, `/internal/cli/`)
    - Uses Cobra for CLI implementation
    - Main commands: build, validate, list, init
+   - Supports global flags for logging, output format, etc.
 
 2. **Configuration System** (`/internal/config/`)
    - Defines YAML configuration structure in `config.go`
    - Handles loading configurations from `agent-def.yml` files
    - Supports project and user-level configurations
+   - Supports standard and simplified formats
 
 3. **Processing Pipeline** (`/internal/processor/`)
    - `manager.go`: Manages the overall processing flow
    - `pipeline.go`: Handles processing tasks from configuration
+   - `memory_processor.go`: Processes memory/context tasks
+   - `command_processor.go`: Processes command tasks
+   - `fs_adapter.go`: File system adapter for I/O operations
 
 4. **Agent Implementations** (`/internal/agent/`)
    - `registry.go`: Central registry for supported agents
@@ -46,6 +54,7 @@ Agent-def is a tool for converting context and command definitions for various A
    - `engine.go`: Template processing engine
    - `functions.go`: Template helper functions (file, include, reference, mcp)
    - Supports Go's `text/template` with custom functions
+   - Path resolution for template includes and references
 
 6. **Logging System** (`/internal/log/`)
    - `config.go`: Logging configuration options
@@ -54,8 +63,16 @@ Agent-def is a tool for converting context and command definitions for various A
    - `test.go`: Testing utilities for logs
 
 7. **Model Definitions** (`/internal/model/`)
-   - `context.go`: Represents memory context
-   - `command.go`: Represents command definitions
+   - `command.go`: Represents command definitions with agent-specific properties
+     - Roo: slug, name, description, roleDefinition, whenToUse, groups
+     - Claude: description, allowed-tools
+     - Copilot: mode, model, tools, description
+
+8. **Utility Functions** (`/internal/util/`)
+   - `file_glob.go`: Glob pattern matching for file selection
+   - `path.go`: Path manipulation utilities
+   - `errors.go`: Error handling utilities
+   - `file.go`: File operation utilities
 
 ### Data Flow
 
@@ -80,8 +97,16 @@ Agent-def is a tool for converting context and command definitions for various A
   - `/util/` - Common utilities
 - `/example/` - Example configurations and templates
 - `/docs/` - Documentation
-  - `/docs/config.md` - Configuration reference
+  - `/docs/cli.md` - Command line interface reference
+  - `/docs/config.md` - Main configuration guide
+  - `/docs/config-reference.md` - Detailed configuration reference
+  - `/docs/examples.md` - Configuration examples and best practices
+  - `/docs/glob-patterns.md` - Glob pattern syntax and behavior
+  - `/docs/input-output.md` - Input handling and output paths
   - `/docs/logging.md` - Logging system documentation
+  - `/docs/task-types.md` - Memory and command task types
+  - `/docs/templates.md` - Template functions and path resolution
+  - `/docs/troubleshooting.md` - Error handling and debugging
 
 ### Configuration Structure
 
@@ -98,4 +123,6 @@ The `agent-def.yml` file defines:
 
 Each task can be of type "memory" (context) or "command" (commands), with multiple sources and targets.
 
-For more details, refer to the {{ file "docs/config.md" }} file for configuration and the {{ file "docs/logging.md" }} file for logging.
+The configuration can be organized in two formats: standard or simplified.
+
+For more details, refer to the documentation files in the `/docs` directory.
