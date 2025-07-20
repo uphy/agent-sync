@@ -101,11 +101,11 @@ func TestIncludeFunc(t *testing.T) {
 	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
-		FileResolver:  mockResolver,
-		References:    make(map[string]string),
-		AgentType:     "claude",
-		BasePath:      "/base",
-		AgentRegistry: registry,
+		FileResolver:       mockResolver,
+		References:         make(map[string]string),
+		AgentType:          "claude",
+		absTemplateBaseDir: "/base",
+		AgentRegistry:      registry,
 	}
 
 	// Test the include function
@@ -133,11 +133,11 @@ func TestReferenceFunc(t *testing.T) {
 	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
-		FileResolver:  mockResolver,
-		References:    make(map[string]string),
-		AgentType:     "claude",
-		BasePath:      "/base",
-		AgentRegistry: registry,
+		FileResolver:       mockResolver,
+		References:         make(map[string]string),
+		AgentType:          "claude",
+		absTemplateBaseDir: "/base",
+		AgentRegistry:      registry,
 	}
 
 	// Test the reference function
@@ -230,11 +230,11 @@ func TestRecursiveTemplateProcessing(t *testing.T) {
 	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
-		FileResolver:  mockResolver,
-		References:    make(map[string]string),
-		AgentType:     "claude",
-		BasePath:      "/base",
-		AgentRegistry: registry,
+		FileResolver:       mockResolver,
+		References:         make(map[string]string),
+		AgentType:          "claude",
+		absTemplateBaseDir: "/base",
+		AgentRegistry:      registry,
 	}
 
 	// Test the recursive include
@@ -265,11 +265,11 @@ func TestReferenceCollection(t *testing.T) {
 	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
-		FileResolver:  mockResolver,
-		References:    make(map[string]string),
-		AgentType:     "claude",
-		BasePath:      "/base",
-		AgentRegistry: registry,
+		FileResolver:       mockResolver,
+		References:         make(map[string]string),
+		AgentType:          "claude",
+		absTemplateBaseDir: "/base",
+		AgentRegistry:      registry,
 	}
 
 	// Process a template with multiple references
@@ -307,11 +307,11 @@ func TestExecute_ErrorHandling(t *testing.T) {
 	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
-		FileResolver:  mockResolver,
-		References:    make(map[string]string),
-		AgentType:     "claude",
-		BasePath:      "/base",
-		AgentRegistry: registry,
+		FileResolver:       mockResolver,
+		References:         make(map[string]string),
+		AgentType:          "claude",
+		absTemplateBaseDir: "/base",
+		AgentRegistry:      registry,
 	}
 
 	// Test include with non-existent file
@@ -341,11 +341,11 @@ func TestIncludeRawFunc(t *testing.T) {
 	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
-		FileResolver:  mockResolver,
-		References:    make(map[string]string),
-		AgentType:     "claude",
-		BasePath:      "/base",
-		AgentRegistry: registry,
+		FileResolver:       mockResolver,
+		References:         make(map[string]string),
+		AgentType:          "claude",
+		absTemplateBaseDir: "/base",
+		AgentRegistry:      registry,
 	}
 
 	// Test the includeRaw function
@@ -387,11 +387,11 @@ func TestReferenceRawFunc(t *testing.T) {
 	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
-		FileResolver:  mockResolver,
-		References:    make(map[string]string),
-		AgentType:     "claude",
-		BasePath:      "/base",
-		AgentRegistry: registry,
+		FileResolver:       mockResolver,
+		References:         make(map[string]string),
+		AgentType:          "claude",
+		absTemplateBaseDir: "/base",
+		AgentRegistry:      registry,
 	}
 
 	// Test the referenceRaw function
@@ -442,11 +442,11 @@ func TestCompareIncludeAndIncludeRaw(t *testing.T) {
 	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
-		FileResolver:  mockResolver,
-		References:    make(map[string]string),
-		AgentType:     "claude",
-		BasePath:      "/base",
-		AgentRegistry: registry,
+		FileResolver:       mockResolver,
+		References:         make(map[string]string),
+		AgentType:          "claude",
+		absTemplateBaseDir: "/base",
+		AgentRegistry:      registry,
 	}
 
 	// Test direct function calls
@@ -492,11 +492,11 @@ func TestCompareReferenceAndReferenceRaw(t *testing.T) {
 
 	// First test with reference function
 	engine1 := &Engine{
-		FileResolver:  mockResolver,
-		References:    make(map[string]string),
-		AgentType:     "claude",
-		BasePath:      "/base",
-		AgentRegistry: registry,
+		FileResolver:       mockResolver,
+		References:         make(map[string]string),
+		AgentType:          "claude",
+		absTemplateBaseDir: "/base",
+		AgentRegistry:      registry,
 	}
 
 	refFunc := engine1.ReferenceFunc(true).(func(...string) (string, error))
@@ -518,11 +518,11 @@ func TestCompareReferenceAndReferenceRaw(t *testing.T) {
 
 	// Then test with referenceRaw function
 	engine2 := &Engine{
-		FileResolver:  mockResolver,
-		References:    make(map[string]string),
-		AgentType:     "claude",
-		BasePath:      "/base",
-		AgentRegistry: registry,
+		FileResolver:       mockResolver,
+		References:         make(map[string]string),
+		AgentType:          "claude",
+		absTemplateBaseDir: "/base",
+		AgentRegistry:      registry,
 	}
 
 	refRawFunc := engine2.ReferenceFunc(false).(func(...string) (string, error))

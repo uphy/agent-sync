@@ -25,10 +25,10 @@ func (p *MemoryProcessor) Process(inputs []string, cfg *OutputConfig) (*TaskResu
 	// Render templates for all input files
 	var renderedOutputs []string
 	for _, input := range inputs {
-		inputPath := filepath.Join(p.inputRoot, input)
+		absInputPath := filepath.Join(p.absInputRoot, input)
 		adapter := NewFSAdapter(p.fs)
-		engine := template.NewEngine(adapter, cfg.AgentName, p.inputRoot, p.registry)
-		out, err := engine.ExecuteFile(inputPath, nil)
+		engine := template.NewEngine(adapter, cfg.AgentName, p.absInputRoot, p.registry)
+		out, err := engine.ExecuteFile(absInputPath, nil)
 		if err != nil {
 			return nil, fmt.Errorf("template execute %s: %w", input, err)
 		}
@@ -49,9 +49,9 @@ func (p *MemoryProcessor) Process(inputs []string, cfg *OutputConfig) (*TaskResu
 
 		// If directory mode, add each input as a separate file
 		if cfg.IsDirectory {
-			out := filepath.Join(cfg.Path, filepath.Base(input))
+			relPath := filepath.Join(cfg.RelPath, filepath.Base(input))
 			result.Files = append(result.Files, ProcessedFile{
-				Path:    out,
+				relPath: relPath,
 				Content: memory,
 			})
 		}
@@ -67,7 +67,7 @@ func (p *MemoryProcessor) Process(inputs []string, cfg *OutputConfig) (*TaskResu
 			return nil, fmt.Errorf("format memory for agent %s: %w", cfg.AgentName, err)
 		}
 		result.Files = append(result.Files, ProcessedFile{
-			Path:    cfg.Path,
+			relPath: cfg.RelPath,
 			Content: memory,
 		})
 	}

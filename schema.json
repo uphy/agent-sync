@@ -57,13 +57,9 @@
         "ProjectConfig": {
             "type": "object",
             "properties": {
-                "root": {
-                    "type": "string",
-                    "description": "Base path for inputs relative to the agent-def.yml location. Supports tilde (~) expansion for home directory"
-                },
                 "outputDirs": {
                     "type": "array",
-                    "description": "Output directories where generated files will be placed. Supports tilde (~) expansion for home directory",
+                    "description": "Output directories where generated files will be placed. Supports tilde (~) expansion for home directory. Both absolute and relative paths are supported; relative paths are resolved relative to the configuration file directory and converted to absolute paths internally",
                     "items": {
                         "type": "string"
                     },
@@ -119,7 +115,7 @@
                 },
                 "inputs": {
                     "type": "array",
-                    "description": "File or directory paths relative to Root. Supports tilde (~) expansion for home directory and glob patterns with exclusions",
+                    "description": "File or directory paths relative to config directory (where agent-def.yml is located). Supports glob patterns with exclusions",
                     "items": {
                         "type": "string"
                     },
@@ -155,7 +151,7 @@
                 },
                 "outputPath": {
                     "type": "string",
-                    "description": "Optional custom output path. If not specified, the agent's default path is used. Supports tilde (~) expansion for home directory. The path is interpreted as a file path when 'concat' is true, or a directory path when 'concat' is false"
+                    "description": "Optional custom output path. If not specified, the agent's default path is used. Can be specified as relative or absolute paths; relative paths are resolved relative to each output directory. The path format determines concatenation behavior: paths ending with '/' are treated as directories (non-concatenated outputs), while paths without a trailing '/' are treated as files (concatenated outputs)"
                 },
                 "concat": {
                     "type": "boolean",

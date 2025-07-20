@@ -19,13 +19,13 @@ type Pipeline struct {
 	// including its name, type, inputs, targets, and concatenation settings.
 	Task config.Task
 
-	// InputRoot is the base directory path for resolving input files and determining
+	// AbsInputRoot is the base directory path for resolving input files and determining
 	// output paths. For user-scoped tasks, it represents the user's home directory.
-	InputRoot string
+	AbsInputRoot string
 
-	// OutputDirs is a list of output directory paths where the processed
+	// AbsOutputDirs is a list of output directory paths where the processed
 	// content will be written. Each output directory will receive a copy of the output.
-	OutputDirs []string
+	AbsOutputDirs []string
 
 	// UserScope indicates whether the task operates in user scope (true) or project
 	// scope (false). This affects output path resolution and file organization.
@@ -55,33 +55,45 @@ type Pipeline struct {
 }
 
 // NewPipeline creates a new Pipeline with context and registers built-in agents.
-func NewPipeline(task config.Task, inputRoot string, outputDirs []string, userScope bool, dryRun bool, force bool, logger *zap.Logger, output log.OutputWriter) *Pipeline {
+func NewPipeline(task config.Task, absInputRoot string, outputDirs []string, userScope bool, dryRun bool, force bool, logger *zap.Logger, output log.OutputWriter) (*Pipeline, error) {
 	// Use no-op logger if none provided
 	if logger == nil {
 		logger = zap.NewNop()
 	}
 
+	if !filepath.IsAbs(absInputRoot) {
+		return nil, fmt.Errorf("input root must be absolute: %s", absInputRoot)
+	}
+	if len(outputDirs) == 0 {
+		return nil, fmt.Errorf("at least one output directory must be specified")
+	}
+	for _, dir := range outputDirs {
+		if !filepath.IsAbs(dir) {
+			return nil, fmt.Errorf("output directory must be absolute: %s", dir)
+		}
+	}
+
 	p := &Pipeline{
-		Task:       task,
-		InputRoot:  inputRoot,
-		OutputDirs: outputDirs,
-		UserScope:  userScope,
-		DryRun:     dryRun,
-		Force:      force,
-		fs:         &util.RealFileSystem{},
-		registry:   agent.NewRegistry(),
-		logger:     logger,
-		output:     output,
+		Task:          task,
+		AbsInputRoot:  absInputRoot,
+		AbsOutputDirs: outputDirs,
+		UserScope:     userScope,
+		DryRun:        dryRun,
+		Force:         force,
+		fs:            &util.RealFileSystem{},
+		registry:      agent.NewRegistry(),
+		logger:        logger,
+		output:        output,
 	}
 	p.registry.Register(&agent.Roo{})
 	p.registry.Register(&agent.Claude{})
 	p.registry.Register(&agent.Cline{})
-	return p
+	return p, nil
 }
 
 // newTaskProcessor creates a TaskProcessor based on the task type
 func (p *Pipeline) newTaskProcessor(taskType string) (TaskProcessor, error) {
-	base := NewBaseProcessor(p.fs, p.logger, p.InputRoot, p.registry, p.UserScope)
+	base := NewBaseProcessor(p.fs, p.logger, p.AbsInputRoot, p.registry, p.UserScope)
 
 	switch taskType {
 	case "memory":
@@ -141,7 +153,7 @@ func (p *Pipeline) Execute() error {
 // then validates that at least one input file was found.
 func (p *Pipeline) resolveAndValidateInputs() ([]string, error) {
 	// Expand globs and apply exclusions
-	paths, err := p.fs.GlobWithExcludes(p.Task.Inputs, p.InputRoot)
+	paths, err := p.fs.GlobWithExcludes(p.Task.Inputs, p.AbsInputRoot)
 	if err != nil {
 		p.logError("Failed to resolve inputs", err,
 			zap.Strings("inputs", p.Task.Inputs))
@@ -175,10 +187,10 @@ func (p *Pipeline) getOutputConfig(output config.Output) (*OutputConfig, error) 
 	}
 
 	// Get output path using processor
-	outputPath := processor.GetOutputPath(agent, output.OutputPath)
+	relOutputPath := processor.GetOutputPath(agent, output.OutputPath)
 
 	// Determine if we should treat this as a directory based on output path
-	isDirectory := strings.HasSuffix(outputPath, "/")
+	isDirectory := strings.HasSuffix(relOutputPath, "/")
 
 	// Log the output mode
 	if isDirectory {
@@ -195,7 +207,7 @@ func (p *Pipeline) getOutputConfig(output config.Output) (*OutputConfig, error) 
 
 	return &OutputConfig{
 		Agent:       agent,
-		Path:        outputPath,
+		RelPath:     relOutputPath,
 		IsDirectory: isDirectory,
 		AgentName:   output.Agent,
 	}, nil
@@ -214,28 +226,20 @@ func (p *Pipeline) logError(msg string, err error, fields ...zap.Field) {
 
 // writeOutputFiles writes the processed files to all output directories
 func (p *Pipeline) writeOutputFiles(files []ProcessedFile) error {
-	for _, outputDir := range p.OutputDirs {
-		if !filepath.IsAbs(outputDir) {
-			outputDir = filepath.Join(p.InputRoot, outputDir)
-			var err error
-			outputDir, err = filepath.Abs(outputDir)
-			if err != nil {
-				return fmt.Errorf("failed to resolve absolute path for output directory %s: %w", outputDir, err)
-			}
-		}
+	for _, absOutputDir := range p.AbsOutputDirs {
 		for _, file := range files {
-			out := filepath.Join(outputDir, file.Path)
+			absOutputFile := filepath.Join(absOutputDir, file.relPath)
 
 			if p.DryRun {
-				p.logger.Info("[DRY RUN] Would write file", zap.String("path", out))
+				p.logger.Info("[DRY RUN] Would write file", zap.String("path", absOutputFile))
 				if p.output != nil {
-					p.output.PrintVerbose(fmt.Sprintf("[DRY RUN] Would write file %s", out))
+					p.output.PrintVerbose(fmt.Sprintf("[DRY RUN] Would write file %s", absOutputFile))
 				}
 			} else {
-				if err := p.fs.WriteFile(out, []byte(file.Content)); err != nil {
-					return fmt.Errorf("write file %s: %w", out, err)
+				if err := p.fs.WriteFile(absOutputFile, []byte(file.Content)); err != nil {
+					return fmt.Errorf("write file %s: %w", absOutputFile, err)
 				}
-				p.logger.Info("Wrote file", zap.String("path", out))
+				p.logger.Info("Wrote file", zap.String("path", absOutputFile))
 			}
 		}
 	}

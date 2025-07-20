@@ -30,7 +30,7 @@ func (p *CommandProcessor) Process(inputs []string, cfg *OutputConfig) (*TaskRes
 
 	// Process each input file
 	for _, input := range inputs {
-		inputPath := filepath.Join(p.inputRoot, input)
+		inputPath := filepath.Join(p.absInputRoot, input)
 
 		// Read and parse the command
 		inputContent, err := p.fs.ReadFile(inputPath)
@@ -44,7 +44,7 @@ func (p *CommandProcessor) Process(inputs []string, cfg *OutputConfig) (*TaskRes
 
 		// Apply template processing
 		adapter := NewFSAdapter(p.fs)
-		engine := template.NewEngine(adapter, cfg.AgentName, p.inputRoot, p.registry)
+		engine := template.NewEngine(adapter, cfg.AgentName, p.absInputRoot, p.registry)
 		out, err := engine.Execute(cmd.Content, nil)
 		if err != nil {
 			return nil, fmt.Errorf("template execute %s: %w", input, err)
@@ -53,13 +53,13 @@ func (p *CommandProcessor) Process(inputs []string, cfg *OutputConfig) (*TaskRes
 
 		// Handle directory mode output (individual files)
 		if cfg.IsDirectory {
-			out := filepath.Join(cfg.Path, filepath.Base(input))
+			relPath := filepath.Join(cfg.RelPath, filepath.Base(input))
 			formattedCmd, err := cfg.Agent.FormatCommand([]model.Command{*cmd})
 			if err != nil {
 				return nil, fmt.Errorf("format command for agent %s: %w", cfg.AgentName, err)
 			}
 			result.Files = append(result.Files, ProcessedFile{
-				Path:    out,
+				relPath: relPath,
 				Content: formattedCmd,
 			})
 		}
@@ -75,7 +75,7 @@ func (p *CommandProcessor) Process(inputs []string, cfg *OutputConfig) (*TaskRes
 			return nil, fmt.Errorf("format command for agent %s: %w", cfg.AgentName, err)
 		}
 		result.Files = append(result.Files, ProcessedFile{
-			Path:    cfg.Path,
+			relPath: cfg.RelPath,
 			Content: formattedCmd,
 		})
 	}

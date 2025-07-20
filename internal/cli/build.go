@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"path/filepath"
+
 	"github.com/spf13/cobra"
 	"github.com/uphy/agent-def/internal/log"
 	"github.com/uphy/agent-def/internal/processor"
@@ -46,7 +48,12 @@ If no project names are provided, all projects will be processed.`,
 			}
 
 			// Initialize manager with context components
-			mgr, err := processor.NewManager(configPath, logger, output)
+			absConfigPath, err := filepath.Abs(configPath)
+			if err != nil {
+				return err
+			}
+
+			mgr, err := processor.NewManager(absConfigPath, logger, output)
 			if err != nil {
 				return err
 			}

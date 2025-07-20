@@ -18,20 +18,20 @@ type TaskProcessor interface {
 
 // BaseProcessor contains common functionality for all task processors
 type BaseProcessor struct {
-	fs        util.FileSystem
-	logger    *zap.Logger
-	inputRoot string
-	registry  *agent.Registry
-	userScope bool
+	fs           util.FileSystem
+	logger       *zap.Logger
+	absInputRoot string
+	registry     *agent.Registry
+	userScope    bool
 }
 
 // NewBaseProcessor creates a new BaseProcessor with the given parameters
-func NewBaseProcessor(fs util.FileSystem, logger *zap.Logger, inputRoot string, registry *agent.Registry, userScope bool) *BaseProcessor {
+func NewBaseProcessor(fs util.FileSystem, logger *zap.Logger, absInputRoot string, registry *agent.Registry, userScope bool) *BaseProcessor {
 	return &BaseProcessor{
-		fs:        fs,
-		logger:    logger,
-		inputRoot: inputRoot,
-		registry:  registry,
-		userScope: userScope,
+		fs:           fs,
+		logger:       logger,
+		absInputRoot: absInputRoot,
+		registry:     registry,
+		userScope:    userScope,
 	}
 }

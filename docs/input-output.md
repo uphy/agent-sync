@@ -4,7 +4,7 @@ This document details how agent-def processes input files and generates output f
 
 ## Glob Pattern Support in Inputs
 
-The `inputs` field supports glob patterns with doublestar support for recursive matching and exclusions:
+The `inputs` field supports glob patterns with doublestar support for recursive matching and exclusions. Input paths are always resolved relative to the configuration file directory (where your `agent-def.yml` is located):
 
 | Pattern | Description |
 |---------|-------------|
@@ -61,9 +61,9 @@ When specifying output directories in the `outputDirs` setting:
 - Absolute paths (starting with `/` on Unix or drive letters on Windows) are used as-is
 - Relative paths (not starting with `/` or drive letters) are:
   - Treated as relative to the agent-def.yml file location
-  - Converted to absolute paths
+  - Always converted to absolute paths internally for clarity and precision
 
-This allows you to specify output directories relative to your configuration file, making configurations more portable across different environments.
+This approach allows you to specify output directories relative to your configuration file, making configurations more portable across different environments, while ensuring that all paths used internally are unambiguous.
 
 Example:
 ```yaml
@@ -79,9 +79,14 @@ The format of the `outputPath` determines how files are processed:
 - Paths ending with `/` are treated as **directories** where individual files will be placed
 - Paths not ending with `/` are treated as **files** where all input content will be concatenated
 
+The `outputPath` can be specified as either relative or absolute:
+- Absolute paths (starting with `/` on Unix or drive letters on Windows) are used as-is
+- Relative paths are resolved relative to each output directory
+
 For example:
 - `.roo/rules/` - Treated as a directory, each source file becomes a separate output file
 - `.roo/rules/combined.md` - Treated as a file, all source files are concatenated into one file
+- `/absolute/path/rules/` - Absolute path to a directory for separate output files
 
 If `outputPath` is not specified, the agent's default path is used (see "Default Output Path Behavior" sections below).
 
@@ -107,7 +112,8 @@ When the `agent-def build` command is executed, the following workflow occurs:
 1. **Configuration Loading**: The configuration file is loaded and validated.
 2. **Task Selection**: If specific projects are provided as command arguments, only those projects' tasks are processed. Otherwise, all projects and user tasks are processed.
 3. **Input Processing**:
-   - For each task, the input files are resolved based on glob patterns.
+   - For each task, the input files are resolved based on glob patterns relative to the configuration file directory.
+   - Absolute paths are constructed internally for all input files to ensure precise handling.
    - Each input file is processed through the template engine if applicable.
 4. **Output Generation**:
    - For each output agent specified in the task, the content is formatted according to the agent's requirements.

@@ -38,8 +38,8 @@ type Engine struct {
 	// AgentType determines the output format
 	AgentType string
 
-	// BasePath is the base path for resolving relative paths
-	BasePath string
+	// absTemplateBaseDir is the base path for resolving relative paths
+	absTemplateBaseDir string
 
 	// CurrentFilePath is the path of the file currently being processed
 	CurrentFilePath string
@@ -55,30 +55,18 @@ type Context struct {
 }
 
 // NewEngine creates a new template engine
-func NewEngine(fileResolver FileResolver, agentType, basePath string, agentRegistry *agent.Registry) *Engine {
+func NewEngine(fileResolver FileResolver, agentType, absTemplateBaseDir string, agentRegistry *agent.Registry) *Engine {
 	return &Engine{
-		FileResolver:  fileResolver,
-		References:    make(map[string]string),
-		AgentType:     agentType,
-		BasePath:      basePath,
-		AgentRegistry: agentRegistry,
-	}
-}
-
-// NewEngineWithFilePath creates a new template engine with the current file path
-func NewEngineWithFilePath(fileResolver FileResolver, agentType, basePath, currentFilePath string, agentRegistry *agent.Registry) *Engine {
-	return &Engine{
-		FileResolver:    fileResolver,
-		References:      make(map[string]string),
-		AgentType:       agentType,
-		BasePath:        basePath,
-		CurrentFilePath: currentFilePath,
-		AgentRegistry:   agentRegistry,
+		FileResolver:       fileResolver,
+		References:         make(map[string]string),
+		AgentType:          agentType,
+		absTemplateBaseDir: absTemplateBaseDir,
+		AgentRegistry:      agentRegistry,
 	}
 }
 
 // Execute processes a template with the given data
-func (e *Engine) Execute(content string, data interface{}) (string, error) {
+func (e *Engine) Execute(content string, data any) (string, error) {
 	result, err := e.executeWithoutReferences(content, data)
 	if err != nil {
 		return "", err
@@ -95,7 +83,7 @@ func (e *Engine) Execute(content string, data interface{}) (string, error) {
 }
 
 // Execute processes a template with the given data
-func (e *Engine) executeWithoutReferences(content string, data interface{}) (string, error) {
+func (e *Engine) executeWithoutReferences(content string, data any) (string, error) {
 	// Create a new template
 	t := template.New("template").Delims("{{", "}}")
 
@@ -124,19 +112,22 @@ func (e *Engine) executeWithoutReferences(content string, data interface{}) (str
 }
 
 // ExecuteFile processes a template file with the given data
-func (e *Engine) ExecuteFile(filePath string, data interface{}) (string, error) {
+func (e *Engine) ExecuteFile(absFilePath string, data any) (string, error) {
+	if !filepath.IsAbs(absFilePath) {
+		return "", fmt.Errorf("absolute file path is required: %s", absFilePath)
+	}
 	// Save previous current file path
 	previousPath := e.CurrentFilePath
 
 	// Set current file path to the file being processed
-	e.CurrentFilePath = filePath
+	e.CurrentFilePath = absFilePath
 
 	// Read the file
-	content, err := e.FileResolver.Read(filePath)
+	content, err := e.FileResolver.Read(absFilePath)
 	if err != nil {
 		// Restore previous path before returning error
 		e.CurrentFilePath = previousPath
-		return "", &util.ErrFileNotFound{Path: filePath}
+		return "", &util.ErrFileNotFound{Path: absFilePath}
 	}
 
 	// Execute the template
@@ -232,7 +223,7 @@ func (e *Engine) processInclude(path string, processTemplate bool) (string, erro
 
 // processReference adds a reference to be appended at the end
 func (e *Engine) processReference(fullPath string, processTemplate bool) (string, error) {
-	originalPath, err := filepath.Rel(e.BasePath, fullPath)
+	originalPath, err := filepath.Rel(e.absTemplateBaseDir, fullPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to get relative path for %q: %w", fullPath, err)
 	}

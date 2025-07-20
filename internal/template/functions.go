@@ -130,7 +130,7 @@ func (e *Engine) resolveTemplatePath(paths []string) ([]string, error) {
 
 		// Handle "@/"-prefixed paths as relative to BasePath
 		if trimmed, ok := strings.CutPrefix(path, "@/"); ok {
-			resolved = append(resolved, filepath.Join(e.BasePath, trimmed))
+			resolved = append(resolved, filepath.Join(e.absTemplateBaseDir, trimmed))
 			continue
 		}
 

@@ -18,7 +18,6 @@ Each project can be configured with the following settings:
 
 | Setting | Type | Required | Description |
 |---------|------|----------|-------------|
-| ~~`root`~~ | ~~String~~ | ~~No~~ | ~~Base path for inputs relative to the agent-def.yml location. Supports tilde (~) expansion for home directory~~ **Removed: Project inputs are always relative to the agent-def.yml directory** |
 | `outputDirs` | String Array | Yes | Output directories where generated files will be placed. Supports tilde (~) expansion for home directory. Multiple directories can be specified to support scenarios like git worktree |
 | `tasks` | Task Array | Yes | List of generation tasks for this project |
 
@@ -39,7 +38,7 @@ Options for each task:
 |---------|------|----------|-------------|
 | `name` | String | No | Optional identifier for the task. If not provided, a default name is automatically generated: for project tasks, "{project-name}-{type}" (e.g., "my-project-memory"); for user tasks, "user-{type}" (e.g., "user-command") |
 | `type` | String | Yes | Type of task, either "command" or "memory" |
-| `inputs` | String Array | Yes | File or directory paths relative to Root. Supports tilde (~) expansion for home directory and glob patterns with exclusions |
+| `inputs` | String Array | Yes | File or directory paths relative to config directory. Supports glob patterns with exclusions |
 | `outputs` | Output Array | Yes | Defines the output agents and their paths |
 
 ## Output Configuration
@@ -49,7 +48,7 @@ Options for each output:
 | Setting | Type | Required | Description |
 |---------|------|----------|-------------|
 | `agent` | String | Yes | Target AI agent (e.g., "roo", "claude", "cline", "copilot") |
-| `outputPath` | String | No | Optional custom output path. If not specified, the agent's default path is used. Supports tilde (~) expansion for home directory. The path format determines concatenation behavior: paths ending with "/" are treated as directories (non-concatenated outputs), while paths without a trailing "/" are treated as files (concatenated outputs) |
+| `outputPath` | String | No | Optional custom output path. If not specified, the agent's default path is used. The path format determines concatenation behavior: paths ending with "/" are treated as directories (non-concatenated outputs), while paths without a trailing "/" are treated as files (concatenated outputs) |
 
 ## Navigation
 

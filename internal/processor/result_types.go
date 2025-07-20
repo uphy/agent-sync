@@ -7,15 +7,19 @@ import (
 
 // OutputConfig encapsulates output configuration settings
 type OutputConfig struct {
-	Agent       agent.Agent
-	Path        string
+	Agent agent.Agent
+	// RelPath is the relative path from the output directory or file where the processed content will be written
+	// If the path ends with "/", it indicates a directory output
+	// If it does not end with "/", it indicates a file output
+	RelPath     string
 	IsDirectory bool
 	AgentName   string // Original agent name from config
 }
 
 // ProcessedFile represents a processed output file
 type ProcessedFile struct {
-	Path    string
+	// relPath is the relative path of the file from the output directory
+	relPath string
 	Content string
 }
 

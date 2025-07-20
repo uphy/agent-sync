@@ -3,6 +3,7 @@ package processor
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"slices"
 
 	"github.com/uphy/agent-def/internal/config"
@@ -13,17 +14,21 @@ import (
 
 // Manager orchestrates task execution based on loaded configuration.
 type Manager struct {
-	cfg       *config.Config
-	configDir string
-	force     bool
-	logger    *zap.Logger
-	output    log.OutputWriter
+	cfg *config.Config
+	// absConfigDir is the absolute directory path where the configuration file is located.
+	absConfigDir string
+	force        bool
+	logger       *zap.Logger
+	output       log.OutputWriter
 }
 
 // NewManager creates a new Manager by loading configuration from the given path.
 func NewManager(cfgPath string, logger *zap.Logger, output log.OutputWriter) (*Manager, error) {
 	if logger == nil {
 		logger = zap.NewNop()
+	}
+	if !filepath.IsAbs(cfgPath) {
+		return nil, fmt.Errorf("config path must be absolute: %s", cfgPath)
 	}
 
 	logger.Debug("Loading configuration", zap.String("path", cfgPath))
@@ -42,11 +47,11 @@ func NewManager(cfgPath string, logger *zap.Logger, output log.OutputWriter) (*M
 		zap.Int("userTaskCount", len(cfg.User.Tasks)))
 
 	return &Manager{
-		cfg:       cfg,
-		configDir: configDir,
-		force:     false,
-		logger:    logger,
-		output:    output,
+		cfg:          cfg,
+		absConfigDir: configDir,
+		force:        false,
+		logger:       logger,
+		output:       output,
 	}, nil
 }
 
@@ -65,13 +70,29 @@ func (m *Manager) Build(projects []string, dryRun, force bool) error {
 		if len(projects) > 0 && !slices.Contains(projects, name) {
 			continue
 		}
+		// Resolve absolute paths for input root and output directories
+		absInputRoot := m.absConfigDir
+		absOutputDirs := proj.OutputDirs
+		for i, outputDir := range absOutputDirs {
+			if filepath.IsAbs(outputDir) {
+				continue
+			}
+			outputDir = filepath.Join(absInputRoot, outputDir)
+			var err error
+			outputDir, err = filepath.Abs(outputDir)
+			if err != nil {
+				return fmt.Errorf("failed to resolve absolute path for output directory %s: %w", outputDir, err)
+			}
+			absOutputDirs[i] = outputDir
+		}
+
 		// Always use config directory as the project root
-		root := m.configDir
 		m.logger.Debug("Using config directory as project root", zap.String("project", name))
 		m.logger.Info("Processing project",
 			zap.String("name", name),
 			zap.Int("taskCount", len(proj.Tasks)),
-			zap.Strings("outputDirs", proj.OutputDirs))
+			zap.String("inputRoot", absInputRoot),
+			zap.Strings("outputDirs", absOutputDirs))
 
 		if m.output != nil {
 			m.output.PrintProgress(fmt.Sprintf("Processing project: %s", name))
@@ -84,7 +105,10 @@ func (m *Manager) Build(projects []string, dryRun, force bool) error {
 				zap.String("taskName", task.Name),
 				zap.String("taskType", string(task.Type)))
 
-			pipeline := NewPipeline(task, root, proj.OutputDirs, false, dryRun, m.force, m.logger, m.output)
+			pipeline, err := NewPipeline(task, absInputRoot, absOutputDirs, false, dryRun, m.force, m.logger, m.output)
+			if err != nil {
+				return fmt.Errorf("failed to create pipeline for project %s task %s: %w", name, task.Name, err)
+			}
 			if err := pipeline.Execute(); err != nil {
 				m.logger.Error("Project task execution failed",
 					zap.String("project", name),
@@ -117,18 +141,25 @@ func (m *Manager) Build(projects []string, dryRun, force bool) error {
 			}
 		}
 
+		absHome, err := filepath.Abs(home)
+		if err != nil {
+			return fmt.Errorf("failed to resolve user home directory: %w", err)
+		}
+
 		m.logger.Info("Processing user-level task",
 			zap.String("taskName", task.Name),
 			zap.String("taskType", string(task.Type)),
-			zap.String("homeDir", home))
+			zap.String("homeDir", absHome))
 
 		if m.output != nil {
 			m.output.PrintProgress(fmt.Sprintf("Processing user-level task: %s", task.Name))
 		}
 
 		// Use the config directory for resolving user task sources
-		root := m.configDir
-		pipeline := NewPipeline(task, root, []string{home}, true, dryRun, m.force, m.logger, m.output)
+		pipeline, err := NewPipeline(task, m.absConfigDir, []string{absHome}, true, dryRun, m.force, m.logger, m.output)
+		if err != nil {
+			return fmt.Errorf("failed to create pipeline for user task %s: %w", task.Name, err)
+		}
 		if err := pipeline.Execute(); err != nil {
 			m.logger.Error("User task execution failed", zap.Error(err))
 

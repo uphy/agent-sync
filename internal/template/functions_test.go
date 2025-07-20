@@ -120,9 +120,9 @@ func TestIncludeFunc_ErrorOnInvalidUsage(t *testing.T) {
 	}
 
 	engine := &Engine{
-		AgentRegistry: registry,
-		FileResolver:  mockResolver,
-		BasePath:      "/base",
+		AgentRegistry:      registry,
+		FileResolver:       mockResolver,
+		absTemplateBaseDir: "/base",
 	}
 	fn := engine.IncludeFunc(true).(func(...string) (string, error))
 	_, err := fn("path")
@@ -143,10 +143,10 @@ func TestReferenceFunc_ErrorOnInvalidUsage(t *testing.T) {
 	}
 
 	engine := &Engine{
-		AgentRegistry: registry,
-		FileResolver:  mockResolver,
-		BasePath:      "/base",
-		References:    make(map[string]string),
+		AgentRegistry:      registry,
+		FileResolver:       mockResolver,
+		absTemplateBaseDir: "/base",
+		References:         make(map[string]string),
 	}
 	fn := engine.ReferenceFunc(true).(func(...string) (string, error))
 	_, err := fn("path")
@@ -167,9 +167,9 @@ func TestIncludeRawFunc_ErrorOnInvalidUsage(t *testing.T) {
 	}
 
 	engine := &Engine{
-		AgentRegistry: registry,
-		FileResolver:  mockResolver,
-		BasePath:      "/base",
+		AgentRegistry:      registry,
+		FileResolver:       mockResolver,
+		absTemplateBaseDir: "/base",
 	}
 	fn := engine.IncludeFunc(false).(func(...string) (string, error))
 	_, err := fn("path")
@@ -190,10 +190,10 @@ func TestReferenceRawFunc_ErrorOnInvalidUsage(t *testing.T) {
 	}
 
 	engine := &Engine{
-		AgentRegistry: registry,
-		FileResolver:  mockResolver,
-		BasePath:      "/base",
-		References:    make(map[string]string),
+		AgentRegistry:      registry,
+		FileResolver:       mockResolver,
+		absTemplateBaseDir: "/base",
+		References:         make(map[string]string),
 	}
 	fn := engine.ReferenceFunc(false).(func(...string) (string, error))
 	_, err := fn("path")
@@ -260,9 +260,9 @@ func TestIncludeFunc_WithMockFileResolver(t *testing.T) {
 	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
-		FileResolver:  mockResolver,
-		BasePath:      "/base",
-		AgentRegistry: registry,
+		FileResolver:       mockResolver,
+		absTemplateBaseDir: "/base",
+		AgentRegistry:      registry,
 	}
 
 	// Test with existing file
@@ -300,10 +300,10 @@ func TestReferenceFunc_WithMockFileResolver(t *testing.T) {
 	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
-		FileResolver:  mockResolver,
-		References:    make(map[string]string),
-		BasePath:      "/base",
-		AgentRegistry: registry,
+		FileResolver:       mockResolver,
+		References:         make(map[string]string),
+		absTemplateBaseDir: "/base",
+		AgentRegistry:      registry,
 	}
 
 	// Test with existing file
@@ -348,9 +348,9 @@ func TestIncludeRawFunc_WithMockFileResolver(t *testing.T) {
 	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
-		FileResolver:  mockResolver,
-		BasePath:      "/base",
-		AgentRegistry: registry,
+		FileResolver:       mockResolver,
+		absTemplateBaseDir: "/base",
+		AgentRegistry:      registry,
 	}
 
 	// Test with existing file
@@ -389,10 +389,10 @@ func TestReferenceRawFunc_WithMockFileResolver(t *testing.T) {
 	registry.Register(&agent.Roo{})
 
 	engine := &Engine{
-		FileResolver:  mockResolver,
-		References:    make(map[string]string),
-		BasePath:      "/base",
-		AgentRegistry: registry,
+		FileResolver:       mockResolver,
+		References:         make(map[string]string),
+		absTemplateBaseDir: "/base",
+		AgentRegistry:      registry,
 	}
 
 	// Test with existing file
@@ -487,7 +487,7 @@ func TestResolveTemplatePath(t *testing.T) {
 	// Create a test engine
 	basePath := "/base/path"
 	engine := &Engine{
-		BasePath: basePath,
+		absTemplateBaseDir: basePath,
 	}
 
 	// Test cases
@@ -600,7 +600,7 @@ func TestResolveTemplatePathSingle(t *testing.T) {
 	// Create a test engine
 	basePath := "/base/path"
 	engine := &Engine{
-		BasePath: basePath,
+		absTemplateBaseDir: basePath,
 	}
 
 	// Test cases

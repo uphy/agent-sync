@@ -68,8 +68,7 @@ type Task struct {
 	Name string `yaml:"name,omitempty"`
 	// Type is either "command" or "memory"
 	Type string `yaml:"type"`
-	// Inputs are file or directory paths relative to Root
-	// Supports tilde (~) expansion for home directory.
+	// Inputs are file or directory paths relative to config directory
 	Inputs []string `yaml:"inputs"`
 	// Outputs define the output agents and paths
 	Outputs []Output `yaml:"outputs"`
@@ -87,7 +86,6 @@ type Output struct {
 	// Agent is the target AI agent (e.g., "roo", "claude")
 	Agent string `yaml:"agent"`
 	// OutputPath is an optional custom output path
-	// Supports tilde (~) expansion for home directory.
 	// The path format determines concatenation behavior:
 	// - If path ends with "/", it will be treated as a directory (non-concatenated outputs)
 	// - If path doesn't end with "/", it will be treated as a file (concatenated outputs)
