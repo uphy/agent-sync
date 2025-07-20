@@ -1,6 +1,6 @@
 # Glob Pattern Support
 
-agent-def uses glob patterns in multiple contexts:
+agent-sync uses glob patterns in multiple contexts:
 
 1. In the `inputs` field of configuration files to select input files
 2. In template functions (`include`, `includeRaw`, `reference`, and `referenceRaw`) to dynamically include files

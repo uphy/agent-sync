@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/uphy/agent-def/internal/agent"
-	"github.com/uphy/agent-def/internal/util"
+	"github.com/uphy/agent-sync/internal/agent"
+	"github.com/uphy/agent-sync/internal/util"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )

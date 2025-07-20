@@ -5,10 +5,10 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/uphy/agent-def/internal/agent"
-	"github.com/uphy/agent-def/internal/cli"
-	"github.com/uphy/agent-def/internal/log"
-	"github.com/uphy/agent-def/internal/util"
+	"github.com/uphy/agent-sync/internal/agent"
+	"github.com/uphy/agent-sync/internal/cli"
+	"github.com/uphy/agent-sync/internal/log"
+	"github.com/uphy/agent-sync/internal/util"
 	"go.uber.org/zap"
 )
 
@@ -35,9 +35,9 @@ func main() {
 	registry.Register(&agent.Roo{})
 
 	rootCmd := &cobra.Command{
-		Use:   "agent-def",
+		Use:   "agent-sync",
 		Short: "Agent Definition - Convert context and command definitions for various AI agents",
-		Long: `Agent Definition (agent-def) is a tool for converting context and command
+		Long: `Agent Definition (agent-sync) is a tool for converting context and command
 definitions for various AI agents like Claude and Roo.
 
 It supports processing memory context files, command definitions,

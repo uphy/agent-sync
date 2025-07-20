@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"github.com/uphy/agent-def/internal/log"
-	"github.com/uphy/agent-def/internal/processor"
+	"github.com/uphy/agent-sync/internal/log"
+	"github.com/uphy/agent-sync/internal/processor"
 	"go.uber.org/zap"
 )
 
@@ -27,8 +27,8 @@ func NewBuildCommandWithContext(ctx *Context) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "build [project...]",
-		Short: "Generate files based on agent-def.yml",
-		Long: `Generate files for one or more projects or user-level tasks as defined in agent-def.yml.
+		Short: "Generate files based on agent-sync.yml",
+		Long: `Generate files for one or more projects or user-level tasks as defined in agent-sync.yml.
 If no project names are provided, all projects will be processed.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Use the context if available
@@ -65,7 +65,7 @@ If no project names are provided, all projects will be processed.`,
 
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show what would be generated without writing files")
 	cmd.Flags().BoolVarP(&force, "force", "f", false, "Force overwrite without prompting for confirmation")
-	cmd.Flags().StringVarP(&configPath, "config", "c", ".", "Path to agent-def.yml file or directory containing it")
+	cmd.Flags().StringVarP(&configPath, "config", "c", ".", "Path to agent-sync.yml file or directory containing it")
 
 	return cmd
 }

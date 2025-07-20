@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/uphy/agent-def/internal/model"
+	"github.com/uphy/agent-sync/internal/model"
 )
 
 func TestCopilot_ID_Name(t *testing.T) {

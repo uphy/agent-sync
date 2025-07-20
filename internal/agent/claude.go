@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/uphy/agent-def/internal/model"
+	"github.com/uphy/agent-sync/internal/model"
 )
 
 // Claude implements the Claude-specific conversion logic

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/goccy/go-yaml"
-	"github.com/uphy/agent-def/internal/model"
+	"github.com/uphy/agent-sync/internal/model"
 )
 
 // Roo implements the Roo-specific conversion logic

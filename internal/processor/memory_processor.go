@@ -1,4 +1,4 @@
-// Package processor provides functionality for processing agent-def tasks
+// Package processor provides functionality for processing agent-sync tasks
 package processor
 
 import (
@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/uphy/agent-def/internal/agent"
-	"github.com/uphy/agent-def/internal/template"
+	"github.com/uphy/agent-sync/internal/agent"
+	"github.com/uphy/agent-sync/internal/template"
 )
 
 // MemoryProcessor processes memory tasks

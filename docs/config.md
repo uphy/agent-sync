@@ -1,8 +1,8 @@
-# agent-def Configuration Reference
+# agent-sync Configuration Reference
 
 ## Overview
 
-agent-def is a tool for managing and converting context and command definitions for AI agents such as Claude, Roo, Cline, and Copilot. This reference documents all configuration options available in the `agent-def.yml` file.
+agent-sync is a tool for managing and converting context and command definitions for AI agents such as Claude, Roo, Cline, and Copilot. This reference documents all configuration options available in the `agent-sync.yml` file.
 
 ## Documentation Structure
 
@@ -18,9 +18,9 @@ The configuration documentation has been organized into several focused document
 
 ## Configuration File Location
 
-By default, agent-def looks for the following files in the current directory:
-- `agent-def.yml`
-- `agent-def.yaml`
+By default, agent-sync looks for the following files in the current directory:
+- `agent-sync.yml`
+- `agent-sync.yaml`
 
 A specific file path can also be directly specified using the `--config` command line option.
 

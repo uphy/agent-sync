@@ -53,11 +53,11 @@ template: |
   ## Installation
 
   ```
-  go install github.com/uphy/agent-def/cmd/agent-def@$RESOLVED_VERSION
+  go install github.com/uphy/agent-sync/cmd/agent-sync@$RESOLVED_VERSION
   ```
 
   Or download the binary for your platform from the assets below.
 
   ## Full Changelog
 
-  https://github.com/uphy/agent-def/compare/$PREVIOUS_TAG...$RESOLVED_VERSION
+  https://github.com/uphy/agent-sync/compare/$PREVIOUS_TAG...$RESOLVED_VERSION

@@ -1,18 +1,18 @@
-# Agent Definition (agent-def)
-[![CI](https://github.com/uphy/agent-def/actions/workflows/ci.yml/badge.svg)](https://github.com/uphy/agent-def/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/uphy/agent-def)](https://github.com/uphy/agent-def/releases/latest)
-[![Go Report Card](https://goreportcard.com/badge/github.com/uphy/agent-def)](https://goreportcard.com/report/github.com/uphy/agent-def)
-[![codecov](https://codecov.io/gh/uphy/agent-def/branch/main/graph/badge.svg)](https://codecov.io/gh/uphy/agent-def)
-[![Go Reference](https://pkg.go.dev/badge/github.com/uphy/agent-def.svg)](https://pkg.go.dev/github.com/uphy/agent-def)
+# Agent Sync (agent-sync)
+[![CI](https://github.com/uphy/agent-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/uphy/agent-sync/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/uphy/agent-sync)](https://github.com/uphy/agent-sync/releases/latest)
+[![Go Report Card](https://goreportcard.com/badge/github.com/uphy/agent-sync)](https://goreportcard.com/report/github.com/uphy/agent-sync)
+[![codecov](https://codecov.io/gh/uphy/agent-sync/branch/main/graph/badge.svg)](https://codecov.io/gh/uphy/agent-sync)
+[![Go Reference](https://pkg.go.dev/badge/github.com/uphy/agent-sync.svg)](https://pkg.go.dev/github.com/uphy/agent-sync)
 
-Agent Definition (`agent-def`) is a tool for converting context and command definitions for various AI agents like Claude, Roo, and Cline.
+Agent Sync (`agent-sync`) is a tool for converting context and command definitions for various AI agents like Claude, Roo, and Cline.
 
 ## Installation
 
 Install via Go:
 
 ```
-go install github.com/uphy/agent-def/cmd/agent-def@latest
+go install github.com/uphy/agent-sync/cmd/agent-sync@latest
 ```
 
 Or download a release from GitHub Releases.
@@ -21,14 +21,14 @@ Or download a release from GitHub Releases.
 
 ### Init Command
 
-Initialize a new agent-def project with sample configuration and directory structure:
+Initialize a new agent-sync project with sample configuration and directory structure:
 
 ```
-agent-def init
+agent-sync init
 ```
 
 This command:
-- Creates an `agent-def.yml` configuration file
+- Creates an `agent-sync.yml` configuration file
 - Sets up the `memories/` and `commands/` directories
 - Adds sample template files to help you get started
 
@@ -37,7 +37,7 @@ Example:
 ```
 mkdir my-new-project
 cd my-new-project
-agent-def init
+agent-sync init
 ```
 
 ### Build Command
@@ -45,25 +45,25 @@ agent-def init
 Process the agent definitions according to the configuration:
 
 ```
-agent-def build [flags]
+agent-sync build [flags]
 ```
 
 Flags:
-- `-c, --config string` Path to agent-def.yml file or directory containing it (default ".")
+- `-c, --config string` Path to agent-sync.yml file or directory containing it (default ".")
 - `--dry-run` Show what would be generated without writing files
 - `-f, --force` Force overwrite without prompting for confirmation
 
 Example:
 
 ```
-agent-def build --config ./configs/agent-def.yml my-app
+agent-sync build --config ./configs/agent-sync.yml my-app
 ```
 
 The build command processes both project-specific and user-level tasks by default. If you specify project names as arguments, only those projects will be processed, but user-level tasks will still be processed.
 
 ## Configuration
 
-agent-def uses a YAML configuration file (`agent-def.yml`) to define the sources and destinations for your agent definitions.
+agent-sync uses a YAML configuration file (`agent-sync.yml`) to define the sources and destinations for your agent definitions.
 
 ### Basic Structure
 
@@ -78,7 +78,7 @@ user:
 
 ### Task Types
 
-agent-def supports two task types:
+agent-sync supports two task types:
 
 1. **Memory** (`type: memory`) - Defines context information for AI agents
 2. **Command** (`type: command`) - Provides custom command definitions for AI agents
@@ -105,7 +105,7 @@ See the `examples/` directory for sample memory context and command definition f
 
 ## Release Process
 
-agent-def uses [GoReleaser](https://goreleaser.com/) for automated releases and distribution. This process builds binaries for multiple platforms and architectures, creates GitHub releases, and automatically updates the Homebrew formula.
+agent-sync uses [GoReleaser](https://goreleaser.com/) for automated releases and distribution. This process builds binaries for multiple platforms and architectures, creates GitHub releases, and automatically updates the Homebrew formula.
 
 ### Creating a New Release
 
@@ -152,12 +152,12 @@ To set up this secret:
 
 ### Homebrew Formula
 
-The release process automatically updates the Homebrew formula in the [homebrew-tap](https://github.com/uphy/homebrew-tap) repository, allowing users to install the latest version of agent-def using Homebrew:
+The release process automatically updates the Homebrew formula in the [homebrew-tap](https://github.com/uphy/homebrew-tap) repository, allowing users to install the latest version of agent-sync using Homebrew:
 
 ```bash
-brew install uphy/tap/agent-def
+brew install uphy/tap/agent-sync
 ```
 
 ## License
 
-agent-def is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+agent-sync is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

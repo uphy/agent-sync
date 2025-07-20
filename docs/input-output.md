@@ -1,10 +1,10 @@
 # Input and Output Processing
 
-This document details how agent-def processes input files and generates output files.
+This document details how agent-sync processes input files and generates output files.
 
 ## Glob Pattern Support in Inputs
 
-The `inputs` field supports glob patterns with doublestar support for recursive matching and exclusions. Input paths are always resolved relative to the configuration file directory (where your `agent-def.yml` is located):
+The `inputs` field supports glob patterns with doublestar support for recursive matching and exclusions. Input paths are always resolved relative to the configuration file directory (where your `agent-sync.yml` is located):
 
 | Pattern | Description |
 |---------|-------------|
@@ -62,14 +62,14 @@ When specifying output directories in the `outputDirs` setting:
 
 - Absolute paths (starting with `/` on Unix or drive letters on Windows) are used as-is
 - Relative paths (not starting with `/` or drive letters) are:
-  - Treated as relative to the agent-def.yml file location
+  - Treated as relative to the agent-sync.yml file location
   - Always converted to absolute paths internally for clarity and precision
 
 This approach allows you to specify output directories relative to your configuration file, making configurations more portable across different environments, while ensuring that all paths used internally are unambiguous.
 
 Example:
 ```yaml
-# If agent-def.yml is located at /path/to/project/agent-def.yml
+# If agent-sync.yml is located at /path/to/project/agent-sync.yml
 outputDirs:
   - dist  # Will be resolved to absolute path: /path/to/project/dist
 ```
@@ -109,7 +109,7 @@ When no `outputPath` is specified, the following default paths are used. The pat
 
 ## Task Processing Workflow
 
-When the `agent-def build` command is executed, the following workflow occurs:
+When the `agent-sync build` command is executed, the following workflow occurs:
 
 1. **Configuration Loading**: The configuration file is loaded and validated.
 2. **Task Selection**: If specific projects are provided as command arguments, only those projects' tasks are processed. Otherwise, all projects and user tasks are processed.

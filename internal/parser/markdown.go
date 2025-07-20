@@ -1,9 +1,9 @@
 package parser
 
 import (
-	"github.com/uphy/agent-def/internal/frontmatter"
-	"github.com/uphy/agent-def/internal/model"
-	"github.com/uphy/agent-def/internal/util"
+	"github.com/uphy/agent-sync/internal/frontmatter"
+	"github.com/uphy/agent-sync/internal/model"
+	"github.com/uphy/agent-sync/internal/util"
 )
 
 // ExtractMarkdownContent extracts the content of a markdown file without frontmatter

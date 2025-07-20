@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/uphy/agent-def/internal/log"
+	"github.com/uphy/agent-sync/internal/log"
 	"go.uber.org/zap"
 )
 
@@ -20,7 +20,7 @@ var templatesFS embed.FS
 var initContext *Context
 
 // NewInitCommand returns the 'init' command with a nil context.
-// It initializes the default agent-def project structure.
+// It initializes the default agent-sync project structure.
 func NewInitCommand() *cobra.Command {
 	return NewInitCommandWithContext(nil)
 }
@@ -32,8 +32,8 @@ func NewInitCommandWithContext(ctx *Context) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "init",
-		Short: "Initialize agent-def.yml and directory structure",
-		Long:  "Generate a sample agent-def.yml in the current directory along with memories/ and commands/ folders with sample files.",
+		Short: "Initialize agent-sync.yml and directory structure",
+		Long:  "Generate a sample agent-sync.yml in the current directory along with memories/ and commands/ folders with sample files.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Use the context if available
 			var logger *zap.Logger
@@ -55,13 +55,13 @@ func NewInitCommandWithContext(ctx *Context) *cobra.Command {
 				return fmt.Errorf("cannot get current directory: %w", err)
 			}
 
-			// Check if agent-def.yml already exists
-			yml := filepath.Join(cwd, "agent-def.yml")
+			// Check if agent-sync.yml already exists
+			yml := filepath.Join(cwd, "agent-sync.yml")
 			if _, err := os.Stat(yml); err == nil {
 				if logger != nil {
-					logger.Warn("agent-def.yml already exists", zap.String("path", yml))
+					logger.Warn("agent-sync.yml already exists", zap.String("path", yml))
 				}
-				return fmt.Errorf("agent-def.yml already exists in %s", cwd)
+				return fmt.Errorf("agent-sync.yml already exists in %s", cwd)
 			}
 
 			if logger != nil {
@@ -77,9 +77,9 @@ func NewInitCommandWithContext(ctx *Context) *cobra.Command {
 			}
 
 			if output != nil {
-				output.PrintSuccess(fmt.Sprintf("Generated agent-def.yml, memories/, and commands/ with sample files in %s", cwd))
+				output.PrintSuccess(fmt.Sprintf("Generated agent-sync.yml, memories/, and commands/ with sample files in %s", cwd))
 			} else {
-				fmt.Println("Generated agent-def.yml, memories/, and commands/ with sample files in", cwd)
+				fmt.Println("Generated agent-sync.yml, memories/, and commands/ with sample files in", cwd)
 			}
 
 			if logger != nil {
@@ -126,9 +126,9 @@ func mapTemplatePath(templatePath string, cwd string) string {
 		// templates/commands/* -> commands/*
 		rel := strings.TrimPrefix(templatePath, "templates/commands/")
 		return filepath.Join(cwd, "commands", rel)
-	case templatePath == "templates/agent-def.yml":
-		// templates/agent-def.yml -> agent-def.yml
-		return filepath.Join(cwd, "agent-def.yml")
+	case templatePath == "templates/agent-sync.yml":
+		// templates/agent-sync.yml -> agent-sync.yml
+		return filepath.Join(cwd, "agent-sync.yml")
 	default:
 		// 他のファイルの場合はtemplatesプレフィックスを削除
 		rel := strings.TrimPrefix(templatePath, "templates/")

@@ -1,6 +1,6 @@
 # Task Types
 
-agent-def supports the following two task types:
+agent-sync supports the following two task types:
 
 ## 1. Memory (`type: memory`)
 

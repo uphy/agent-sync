@@ -15,15 +15,15 @@ dir = "internal/cli"
 alias = "itr"
 
 [tasks.dev]
-run = "go run ./cmd/agent-def"
+run = "go run ./cmd/agent-sync"
 alias = "d"
 
 [tasks.install]
-run = "go install ./cmd/agent-def"
+run = "go install ./cmd/agent-sync"
 alias = "deploy"
 
-[tasks.agent-def]
-run = "go run ./cmd/agent-def build -f -c .agent-def/agent-def.yml"
+[tasks.agent-sync]
+run = "go run ./cmd/agent-sync build -f -c .agent-sync/agent-sync.yml"
 
 [tasks.lint]
 run = "golangci-lint run ./..."
@@ -36,4 +36,4 @@ run = "gofmt -w ."
 run = "go build ./..."
 
 [tasks.pre-commit]
-depends = ["build", "lint", "format", "test", "agent-def"]
+depends = ["build", "lint", "format", "test", "agent-sync"]

@@ -10,7 +10,7 @@ import (
 
 func TestLoadConfig_Basic(t *testing.T) {
 	// Create a temporary directory for test files
-	tmpDir, err := os.MkdirTemp("", "agent-def-test")
+	tmpDir, err := os.MkdirTemp("", "agent-sync-test")
 	assert.NoError(t, err)
 	defer func() {
 		if err := os.RemoveAll(tmpDir); err != nil {
@@ -49,7 +49,7 @@ user:
 
 func TestExpandTildeInConfig(t *testing.T) {
 	// Create a temporary directory for test files
-	tmpDir, err := os.MkdirTemp("", "agent-def-test")
+	tmpDir, err := os.MkdirTemp("", "agent-sync-test")
 	assert.NoError(t, err)
 	defer func() {
 		if err := os.RemoveAll(tmpDir); err != nil {

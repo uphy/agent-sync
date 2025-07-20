@@ -49,7 +49,7 @@ func (e *ErrInvalidAgent) Error() string {
 
 // FormattedError returns a user-friendly error message for invalid agent errors
 func (e *ErrInvalidAgent) FormattedError() string {
-	return fmt.Sprintf("Invalid agent type: '%s'. Use 'agent-def list' to see available agents.", e.Type)
+	return fmt.Sprintf("Invalid agent type: '%s'. Use 'agent-sync list' to see available agents.", e.Type)
 }
 
 // ErrParseFailure represents a parsing error

@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 
 	"github.com/goccy/go-yaml"
-	"github.com/uphy/agent-def/internal/util"
+	"github.com/uphy/agent-sync/internal/util"
 )
 
-// LoadConfig reads and parses the agent-def YAML configuration from the given path.
-// If the provided path is a directory, it looks for "agent-def.yml" or "agent-def.yaml" in that directory.
+// LoadConfig reads and parses the agent-sync YAML configuration from the given path.
+// If the provided path is a directory, it looks for "agent-sync.yml" or "agent-sync.yaml" in that directory.
 func LoadConfig(path string) (*Config, string, error) {
 	cfgPath := path
 	var cfgDir string
@@ -22,8 +22,8 @@ func LoadConfig(path string) (*Config, string, error) {
 
 	if info.IsDir() {
 		cfgDir = path
-		// search for agent-def.yml or agent-def.yaml
-		for _, name := range []string{"agent-def.yml", "agent-def.yaml"} {
+		// search for agent-sync.yml or agent-sync.yaml
+		for _, name := range []string{"agent-sync.yml", "agent-sync.yaml"} {
 			p := filepath.Join(path, name)
 			if _, err := os.Stat(p); err == nil {
 				cfgPath = p

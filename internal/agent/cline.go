@@ -3,7 +3,7 @@ package agent
 import (
 	"path/filepath"
 
-	"github.com/uphy/agent-def/internal/model"
+	"github.com/uphy/agent-sync/internal/model"
 )
 
 // Cline implements the Cline-specific conversion logic

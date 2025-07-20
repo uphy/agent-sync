@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/uphy/agent-def/internal/util"
+	"github.com/uphy/agent-sync/internal/util"
 )
 
 // FileFunc generates a file reference helper function
@@ -116,7 +116,7 @@ func (e *Engine) Agent() string {
 // resolveTemplatePath resolves paths for template includes and references
 // using the special template path resolution rules:
 // 1. Absolute paths (like C:\ on Windows or /root on Unix) are not allowed and will return an error
-// 2. Paths starting with "@/" are relative to agent-def.yml's directory (BasePath) with the "@/" prefix removed
+// 2. Paths starting with "@/" are relative to agent-sync.yml's directory (BasePath) with the "@/" prefix removed
 // 3. All other paths (including those with "./" or "../" prefix) are relative to the including file's directory (CurrentFilePath)
 //
 // Returns an array of resolved absolute paths and an error if any path is invalid.

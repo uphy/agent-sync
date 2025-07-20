@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/uphy/agent-def/internal/model"
+	"github.com/uphy/agent-sync/internal/model"
 )
 
 func TestClaude_FormatCommand(t *testing.T) {

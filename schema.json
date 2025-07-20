@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "agent-def Configuration Schema",
-    "description": "Schema for agent-def configuration files",
+    "title": "agent-sync Configuration Schema",
+    "description": "Schema for agent-sync configuration files",
     "type": "object",
     "properties": {
         "configVersion": {
@@ -115,7 +115,7 @@
                 },
                 "inputs": {
                     "type": "array",
-                    "description": "File or directory paths relative to config directory (where agent-def.yml is located). Supports glob patterns with exclusions",
+                    "description": "File or directory paths relative to config directory (where agent-sync.yml is located). Supports glob patterns with exclusions",
                     "items": {
                         "type": "string"
                     },

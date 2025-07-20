@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/goccy/go-yaml"
-	"github.com/uphy/agent-def/internal/util"
+	"github.com/uphy/agent-sync/internal/util"
 )
 
 // ExtractFrontmatter extracts the raw YAML frontmatter bytes from content

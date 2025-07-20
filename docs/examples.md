@@ -1,6 +1,6 @@
 # Examples and Best Practices
 
-This document provides configuration examples and best practices for using agent-def effectively.
+This document provides configuration examples and best practices for using agent-sync effectively.
 
 ## Configuration Example
 
@@ -118,13 +118,13 @@ tasks:
    {{ ifRoo "This appears only in Roo output" }}
    ```
 
-7. **Version Control**: Keep your agent-def configuration and template files under version control
+7. **Version Control**: Keep your agent-sync configuration and template files under version control
 
 8. **Modular Content**: Break down large memory files into smaller, focused files for easier maintenance
 
 9. **Test Changes**: Use `--dry-run` to preview changes before applying them
    ```bash
-   agent-def build --dry-run
+   agent-sync build --dry-run
    ```
 
 10. **Document Configuration**: Add comments to your configuration file to explain complex setups

@@ -1,6 +1,6 @@
 # Configuration Reference
 
-This document details all configuration parameters available in the `agent-def.yml` file, their types, requirements, and descriptions.
+This document details all configuration parameters available in the `agent-sync.yml` file, their types, requirements, and descriptions.
 
 ## Root Configuration
 

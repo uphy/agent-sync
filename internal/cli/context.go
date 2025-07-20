@@ -2,7 +2,7 @@ package cli
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/uphy/agent-def/internal/log"
+	"github.com/uphy/agent-sync/internal/log"
 	"go.uber.org/zap"
 )
 

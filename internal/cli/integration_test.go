@@ -10,14 +10,14 @@ import (
 	"testing"
 )
 
-// TestAgentDef runs integration tests for the agent-def command.
+// TestAgentDef runs integration tests for the agent-sync command.
 // It discovers test directories in testdata/ and runs each test case.
 func TestAgentDef(t *testing.T) {
 	replace := os.Getenv("AGENT_DEF_REPLACE") == "true"
-	// Build the agent-def binary first
+	// Build the agent-sync binary first
 	binaryPath, err := buildAgentDefBinary()
 	if err != nil {
-		t.Fatalf("Failed to build agent-def binary: %v", err)
+		t.Fatalf("Failed to build agent-sync binary: %v", err)
 	}
 	defer func() {
 		if err := os.Remove(binaryPath); err != nil {
@@ -44,7 +44,7 @@ func TestAgentDef(t *testing.T) {
 			expectError := testName == "edge-cases" || testName == "mixed-format-test"
 
 			// Create a temporary directory for the test
-			tempDir, err := os.MkdirTemp("", "agent-def-test-")
+			tempDir, err := os.MkdirTemp("", "agent-sync-test-")
 			if err != nil {
 				t.Fatalf("Failed to create temporary directory: %v", err)
 			}
@@ -55,7 +55,7 @@ func TestAgentDef(t *testing.T) {
 			}()
 			buildDir := filepath.Join(tempDir, "build")
 
-			// Path to test directory containing agent-def.yml
+			// Path to test directory containing agent-sync.yml
 			testPath := filepath.Join(testDir, "test")
 
 			// Copy test files to temporary directory
@@ -63,7 +63,7 @@ func TestAgentDef(t *testing.T) {
 				t.Fatalf("Failed to copy test files to temporary directory: %v", err)
 			}
 
-			// Run the agent-def binary with config flag pointing to the local directory
+			// Run the agent-sync binary with config flag pointing to the local directory
 			cmd := exec.Command(binaryPath, "build", "--force", "--config", ".")
 			cmd.Dir = tempDir
 			var stderr bytes.Buffer
@@ -78,7 +78,7 @@ func TestAgentDef(t *testing.T) {
 				// For error cases, we don't compare directories
 				return
 			} else if err != nil {
-				t.Fatalf("agent-def command failed: %v\n%s\n%s", err, output, stderr.String())
+				t.Fatalf("agent-sync command failed: %v\n%s\n%s", err, output, stderr.String())
 			}
 
 			// Compare output with expected output
@@ -286,10 +286,10 @@ func compareDirectories(expected, actual string) (string, error) {
 	return "", fmt.Errorf("error comparing directories with diff command: %w\nOutput: %s", err, string(output))
 }
 
-// buildAgentDefBinary builds the agent-def binary to a temporary location and returns the path.
+// buildAgentDefBinary builds the agent-sync binary to a temporary location and returns the path.
 func buildAgentDefBinary() (string, error) {
 	// Create a temporary file to store the binary
-	tempFile, err := os.CreateTemp("", "agent-def-test")
+	tempFile, err := os.CreateTemp("", "agent-sync-test")
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp file: %w", err)
 	}
@@ -298,7 +298,7 @@ func buildAgentDefBinary() (string, error) {
 	}
 
 	binaryPath := tempFile.Name()
-	fmt.Printf("Building agent-def binary to: %s\n", binaryPath)
+	fmt.Printf("Building agent-sync binary to: %s\n", binaryPath)
 
 	// Get project root to find main.go
 	projectRoot, err := findProjectRoot()
@@ -307,7 +307,7 @@ func buildAgentDefBinary() (string, error) {
 	}
 
 	// Build the binary
-	cmd := exec.Command("go", "build", "-o", binaryPath, filepath.Join(projectRoot, "cmd", "agent-def", "main.go"))
+	cmd := exec.Command("go", "build", "-o", binaryPath, filepath.Join(projectRoot, "cmd", "agent-sync", "main.go"))
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 

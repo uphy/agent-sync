@@ -1,4 +1,4 @@
-module github.com/uphy/agent-def
+module github.com/uphy/agent-sync
 
 go 1.23.0
 

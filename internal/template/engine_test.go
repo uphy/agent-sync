@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/uphy/agent-def/internal/agent"
+	"github.com/uphy/agent-sync/internal/agent"
 )
 
 func TestExecute_ReturnsRawContent(t *testing.T) {

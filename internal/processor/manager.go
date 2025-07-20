@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"slices"
 
-	"github.com/uphy/agent-def/internal/config"
-	"github.com/uphy/agent-def/internal/log"
-	"github.com/uphy/agent-def/internal/util"
+	"github.com/uphy/agent-sync/internal/config"
+	"github.com/uphy/agent-sync/internal/log"
+	"github.com/uphy/agent-sync/internal/util"
 	"go.uber.org/zap"
 )
 

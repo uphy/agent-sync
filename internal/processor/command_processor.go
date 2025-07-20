@@ -1,14 +1,14 @@
-// Package processor provides functionality for processing agent-def tasks
+// Package processor provides functionality for processing agent-sync tasks
 package processor
 
 import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/uphy/agent-def/internal/agent"
-	"github.com/uphy/agent-def/internal/model"
-	"github.com/uphy/agent-def/internal/parser"
-	"github.com/uphy/agent-def/internal/template"
+	"github.com/uphy/agent-sync/internal/agent"
+	"github.com/uphy/agent-sync/internal/model"
+	"github.com/uphy/agent-sync/internal/parser"
+	"github.com/uphy/agent-sync/internal/template"
 )
 
 // CommandProcessor processes command tasks

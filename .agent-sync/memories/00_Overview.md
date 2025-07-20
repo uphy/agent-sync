@@ -1,4 +1,4 @@
-# agent-def
+# agent-sync
 
 ## Development Commands
 
@@ -20,18 +20,18 @@ mise run pre-commit
 
 ## Project Architecture
 
-Agent-def is a tool for converting context and command definitions for various AI agents like Claude, Roo, Cline, and Copilot. The architecture is organized as follows:
+agent-sync is a tool for converting context and command definitions for various AI agents like Claude, Roo, Cline, and Copilot. The architecture is organized as follows:
 
 ### Core Components
 
-1. **Command Line Interface** (`/cmd/agent-def/main.go`, `/internal/cli/`)
+1. **Command Line Interface** (`/cmd/agent-sync/main.go`, `/internal/cli/`)
    - Uses Cobra for CLI implementation
    - Main commands: build, validate, list, init
    - Supports global flags for logging, output format, etc.
 
 2. **Configuration System** (`/internal/config/`)
    - Defines YAML configuration structure in `config.go`
-   - Handles loading configurations from `agent-def.yml` files
+   - Handles loading configurations from `agent-sync.yml` files
    - Supports project and user-level configurations
    - Supports standard and simplified formats
 
@@ -76,7 +76,7 @@ Agent-def is a tool for converting context and command definitions for various A
 
 ### Data Flow
 
-1. Configuration is loaded from `agent-def.yml`
+1. Configuration is loaded from `agent-sync.yml`
 2. Tasks are processed according to their type (memory or command)
 3. Source files are read and processed through the template engine
 4. Results are transformed for the target agent format
@@ -84,7 +84,7 @@ Agent-def is a tool for converting context and command definitions for various A
 
 ### File Structure
 
-- `/cmd/agent-def/` - Main application entry point
+- `/cmd/agent-sync/` - Main application entry point
 - `/internal/` - Internal packages
   - `/agent/` - Agent-specific implementations
   - `/cli/` - CLI command implementations
@@ -110,7 +110,7 @@ Agent-def is a tool for converting context and command definitions for various A
 
 ### Configuration Structure
 
-The `agent-def.yml` file defines:
+The `agent-sync.yml` file defines:
 
 1. Project-specific configurations:
    - Source paths for memories and commands

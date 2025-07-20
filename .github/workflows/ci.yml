@@ -62,4 +62,4 @@ jobs:
 
       # Verify that the code builds without errors
       - name: Verify build
-        run: go build -v ./cmd/agent-def
+        run: go build -v ./cmd/agent-sync

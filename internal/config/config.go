@@ -4,9 +4,9 @@ import (
 	"fmt"
 )
 
-// Config represents the root configuration for agent-def
+// Config represents the root configuration for agent-sync
 type Config struct {
-	// ConfigVersion defines the schema version of agent-def.yml
+	// ConfigVersion defines the schema version of agent-sync.yml
 	ConfigVersion string `yaml:"configVersion"`
 	// Projects holds named project configurations
 	Projects map[string]Project `yaml:"projects"`

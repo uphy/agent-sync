@@ -1,6 +1,6 @@
 # Template System
 
-agent-def provides a powerful templating system that allows you to create dynamic content, include files, and handle agent-specific formatting.
+agent-sync provides a powerful templating system that allows you to create dynamic content, include files, and handle agent-specific formatting.
 
 ## Template Path Resolution
 
@@ -16,7 +16,7 @@ Within templates, paths are resolved using special rules:
    - Example from file `/templates/main.md`: `../shared/partial.md` → `/shared/partial.md`
    - Example from file `/templates/main.md`: `common.md` → `/templates/common.md`
 
-Examples assuming config file is at `/project/agent-def.yml`:
+Examples assuming config file is at `/project/agent-sync.yml`:
 
 | Template Path | Including File | Resolved Path |
 |---------------|----------------|---------------|
@@ -41,7 +41,7 @@ For detailed information about glob pattern syntax and behavior, see the [Glob P
 
 ## Template Functions
 
-agent-def supports the following template functions in source files:
+agent-sync supports the following template functions in source files:
 
 | Function | Description | Example |
 |----------|-------------|---------|

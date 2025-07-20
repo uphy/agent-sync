@@ -1,4 +1,4 @@
-// Package processor provides functionality for processing agent-def tasks
+// Package processor provides functionality for processing agent-sync tasks
 package processor
 
 import (

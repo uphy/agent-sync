@@ -1,9 +1,9 @@
-// Package processor provides functionality for processing agent-def tasks
+// Package processor provides functionality for processing agent-sync tasks
 package processor
 
 import (
-	"github.com/uphy/agent-def/internal/agent"
-	"github.com/uphy/agent-def/internal/util"
+	"github.com/uphy/agent-sync/internal/agent"
+	"github.com/uphy/agent-sync/internal/util"
 	"go.uber.org/zap"
 )
 

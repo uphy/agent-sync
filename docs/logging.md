@@ -1,23 +1,23 @@
-# Agent-def Logging Guide
+# agent-sync Logging Guide
 
 ## Overview
 
-The agent-def tool includes a flexible logging system that helps you:
+The agent-sync tool includes a flexible logging system that helps you:
 
 1. **See what's happening** with clear, color-coded messages in the terminal when logging is enabled
 2. **Keep records** of operations for troubleshooting and auditing
 3. **Control the amount of information** displayed based on your needs
 
-This guide explains how to configure and use logging features in agent-def.
+This guide explains how to configure and use logging features in agent-sync.
 
 ## Quick Start
 
-By default, agent-def operates silently with no console output. To enable output, use one of these options:
+By default, agent-sync operates silently with no console output. To enable output, use one of these options:
 
 1. Use the `--verbose` flag to show output in your terminal:
 
 ```bash
-agent-def build --verbose
+agent-sync build --verbose
 ```
 
 The `--verbose` flag does two important things:
@@ -27,7 +27,7 @@ The `--verbose` flag does two important things:
 2. Use the `--log-file` flag to save logs to a file:
 
 ```bash
-agent-def build --log-file build.log
+agent-sync build --log-file build.log
 ```
 
 When enabled, output includes visual indicators:
@@ -48,13 +48,13 @@ These flags provide immediate control for a single command:
 
 ```bash
 # Increase logging detail
-agent-def build --log-level debug
+agent-sync build --log-level debug
 
 # Save logs to a file
-agent-def build --log-file ./logs/agent-def.log
+agent-sync build --log-file ./logs/agent-sync.log
 
 # Display more detailed messages
-agent-def build --verbose
+agent-sync build --verbose
 ```
 
 ### 2. Environment Variables
@@ -64,12 +64,12 @@ For persistent settings across multiple commands:
 ```bash
 # Set these variables in your shell or .bashrc/.zshrc file
 export AGENT_DEF_LOG_LEVEL=debug
-export AGENT_DEF_LOG_FILE=./logs/agent-def.log
+export AGENT_DEF_LOG_FILE=./logs/agent-sync.log
 ```
 
 ## Configuration Priority
 
-When multiple configuration sources exist, agent-def uses this priority order:
+When multiple configuration sources exist, agent-sync uses this priority order:
 
 1. Command-line flags (highest priority)
 2. Environment variables
@@ -79,7 +79,7 @@ By default, logging is disabled. You must explicitly enable it using one of the 
 
 ## Log Levels
 
-Agent-def uses four log levels, controlling how much information is recorded:
+agent-sync uses four log levels, controlling how much information is recorded:
 
 | Level | Description | Use When |
 |-------|-------------|---------|
@@ -106,7 +106,7 @@ When logging to a file, you can control:
 When something isn't working as expected:
 
 ```bash
-agent-def build --log-level debug --log-file debug.log --verbose
+agent-sync build --log-level debug --log-file debug.log --verbose
 ```
 
 This will:
@@ -115,10 +115,10 @@ This will:
 
 ### Running in a Script
 
-When using agent-def in automated scripts:
+When using agent-sync in automated scripts:
 
 ```bash
-agent-def build --log-level error --log-file build.log
+agent-sync build --log-level error --log-file build.log
 ```
 
 This will:
@@ -133,7 +133,7 @@ For day-to-day development work:
 # Set environment variables
 export AGENT_DEF_LOG_LEVEL=info
 # Or use command-line flags
-agent-def build --verbose
+agent-sync build --verbose
 ```
 
 ### Production Environment
@@ -143,14 +143,14 @@ For server or CI/CD environments:
 ```bash
 # Set environment variables
 export AGENT_DEF_LOG_LEVEL=info
-export AGENT_DEF_LOG_FILE=/var/log/agent-def/agent-def.log
+export AGENT_DEF_LOG_FILE=/var/log/agent-sync/agent-sync.log
 # Or use command-line flags
-agent-def build --log-level info --log-file /var/log/agent-def/agent-def.log
+agent-sync build --log-level info --log-file /var/log/agent-sync/agent-sync.log
 ```
 
 ### Silent Operation
 
-For minimal output when running in scripts or automated environments, simply don't set any logging options. By default, agent-def will not produce any log output unless explicitly enabled.
+For minimal output when running in scripts or automated environments, simply don't set any logging options. By default, agent-sync will not produce any log output unless explicitly enabled.
 
 ## Troubleshooting
 
@@ -176,7 +176,7 @@ For minimal output when running in scripts or automated environments, simply don
 If you encounter issues with logging, try running with debug level to get more information:
 
 ```bash
-agent-def --log-level debug --verbose build
+agent-sync --log-level debug --verbose build
 ```
 
 ## Testing Logs
@@ -185,16 +185,16 @@ If you want to verify that your logging configuration is working correctly, you 
 
 ```bash
 # Test logging with default settings (silent)
-agent-def log-test
+agent-sync log-test
 
 # Test logging with verbose output enabled
-agent-def --verbose log-test
+agent-sync --verbose log-test
 
 # Test logging with a specific log level
-agent-def --log-level debug --verbose log-test
+agent-sync --log-level debug --verbose log-test
 
 # Save test logs to a file
-agent-def --log-file test.log log-test
+agent-sync --log-file test.log log-test
 ```
 
 The `log-test` command:
