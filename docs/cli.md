@@ -33,7 +33,7 @@ All projects will be processed.
 
 Flags:
 - `--config, -c`: Path to agent-sync.yml file or directory containing it (default: ".")
-- `--dry-run`: Show what would be generated without writing files
+- `--dry-run`: Show what would be generated without writing files. The output provides detailed information organized by agent, including file status ([CREATE], [MODIFY], or [UNCHANGED]), file paths, sizes, and summaries showing counts of created, modified, and unchanged files
 - `--force, -f`: Force overwrite without prompting for confirmation
 
 ### `init`

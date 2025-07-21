@@ -20,7 +20,10 @@ type OutputConfig struct {
 type ProcessedFile struct {
 	// relPath is the relative path of the file from the output directory
 	relPath string
+	// Content is the processed file content
 	Content string
+	// AgentName is the name of the agent for this file
+	AgentName string
 }
 
 // TaskResult represents the result of processing a task

@@ -33,10 +33,45 @@ agent-sync recognizes the following environment variables:
 1. **Use `--dry-run`**: Preview what would be generated without writing files
 2. **Enable debug logging**: Use `--debug` or `--log-level=debug` for detailed logs
 3. **Check output path formatting**: Remember that paths ending with `/` are treated as directories, while paths without are treated as files
-4. **Dry-run**: Run `agent-sync apply --dry-run` to check your configuration before applying
-5. **Check file permissions**: Ensure you have read permissions for input files and write permissions for output directories
-6. **Examine template processing**: If you suspect issues with templates, try creating simpler templates first to isolate the problem
-7. **Check for conflicting paths**: Make sure you're not writing to the same output file from different tasks
+4. **Check file permissions**: Ensure you have read permissions for input files and write permissions for output directories
+5. **Examine template processing**: If you suspect issues with templates, try creating simpler templates first to isolate the problem
+6. **Check for conflicting paths**: Make sure you're not writing to the same output file from different tasks
+
+## Using Enhanced Dry-Run Mode
+
+The `--dry-run` flag provides a powerful way to preview and debug your configuration without making actual changes. The enhanced output format offers:
+
+1. **Agent-based organization**: Output is grouped by agent, making it easy to see how files will be processed for each target system
+
+2. **Status indicators**: Each file is prefixed with one of these status tags:
+   - `[CREATE]`: File does not exist and would be created
+   - `[MODIFY]`: File exists and its content would be changed
+   - `[UNCHANGED]`: File exists and its content would remain the same
+
+3. **File details**: For each file, you'll see:
+   - Full file path
+   - File size in human-readable format (B, KB, MB)
+
+4. **Agent summaries**: For each agent, a summary is provided showing:
+   - Number of files that would be created
+   - Number of files that would be modified
+   - Number of files that would remain unchanged
+
+Example of using dry-run to debug configuration issues:
+
+```bash
+# Run in dry-run mode to check configuration
+agent-sync apply --dry-run
+
+# If you need more details, combine with debug logging
+agent-sync apply --dry-run --debug
+```
+
+This helps identify issues such as:
+- Files being created in unexpected locations
+- Expected modifications not being detected
+- Unnecessary file duplication
+- Size discrepancies indicating template processing issues
 
 ## OS-Specific Considerations
 

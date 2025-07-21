@@ -137,6 +137,37 @@ tasks:
    ```bash
    agent-sync apply --dry-run
    ```
+   
+   Example output from enhanced dry-run mode:
+   ```
+   DRY RUN MODE: No files will actually be written
+   Executing task 'Project Memory' of type 'memory'
+   
+   Agent: claude
+     [CREATE] /Users/alice/projects/my-app/CLAUDE.md (2.3 KB)
+   
+     Summary: 1 files would be created, 0 files would be modified, 0 files would remain unchanged
+   
+   Agent: roo
+     [MODIFY] /Users/alice/projects/my-app/.roo/rules/architecture.md (1.1 KB)
+     [CREATE] /Users/alice/projects/my-app/.roo/rules/coding-standards.md (856 B)
+     [UNCHANGED] /Users/alice/projects/my-app/.roo/rules/deployment.md (512 B)
+   
+     Summary: 1 files would be created, 1 files would be modified, 1 files would remain unchanged
+   
+   Executing task 'Project Commands' of type 'command'
+   
+   Agent: claude
+     [CREATE] /Users/alice/projects/my-app/.claude/commands/deploy.md (734 B)
+     [CREATE] /Users/alice/projects/my-app/.claude/commands/test.md (512 B)
+   
+     Summary: 2 files would be created, 0 files would be modified, 0 files would remain unchanged
+   
+   Agent: roo
+     [MODIFY] /Users/alice/projects/my-app/.roomodes (1.2 KB)
+   
+     Summary: 0 files would be created, 1 files would be modified, 0 files would remain unchanged
+   ```
 
 10. **Document Configuration**: Add comments to your configuration file to explain complex setups
     ```yaml

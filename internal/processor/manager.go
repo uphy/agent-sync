@@ -61,6 +61,12 @@ func (m *Manager) Apply(dryRun, force bool) error {
 	m.logger.Info("Starting apply process",
 		zap.Bool("dryRun", dryRun),
 		zap.Bool("force", force))
+
+	// Print clear dry run message at the beginning
+	if dryRun && m.output != nil {
+		m.output.PrintProgress("DRY RUN MODE: No files will actually be written")
+	}
+
 	// Process project-level tasks
 	for name, proj := range m.cfg.Projects {
 		// Resolve absolute paths for input root and output directories

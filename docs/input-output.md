@@ -126,7 +126,7 @@ When the `agent-sync apply` command is executed, the following workflow occurs:
 4. **Output Generation**:
    - For each output agent specified in the task, the content is formatted according to the agent's requirements.
    - The formatted content is written to the specified output paths in each output directory.
-5. **Verification**: Optionally, with the `--dry-run` flag, the process will show what would be generated without actually writing files.
+5. **Verification**: Optionally, with the `--dry-run` flag, the process will show what would be generated without actually writing files. The enhanced output displays content organized by agent with file status ([CREATE], [MODIFY], [UNCHANGED]), file paths, sizes, and per-agent summaries.
 
 ## Navigation
 

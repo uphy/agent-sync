@@ -123,6 +123,9 @@ func (p *Pipeline) Execute() error {
 		return err
 	}
 
+	// Map to store files by agent
+	filesByAgent := make(map[string][]ProcessedFile)
+
 	// Process each output agent
 	for _, output := range p.Task.Outputs {
 		// Get output configuration
@@ -137,10 +140,17 @@ func (p *Pipeline) Execute() error {
 			return err
 		}
 
-		// Write the processed files
-		if err := p.writeOutputFiles(result.Files); err != nil {
-			return err
+		// Store files by agent
+		for _, file := range result.Files {
+			// Add agent name to each file
+			file.AgentName = output.Agent
+			filesByAgent[output.Agent] = append(filesByAgent[output.Agent], file)
 		}
+	}
+
+	// Write all processed files organized by agent
+	if err := p.writeOutputFilesByAgent(filesByAgent); err != nil {
+		return err
 	}
 
 	// Log successful completion
@@ -224,32 +234,133 @@ func (p *Pipeline) logError(msg string, err error, fields ...zap.Field) {
 	}
 }
 
-// writeOutputFiles writes the processed files to all output directories
-func (p *Pipeline) writeOutputFiles(files []ProcessedFile) error {
-	for _, absOutputDir := range p.AbsOutputDirs {
-		for _, file := range files {
-			absOutputFile := filepath.Join(absOutputDir, file.relPath)
+// writeOutputFilesByAgent writes the processed files to all output directories, grouped by agent
+func (p *Pipeline) writeOutputFilesByAgent(filesByAgent map[string][]ProcessedFile) error {
+	if p.DryRun && p.output != nil {
+		// Process and print files grouped by agent
+		for agentName, files := range filesByAgent {
+			// Count for per-agent summary
+			createCount := 0
+			modifyCount := 0
+			unchangedCount := 0
 
-			if isSub, err := util.IsSub(absOutputDir, absOutputFile); err != nil {
-				return fmt.Errorf("check if output path is subdirectory: %w", err)
-			} else if !isSub {
-				return fmt.Errorf("output path %s is not a subdirectory of %s", absOutputFile, absOutputDir)
+			// Print agent header
+			p.output.Print(fmt.Sprintf("\nAgent: %s", agentName))
+
+			// Track status messages for this agent
+			var statusMessages []string
+
+			// Process all files for this agent across all output directories
+			for _, absOutputDir := range p.AbsOutputDirs {
+				for _, file := range files {
+					absOutputFile := filepath.Join(absOutputDir, file.relPath)
+					contentLength := len(file.Content)
+
+					if isSub, err := util.IsSub(absOutputDir, absOutputFile); err != nil {
+						return fmt.Errorf("check if output path is subdirectory: %w", err)
+					} else if !isSub {
+						return fmt.Errorf("output path %s is not a subdirectory of %s", absOutputFile, absOutputDir)
+					}
+
+					fileExists := p.fs.FileExists(absOutputFile)
+					unchanged := false
+
+					// Check if file content would change
+					if fileExists {
+						existingContent, err := p.fs.ReadFile(absOutputFile)
+						if err == nil {
+							// Compare content
+							if string(existingContent) == file.Content {
+								unchanged = true
+								unchangedCount++
+							} else {
+								modifyCount++
+							}
+						} else {
+							// If we can't read the file, assume it will be modified
+							p.logger.Debug("Could not read existing file for comparison",
+								zap.String("path", absOutputFile),
+								zap.Error(err))
+							modifyCount++
+						}
+					} else {
+						createCount++
+					}
+
+					statusMsg := p.formatDryRunFileStatus(absOutputFile, contentLength, unchanged)
+					p.logger.Info("[DRY RUN] " + statusMsg)
+
+					// Collect status messages without the redundant [DRY RUN] prefix
+					statusMessages = append(statusMessages, fmt.Sprintf("  %s", statusMsg))
+				}
 			}
 
-			if p.DryRun {
-				p.logger.Info("[DRY RUN] Would write file", zap.String("path", absOutputFile))
-				if p.output != nil {
-					p.output.PrintVerbose(fmt.Sprintf("[DRY RUN] Would write file %s", absOutputFile))
+			// Print all collected file statuses for this agent
+			for _, msg := range statusMessages {
+				p.output.Print(msg)
+			}
+
+			// Print per-agent summary
+			p.output.Print(fmt.Sprintf("\n  Summary: %d files would be created, %d files would be modified, %d files would remain unchanged",
+				createCount, modifyCount, unchangedCount))
+		}
+	} else {
+		// Non-dry-run mode: actually write the files
+		for _, files := range filesByAgent {
+			for _, absOutputDir := range p.AbsOutputDirs {
+				for _, file := range files {
+					absOutputFile := filepath.Join(absOutputDir, file.relPath)
+					contentLength := len(file.Content)
+
+					if isSub, err := util.IsSub(absOutputDir, absOutputFile); err != nil {
+						return fmt.Errorf("check if output path is subdirectory: %w", err)
+					} else if !isSub {
+						return fmt.Errorf("output path %s is not a subdirectory of %s", absOutputFile, absOutputDir)
+					}
+
+					if err := p.fs.WriteFile(absOutputFile, []byte(file.Content)); err != nil {
+						return fmt.Errorf("write file %s: %w", absOutputFile, err)
+					}
+					p.logger.Info("Wrote file", zap.String("path", absOutputFile), zap.Int("bytes", contentLength))
 				}
-			} else {
-				if err := p.fs.WriteFile(absOutputFile, []byte(file.Content)); err != nil {
-					return fmt.Errorf("write file %s: %w", absOutputFile, err)
-				}
-				p.logger.Info("Wrote file", zap.String("path", absOutputFile))
 			}
 		}
 	}
+
 	return nil
+}
+
+// writeOutputFiles writes the processed files to all output directories
+// Kept for backward compatibility
+func (p *Pipeline) writeOutputFiles(files []ProcessedFile) error {
+	// Group files by a dummy agent name to use the new method
+	filesByAgent := map[string][]ProcessedFile{"": files}
+	return p.writeOutputFilesByAgent(filesByAgent)
+}
+
+// formatDryRunFileStatus returns a formatted status string for dry run output
+func (p *Pipeline) formatDryRunFileStatus(absOutputFile string, contentLength int, unchanged bool) string {
+	fileExists := p.fs.FileExists(absOutputFile)
+	status := "CREATE"
+	if fileExists {
+		if unchanged {
+			status = "UNCHANGED"
+		} else {
+			status = "MODIFY"
+		}
+	}
+
+	// Format size in a human-readable way
+	var sizeStr string
+	if contentLength < 1024 {
+		sizeStr = fmt.Sprintf("%d B", contentLength)
+	} else if contentLength < 1024*1024 {
+		sizeStr = fmt.Sprintf("%.1f KB", float64(contentLength)/1024)
+	} else {
+		sizeStr = fmt.Sprintf("%.1f MB", float64(contentLength)/(1024*1024))
+	}
+
+	return fmt.Sprintf("[%s] %s (%s)", status, absOutputFile, sizeStr)
 }
 
 // logTaskStart logs the start of task execution

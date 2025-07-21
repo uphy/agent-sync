@@ -61,7 +61,7 @@ func NewApplyCommandWithContext(ctx *Context) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show what would be generated without writing files")
+	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Preview files that would be generated (showing paths, sizes, and whether files would be created or overwritten)")
 	cmd.Flags().BoolVarP(&force, "force", "f", false, "Force overwrite without prompting for confirmation")
 	cmd.Flags().StringVarP(&configPath, "config", "c", ".", "Path to agent-sync.yml file or directory containing it")
 
