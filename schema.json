@@ -37,24 +37,10 @@
             }
         }
     },
-    "oneOf": [
+    "allOf": [
         {
             "required": [
-                "configVersion",
-                "projects"
-            ]
-        },
-        {
-            "required": [
-                "configVersion",
-                "user"
-            ]
-        },
-        {
-            "required": [
-                "configVersion",
-                "outputDirs",
-                "tasks"
+                "configVersion"
             ]
         }
     ],

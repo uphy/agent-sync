@@ -30,6 +30,7 @@ Rather than maintaining separate files for each AI assistant, agent-sync allows 
 
 ### Core Concepts
 
+- [**Installation**](installation.md) - Installation methods for different platforms
 - [**Configuration Guide**](config.md) - Main configuration concepts and structure
 - [**Configuration Reference**](config-reference.md) - Detailed configuration parameters and settings
 - [**Task Types**](task-types.md) - Memory and command task types with agent-specific details
@@ -49,7 +50,7 @@ Rather than maintaining separate files for each AI assistant, agent-sync allows 
 
 ## Getting Started
 
-To get started with agent-sync, install it using one of the methods described in the [GitHub repository](https://github.com/uphy/agent-sync) and run the `init` command to create a sample configuration:
+To get started with agent-sync, install it using one of the methods described in the [Installation Guide](installation.md) and run the `init` command to create a sample configuration:
 
 ```bash
 agent-sync init

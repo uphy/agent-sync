@@ -1,29 +1,74 @@
+# This defines the configuration schema version - always required
 configVersion: "1.0"
 
+# The projects section contains all your project-specific configurations
+# You can define multiple projects in a single file, each with unique settings
 projects:
+  # Replace "my-project" with your actual project name (e.g., "web-app", "documentation", etc.)
   my-project:
+    # Defines where generated files will be placed
+    # - Use relative paths (./dest) for project locations
+    # - Use ~ for home directory expansion (e.g., ~/projects/my-app)
+    # - You can specify multiple directories if needed for git worktree setups:
+    #   This enables you to generate the same AI agent configurations across
+    #   multiple worktrees (e.g., main branch, feature branch), ensuring
+    #   consistent context and commands for AI agents in all workspaces
     outputDirs:
-      - ./dest # Example destination
+      - ./dest
+
+    # Each task defines a specific processing job for agent-sync
     tasks:
+      # Memory tasks process context information for AI agents
+      # These contain rules, guidelines, or information that the AI should know
       - name: "Project Memory"
         type: memory
+
+        # Specifies which files to process for this task
+        # - Uses glob patterns to match files (** for recursive directory traversal)
+        # - Patterns with ! exclude matching files
+        # - Paths are relative to the configuration file location
         inputs:
           - "./memories/**/*.md"
           # Exclude test files with explicit quotes
           - "!./memories/**/*_test.md"
+
+        # Lists which AI agents formats to generate
+        # Each entry creates files for that specific agent type
         outputs:
+          # Creates Claude-specific context files
+          # Default: CLAUDE.md in project root (concatenated file)
           - agent: claude
+
+          # Creates Roo-specific rule files
+          # Default: .roo/rules/ directory (separate files)
           - agent: roo
 
+      # Command tasks process custom instructions for AI agents
+      # These create shortcuts for performing specific tasks
       - name: "Project Commands"
         type: command
+
+        # Similar to memory inputs, specifies which command files to process
+        # - Looks in the commands directory and subdirectories for .md files
+        # - Excludes any files with names ending in _test.md
         inputs:
           - "./commands/**/*.md"
           # Exclude test files with explicit quotes
           - "!./commands/**/*_test.md"
+
+        # Same as with memory outputs, defines which agents receive commands
         outputs:
+          # Creates Claude-specific command files
+          # Default: .claude/commands/ directory (separate files)
           - agent: claude
+
+          # Creates Roo-specific command definitions
+          # Default: .roomodes file (concatenated)
           - agent: roo
 
+# User-level global configuration that applies across all projects
+# Perfect for shared rules, templates, or commands you want available everywhere
 user:
+  # Currently empty, but you can add global tasks here
+  # User tasks work just like project tasks but have global scope
   tasks: []
