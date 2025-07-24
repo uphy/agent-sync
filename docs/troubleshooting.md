@@ -25,8 +25,8 @@ agent-sync recognizes the following environment variables:
 
 | Variable | Description |
 |----------|-------------|
-| `AGENT_DEF_LOG_FILE` | Log file path (overridden by `--log-file` flag) |
-| `AGENT_DEF_LOG_LEVEL` | Log level (overridden by `--log-level` flag) |
+| `AGENT_SYNC_LOG_FILE` | Log file path (overridden by `--log-file` flag) |
+| `AGENT_SYNC_LOG_LEVEL` | Log level (overridden by `--log-level` flag) |
 
 ## Debugging Tips
 

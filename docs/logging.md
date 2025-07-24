@@ -70,8 +70,8 @@ For persistent settings across multiple commands:
 
 ```bash
 # Set these variables in your shell or .bashrc/.zshrc file
-export AGENT_DEF_LOG_LEVEL=debug
-export AGENT_DEF_LOG_FILE=./logs/agent-sync.log
+export AGENT_SYNC_LOG_LEVEL=debug
+export AGENT_SYNC_LOG_FILE=./logs/agent-sync.log
 ```
 
 ## Configuration Priority
@@ -138,7 +138,7 @@ For day-to-day development work:
 
 ```bash
 # Set environment variables
-export AGENT_DEF_LOG_LEVEL=info
+export AGENT_SYNC_LOG_LEVEL=info
 # Or use command-line flags
 agent-sync apply --verbose
 ```
@@ -149,8 +149,8 @@ For server or CI/CD environments:
 
 ```bash
 # Set environment variables
-export AGENT_DEF_LOG_LEVEL=info
-export AGENT_DEF_LOG_FILE=/var/log/agent-sync/agent-sync.log
+export AGENT_SYNC_LOG_LEVEL=info
+export AGENT_SYNC_LOG_FILE=/var/log/agent-sync/agent-sync.log
 # Or use command-line flags
 agent-sync apply --log-level info --log-file /var/log/agent-sync/agent-sync.log
 ```
@@ -219,8 +219,8 @@ This command is valuable for developers who need to verify the logging system is
 | Option | CLI Flag | Env Variable | Description | Default |
 |--------|----------|--------------|-------------|---------|
 | Logging Enabled | `--verbose` | - | Enable/disable logging | `false` |
-| Log Level | `--log-level` | `AGENT_DEF_LOG_LEVEL` | Logging detail (debug, info, warn, error) | `info` |
-| Log File | `--log-file` | `AGENT_DEF_LOG_FILE` | Path to save logs | - |
+| Log Level | `--log-level` | `AGENT_SYNC_LOG_LEVEL` | Logging detail (debug, info, warn, error) | `info` |
+| Log File | `--log-file` | `AGENT_SYNC_LOG_FILE` | Path to save logs | - |
 | Verbose | `--verbose` | - | Show detailed messages | `false` |
 
 ## Navigation

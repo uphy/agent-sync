@@ -13,7 +13,7 @@ dir = "internal/cli"
 alias = "it"
 
 [tasks.integration-test-replace]
-run = "AGENT_DEF_REPLACE=true go test -timeout 30s -run ^TestAgentDef$"
+run = "AGENT_SYNC_REPLACE=true go test -timeout 30s -run ^TestAgentDef$"
 dir = "internal/cli"
 alias = "itr"
 

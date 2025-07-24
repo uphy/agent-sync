@@ -80,36 +80,36 @@ func TestSetupCommands(t *testing.T) {
 // TestEnvironmentVariables tests the processing of environment variables for logging
 func TestEnvironmentVariables(t *testing.T) {
 	// Save original environment
-	origLogFile := os.Getenv("AGENT_DEF_LOG_FILE")
-	origLogLevel := os.Getenv("AGENT_DEF_LOG_LEVEL")
+	origLogFile := os.Getenv("AGENT_SYNC_LOG_FILE")
+	origLogLevel := os.Getenv("AGENT_SYNC_LOG_LEVEL")
 	defer func() {
 		// Restore original environment
-		if err := os.Setenv("AGENT_DEF_LOG_FILE", origLogFile); err != nil {
-			t.Logf("Failed to restore AGENT_DEF_LOG_FILE: %v", err)
+		if err := os.Setenv("AGENT_SYNC_LOG_FILE", origLogFile); err != nil {
+			t.Logf("Failed to restore AGENT_SYNC_LOG_FILE: %v", err)
 		}
-		if err := os.Setenv("AGENT_DEF_LOG_LEVEL", origLogLevel); err != nil {
-			t.Logf("Failed to restore AGENT_DEF_LOG_LEVEL: %v", err)
+		if err := os.Setenv("AGENT_SYNC_LOG_LEVEL", origLogLevel); err != nil {
+			t.Logf("Failed to restore AGENT_SYNC_LOG_LEVEL: %v", err)
 		}
 	}()
 
 	// Set test environment variables
 	testLogFile := "/tmp/test.log"
 	testLogLevel := "debug"
-	if err := os.Setenv("AGENT_DEF_LOG_FILE", testLogFile); err != nil {
-		t.Fatalf("Failed to set AGENT_DEF_LOG_FILE: %v", err)
+	if err := os.Setenv("AGENT_SYNC_LOG_FILE", testLogFile); err != nil {
+		t.Fatalf("Failed to set AGENT_SYNC_LOG_FILE: %v", err)
 	}
-	if err := os.Setenv("AGENT_DEF_LOG_LEVEL", testLogLevel); err != nil {
-		t.Fatalf("Failed to set AGENT_DEF_LOG_LEVEL: %v", err)
+	if err := os.Setenv("AGENT_SYNC_LOG_LEVEL", testLogLevel); err != nil {
+		t.Fatalf("Failed to set AGENT_SYNC_LOG_LEVEL: %v", err)
 	}
 
 	// Create a test config to verify environment variable processing
 	config := log.DefaultConfig()
 
 	// Process environment variables (similar to what main.go does)
-	if envFile := os.Getenv("AGENT_DEF_LOG_FILE"); envFile != "" {
+	if envFile := os.Getenv("AGENT_SYNC_LOG_FILE"); envFile != "" {
 		config.File = envFile
 	}
-	if envLevel := os.Getenv("AGENT_DEF_LOG_LEVEL"); envLevel != "" {
+	if envLevel := os.Getenv("AGENT_SYNC_LOG_LEVEL"); envLevel != "" {
 		config.Level = log.Level(envLevel)
 	}
 
@@ -125,18 +125,18 @@ func TestEnvironmentVariables(t *testing.T) {
 // TestFlagPrecedence tests that command-line flags take precedence over environment variables
 func TestFlagPrecedence(t *testing.T) {
 	// Set environment variables
-	if err := os.Setenv("AGENT_DEF_LOG_FILE", "/tmp/env.log"); err != nil {
-		t.Fatalf("Failed to set AGENT_DEF_LOG_FILE: %v", err)
+	if err := os.Setenv("AGENT_SYNC_LOG_FILE", "/tmp/env.log"); err != nil {
+		t.Fatalf("Failed to set AGENT_SYNC_LOG_FILE: %v", err)
 	}
-	if err := os.Setenv("AGENT_DEF_LOG_LEVEL", "error"); err != nil {
-		t.Fatalf("Failed to set AGENT_DEF_LOG_LEVEL: %v", err)
+	if err := os.Setenv("AGENT_SYNC_LOG_LEVEL", "error"); err != nil {
+		t.Fatalf("Failed to set AGENT_SYNC_LOG_LEVEL: %v", err)
 	}
 	defer func() {
-		if err := os.Unsetenv("AGENT_DEF_LOG_FILE"); err != nil {
-			t.Logf("Failed to unset AGENT_DEF_LOG_FILE: %v", err)
+		if err := os.Unsetenv("AGENT_SYNC_LOG_FILE"); err != nil {
+			t.Logf("Failed to unset AGENT_SYNC_LOG_FILE: %v", err)
 		}
-		if err := os.Unsetenv("AGENT_DEF_LOG_LEVEL"); err != nil {
-			t.Logf("Failed to unset AGENT_DEF_LOG_LEVEL: %v", err)
+		if err := os.Unsetenv("AGENT_SYNC_LOG_LEVEL"); err != nil {
+			t.Logf("Failed to unset AGENT_SYNC_LOG_LEVEL: %v", err)
 		}
 	}()
 
@@ -157,10 +157,10 @@ func TestFlagPrecedence(t *testing.T) {
 
 	// Process environment variables if flags not set
 	// (in this test, flags are "set" so env vars should be ignored)
-	if envFile := os.Getenv("AGENT_DEF_LOG_FILE"); envFile != "" && logFile == "" {
+	if envFile := os.Getenv("AGENT_SYNC_LOG_FILE"); envFile != "" && logFile == "" {
 		config.File = envFile
 	}
-	if envLevel := os.Getenv("AGENT_DEF_LOG_LEVEL"); envLevel != "" && logLevel == "" {
+	if envLevel := os.Getenv("AGENT_SYNC_LOG_LEVEL"); envLevel != "" && logLevel == "" {
 		config.Level = log.Level(envLevel)
 	}
 

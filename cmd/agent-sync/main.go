@@ -95,12 +95,12 @@ and listing available agents.`,
 		}
 
 		// Process environment variables (lower priority than command line flags)
-		if envFile := os.Getenv("AGENT_DEF_LOG_FILE"); envFile != "" && logFile == "" {
+		if envFile := os.Getenv("AGENT_SYNC_LOG_FILE"); envFile != "" && logFile == "" {
 			logConfig.File = envFile
 			logConfig.Enabled = true
 		}
 
-		if envLevel := os.Getenv("AGENT_DEF_LOG_LEVEL"); envLevel != "" && logLevel == "" {
+		if envLevel := os.Getenv("AGENT_SYNC_LOG_LEVEL"); envLevel != "" && logLevel == "" {
 			logConfig.Level = log.Level(envLevel)
 			logConfig.Enabled = true
 		}

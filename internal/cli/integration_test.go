@@ -13,7 +13,7 @@ import (
 // TestAgentDef runs integration tests for the agent-sync command.
 // It discovers test directories in testdata/ and runs each test case.
 func TestAgentDef(t *testing.T) {
-	replace := os.Getenv("AGENT_DEF_REPLACE") == "true"
+	replace := os.Getenv("AGENT_SYNC_REPLACE") == "true"
 	// Build the agent-sync binary first
 	binaryPath, err := buildAgentDefBinary()
 	if err != nil {
