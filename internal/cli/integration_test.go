@@ -2,13 +2,144 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
+
+	"github.com/uphy/agent-sync/internal/log"
+	"github.com/urfave/cli/v3"
+	"go.uber.org/zap"
 )
+
+// setupTestApp creates a test CLI app with all commands for integration testing
+func setupTestApp() *cli.Command {
+	// Create a test logger
+	logConfig := log.DefaultConfig()
+	logConfig.Enabled = true
+	logConfig.Level = log.DebugLevel
+	logger, _ := zap.NewDevelopment()
+
+	// Create output writer
+	output := &log.ConsoleOutput{
+		Verbose: true,
+		Color:   false,
+	}
+
+	// Create shared context
+	sharedContext := &Context{
+		Logger: logger,
+		Output: output,
+	}
+
+	// Create root command with global flags and environment variable support
+	rootCmd := &cli.Command{
+		Name:  "agent-sync",
+		Usage: "Convert context and command definitions for various AI agents",
+		Description: `Agent Sync (agent-sync) is a tool for converting context and command
+definitions for various AI agents like Claude and Roo.
+
+It supports processing memory context files, command definitions,
+and listing available agents.`,
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:     "output",
+				Aliases:  []string{"o"},
+				Usage:    "Output format (json, yaml, text)",
+				Sources:  cli.EnvVars("AGENT_SYNC_OUTPUT"),
+				Category: "Output",
+			},
+			&cli.BoolFlag{
+				Name:     "verbose",
+				Aliases:  []string{"v"},
+				Usage:    "Enable verbose output",
+				Sources:  cli.EnvVars("AGENT_SYNC_VERBOSE"),
+				Category: "Logging",
+			},
+			&cli.StringFlag{
+				Name:     "log-file",
+				Usage:    "Log file path",
+				Sources:  cli.EnvVars("AGENT_SYNC_LOG_FILE"),
+				Category: "Logging",
+			},
+			&cli.StringFlag{
+				Name:     "log-level",
+				Usage:    "Log level (debug, info, warn, error)",
+				Value:    "info",
+				Sources:  cli.EnvVars("AGENT_SYNC_LOG_LEVEL"),
+				Category: "Logging",
+			},
+			&cli.BoolFlag{
+				Name:     "debug",
+				Usage:    "Set log level to debug (shorthand for --log-level=debug)",
+				Sources:  cli.EnvVars("AGENT_SYNC_DEBUG"),
+				Category: "Logging",
+			},
+		},
+		Commands: []*cli.Command{
+			{
+				Name:  "apply",
+				Usage: "Generate files based on configuration",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "config",
+						Aliases:  []string{"c"},
+						Usage:    "Path to agent-sync.yml file or directory containing it",
+						Value:    ".",
+						Sources:  cli.EnvVars("AGENT_SYNC_CONFIG"),
+						Category: "Config",
+					},
+					&cli.BoolFlag{
+						Name:     "dry-run",
+						Usage:    "Show what would be generated without writing files",
+						Sources:  cli.EnvVars("AGENT_SYNC_DRY_RUN"),
+						Category: "Output",
+					},
+					&cli.BoolFlag{
+						Name:     "force",
+						Aliases:  []string{"f"},
+						Usage:    "Force overwrite without prompting for confirmation",
+						Sources:  cli.EnvVars("AGENT_SYNC_FORCE"),
+						Category: "Output",
+					},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					return nil // Mock implementation for testing
+				},
+				Metadata: map[string]interface{}{
+					"context": sharedContext,
+				},
+			},
+			{
+				Name:  "init",
+				Usage: "Initialize a new agent-sync.yml configuration",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:     "force",
+						Aliases:  []string{"f"},
+						Usage:    "Force overwrite of existing files",
+						Sources:  cli.EnvVars("AGENT_SYNC_INIT_FORCE"),
+						Category: "Output",
+					},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					return nil // Mock implementation for testing
+				},
+				Metadata: map[string]interface{}{
+					"context": sharedContext,
+				},
+			},
+		},
+		Metadata: map[string]interface{}{
+			"context": sharedContext,
+		},
+	}
+
+	return rootCmd
+}
 
 // TestAgentDef runs integration tests for the agent-sync command.
 // It discovers test directories in testdata/ and runs each test case.
@@ -64,7 +195,7 @@ func TestAgentDef(t *testing.T) {
 			}
 
 			// Run the agent-sync binary with config flag pointing to the local directory
-			cmd := exec.Command(binaryPath, "apply", "--force", "--config", ".")
+			cmd := exec.Command(binaryPath, "apply", "-f", "--config", ".")
 			cmd.Dir = tempDir
 			var stderr bytes.Buffer
 			cmd.Stderr = &stderr
@@ -342,4 +473,118 @@ func findProjectRoot() (string, error) {
 	}
 
 	return "", fmt.Errorf("could not find project root")
+}
+
+// TestIntegrationWithCliV3 tests urfave/cli/v3 integration with in-memory commands
+func TestIntegrationWithCliV3(t *testing.T) {
+	// Skip in short mode
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	// Define test cases
+	testCases := []struct {
+		name         string
+		args         []string
+		envVars      map[string]string
+		expectOutput string
+		expectError  bool
+	}{
+		{
+			name:        "apply with dry-run flag",
+			args:        []string{"apply", "--dry-run"},
+			expectError: false,
+		},
+		{
+			name: "apply with environment variables",
+			args: []string{"apply"},
+			envVars: map[string]string{
+				"AGENT_SYNC_DRY_RUN": "true",
+				"AGENT_SYNC_CONFIG":  "./testdata/default-project-test/test",
+			},
+			expectError: false,
+		},
+		{
+			name:        "apply with config flag",
+			args:        []string{"apply", "--config", "./testdata/default-project-test/test"},
+			expectError: false,
+		},
+		{
+			name:        "init command",
+			args:        []string{"init"},
+			expectError: false,
+		},
+		{
+			name:        "init with force flag",
+			args:        []string{"init", "--force"},
+			expectError: false,
+		},
+	}
+
+	// Run each test case
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			app := setupTestApp()
+
+			withEnvironment(t, tc.envVars, func() {
+				_, err := executeCliCommand(t, app, tc.args...)
+
+				if tc.expectError && err == nil {
+					t.Errorf("Expected error, got none")
+				}
+				if !tc.expectError && err != nil {
+					t.Errorf("Expected no error, got %v", err)
+				}
+			})
+		})
+	}
+}
+
+// TestFlagEnvironmentPrecedence tests flag vs environment variable precedence
+func TestFlagEnvironmentPrecedence(t *testing.T) {
+	// Create a command with config flag and environment variable
+	var configPath string
+
+	cmd := &cli.Command{
+		Name: "test",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "config",
+				Aliases: []string{"c"},
+				Usage:   "Config path",
+				Value:   "default-path",
+				Sources: cli.EnvVars("AGENT_SYNC_CONFIG"),
+			},
+		},
+		Action: func(ctx context.Context, c *cli.Command) error {
+			configPath = c.String("config")
+			return nil
+		},
+	}
+
+	// Test environment variable without flag
+	withEnvironment(t, map[string]string{
+		"AGENT_SYNC_CONFIG": "env-path",
+	}, func() {
+		err := cmd.Run(context.Background(), []string{"test"})
+		if err != nil {
+			t.Fatalf("Expected no error, got %v", err)
+		}
+		if configPath != "env-path" {
+			t.Errorf("Expected config to be 'env-path', got '%s'", configPath)
+		}
+	})
+
+	// Test flag overrides environment variable
+	withEnvironment(t, map[string]string{
+		"AGENT_SYNC_CONFIG": "env-path",
+	}, func() {
+		err := cmd.Run(context.Background(), []string{"test", "--config", "flag-path"})
+		if err != nil {
+			t.Fatalf("Expected no error, got %v", err)
+		}
+		if configPath != "flag-path" {
+			t.Errorf("Expected config to be 'flag-path', got '%s'", configPath)
+		}
+	})
 }

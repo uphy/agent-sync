@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"embed"
 	"fmt"
 	"io/fs"
@@ -8,43 +9,47 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/uphy/agent-sync/internal/log"
+	"github.com/urfave/cli/v3"
 	"go.uber.org/zap"
 )
 
 //go:embed templates templates/memories templates/commands
 var templatesFS embed.FS
 
-// initContext holds the CLI context for the init command
-var initContext *Context
-
-// NewInitCommand returns the 'init' command with a nil context.
+// NewInitCommand returns the 'init' command for urfave/cli.
 // It initializes the default agent-sync project structure.
-func NewInitCommand() *cobra.Command {
-	return NewInitCommandWithContext(nil)
-}
+func NewInitCommand() *cli.Command {
+	return &cli.Command{
+		Name:        "init",
+		Usage:       "Initialize agent-sync.yml and directory structure",
+		Description: "Generate a sample agent-sync.yml in the current directory along with memories/ and commands/ folders with sample files.",
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "force",
+				Aliases: []string{"f"},
+				Usage:   "Force overwrite of existing files",
+				Sources: cli.EnvVars("AGENT_SYNC_INIT_FORCE"),
+			},
+		},
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			// Get the shared context from app metadata
+			sharedContext := GetSharedContext(cmd)
 
-// NewInitCommandWithContext returns the 'init' command with the specified context.
-func NewInitCommandWithContext(ctx *Context) *cobra.Command {
-	// Store context for command execution
-	initContext = ctx
+			// Get command-specific flags
+			force := cmd.Bool("force")
 
-	cmd := &cobra.Command{
-		Use:   "init",
-		Short: "Initialize agent-sync.yml and directory structure",
-		Long:  "Generate a sample agent-sync.yml in the current directory along with memories/ and commands/ folders with sample files.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// Use the context if available
 			var logger *zap.Logger
 			var output log.OutputWriter
 
-			if initContext != nil {
-				logger = initContext.Logger
-				output = initContext.Output
+			// Get logger and output from shared context
+			if sharedContext != nil {
+				logger = sharedContext.Logger
+				output = sharedContext.Output
 
 				// Log command execution
-				logger.Info("Executing init command")
+				logger.Info("Executing init command",
+					zap.Bool("force", force))
 			}
 
 			cwd, err := os.Getwd()
@@ -57,11 +62,11 @@ func NewInitCommandWithContext(ctx *Context) *cobra.Command {
 
 			// Check if agent-sync.yml already exists
 			yml := filepath.Join(cwd, "agent-sync.yml")
-			if _, err := os.Stat(yml); err == nil {
+			if _, err := os.Stat(yml); err == nil && !force {
 				if logger != nil {
 					logger.Warn("agent-sync.yml already exists", zap.String("path", yml))
 				}
-				return fmt.Errorf("agent-sync.yml already exists in %s", cwd)
+				return fmt.Errorf("agent-sync.yml already exists in %s (use --force to overwrite)", cwd)
 			}
 
 			if logger != nil {
@@ -91,10 +96,9 @@ func NewInitCommandWithContext(ctx *Context) *cobra.Command {
 			return nil
 		},
 	}
-	return cmd
 }
 
-// 再帰的にディレクトリからすべてのファイルを取得する
+// getAllFiles gets all files from a directory recursively
 func getAllFiles(fsys fs.FS, dir string) ([]string, error) {
 	var files []string
 
@@ -115,7 +119,7 @@ func getAllFiles(fsys fs.FS, dir string) ([]string, error) {
 	return files, nil
 }
 
-// テンプレートパスから実際のファイルシステム上のパスへマッピングする
+// mapTemplatePath maps template path to filesystem path
 func mapTemplatePath(templatePath string, cwd string) string {
 	switch {
 	case strings.HasPrefix(templatePath, "templates/memories/"):
@@ -130,17 +134,17 @@ func mapTemplatePath(templatePath string, cwd string) string {
 		// templates/agent-sync.yml -> agent-sync.yml
 		return filepath.Join(cwd, "agent-sync.yml")
 	default:
-		// 他のファイルの場合はtemplatesプレフィックスを削除
+		// Other files - remove templates prefix
 		rel := strings.TrimPrefix(templatePath, "templates/")
 		if rel == templatePath {
-			// プレフィックスが削除されていない場合は、そのまま使用
+			// Prefix was not removed - use as is
 			return filepath.Join(cwd, templatePath)
 		}
 		return filepath.Join(cwd, rel)
 	}
 }
 
-// 再帰的にディレクトリ内のすべてのファイルをコピーする
+// copyEmbeddedDirectory copies all files from an embedded directory
 func copyEmbeddedDirectory(fsys fs.FS, dir string, cwd string) error {
 	files, err := getAllFiles(fsys, dir)
 	if err != nil {
@@ -155,14 +159,14 @@ func copyEmbeddedDirectory(fsys fs.FS, dir string, cwd string) error {
 	for _, file := range files {
 		destPath := mapTemplatePath(file, cwd)
 
-		// ディレクトリを作成
+		// Create directory
 		destDir := filepath.Dir(destPath)
 		if err := os.MkdirAll(destDir, 0755); err != nil {
 			copyErrors = append(copyErrors, fmt.Sprintf("failed to create directory %s: %v", destDir, err))
 			continue
 		}
 
-		// ファイルをコピー
+		// Copy file
 		data, err := fs.ReadFile(fsys, file)
 		if err != nil {
 			copyErrors = append(copyErrors, fmt.Sprintf("failed to read embedded file %s: %v", file, err))

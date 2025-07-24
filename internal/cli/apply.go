@@ -1,42 +1,57 @@
 package cli
 
 import (
+	"context"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
 	"github.com/uphy/agent-sync/internal/log"
 	"github.com/uphy/agent-sync/internal/processor"
+	"github.com/urfave/cli/v3"
 	"go.uber.org/zap"
 )
 
-// applyContext holds the CLI context for the apply command
-var applyContext *Context
+// NewApplyCommand returns the 'apply' command for urfave/cli.
+func NewApplyCommand() *cli.Command {
+	return &cli.Command{
+		Name:        "apply",
+		Usage:       "Generate files based on agent-sync.yml",
+		Description: "Generate files for projects and user-level tasks as defined in agent-sync.yml.",
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "dry-run",
+				Usage:   "Preview files that would be generated (showing paths, sizes, and whether files would be created or overwritten)",
+				Sources: cli.EnvVars("AGENT_SYNC_DRY_RUN"),
+			},
+			&cli.BoolFlag{
+				Name:    "force",
+				Aliases: []string{"f"},
+				Usage:   "Force overwrite without prompting for confirmation",
+				Sources: cli.EnvVars("AGENT_SYNC_FORCE"),
+			},
+			&cli.StringFlag{
+				Name:    "config",
+				Aliases: []string{"c"},
+				Usage:   "Path to agent-sync.yml file or directory containing it",
+				Value:   ".",
+				Sources: cli.EnvVars("AGENT_SYNC_CONFIG"),
+			},
+		},
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			// Access the shared context from metadata
+			sharedContext := GetSharedContext(cmd)
 
-// NewApplyCommand returns the 'apply' command for the CLI.
-func NewApplyCommand() *cobra.Command {
-	return NewApplyCommandWithContext(nil)
-}
+			// Get command-specific flags
+			dryRun := cmd.Bool("dry-run")
+			force := cmd.Bool("force")
+			configPath := cmd.String("config")
 
-// NewApplyCommandWithContext returns the 'apply' command with the specified context.
-func NewApplyCommandWithContext(ctx *Context) *cobra.Command {
-	// Store context for command execution
-	applyContext = ctx
-	var dryRun bool
-	var force bool
-	var configPath string
-
-	cmd := &cobra.Command{
-		Use:   "apply",
-		Short: "Generate files based on agent-sync.yml",
-		Long:  `Generate files for projects and user-level tasks as defined in agent-sync.yml.`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// Use the context if available
 			var logger *zap.Logger
 			var output log.OutputWriter
 
-			if applyContext != nil {
-				logger = applyContext.Logger
-				output = applyContext.Output
+			// Get logger and output from shared context
+			if sharedContext != nil {
+				logger = sharedContext.Logger
+				output = sharedContext.Output
 
 				// Log command execution
 				logger.Info("Executing apply command",
@@ -60,10 +75,4 @@ func NewApplyCommandWithContext(ctx *Context) *cobra.Command {
 			return mgr.Apply(dryRun, force)
 		},
 	}
-
-	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Preview files that would be generated (showing paths, sizes, and whether files would be created or overwritten)")
-	cmd.Flags().BoolVarP(&force, "force", "f", false, "Force overwrite without prompting for confirmation")
-	cmd.Flags().StringVarP(&configPath, "config", "c", ".", "Path to agent-sync.yml file or directory containing it")
-
-	return cmd
 }

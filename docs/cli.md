@@ -21,6 +21,15 @@ These flags can be used with any command:
 | `--log-level` | Log level (debug, info, warn, error) |
 | `--debug` | Set log level to debug (shorthand for --log-level=debug) |
 
+## Environment Variables
+
+Most command-line flags can be configured via environment variables using the `AGENT_SYNC_` prefix.
+
+For details on available environment variables, run:
+```bash
+agent-sync --help
+```
+
 ## Commands
 
 ### `apply`
