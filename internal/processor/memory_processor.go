@@ -2,12 +2,9 @@
 package processor
 
 import (
-	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/uphy/agent-sync/internal/agent"
-	"github.com/uphy/agent-sync/internal/template"
 )
 
 // MemoryProcessor processes memory tasks
@@ -20,60 +17,37 @@ func NewMemoryProcessor(base *BaseProcessor) *MemoryProcessor {
 	return &MemoryProcessor{BaseProcessor: base}
 }
 
+// memoryStrategy provides parsing, content access, and formatting for memory (string-based)
+type memoryStrategy struct {
+	p         *BaseProcessor
+	agentName string
+}
+
+func (s memoryStrategy) Parse(absPath string, raw []byte) (string, error) {
+	return string(raw), nil
+}
+
+func (s memoryStrategy) GetContent(item string) string {
+	return item
+}
+
+func (s memoryStrategy) SetContent(item string, content string) string {
+	return content
+}
+
+func (s memoryStrategy) FormatOne(a agent.Agent, item string) (string, error) {
+	return a.FormatMemory(item)
+}
+
+func (s memoryStrategy) FormatMany(a agent.Agent, items []string) (string, error) {
+	joined := strings.Join(items, "\n\n")
+	return a.FormatMemory(joined)
+}
+
 // Process implements the task processing for memory task type
-// Preserve external behavior (output shape, concatenation rules, default paths)
-// while aligning the internal flow with command_processor.go / mode_processor.go.
 func (p *MemoryProcessor) Process(inputs []string, cfg *OutputConfig) (*TaskResult, error) {
-	concatParts := make([]string, 0, len(inputs))
-	result := &TaskResult{Files: []ProcessedFile{}}
-
-	for _, input := range inputs {
-		absInputPath := filepath.Join(p.absInputRoot, input)
-
-		// Read and parse the command
-		inputContent, err := p.fs.ReadFile(absInputPath)
-		if err != nil {
-			return nil, fmt.Errorf("read input file %s: %w", absInputPath, err)
-		}
-
-		adapter := NewFSAdapter(p.fs)
-		engine := template.NewEngine(adapter, cfg.AgentName, p.absInputRoot, p.registry)
-		out, err := engine.Execute(absInputPath, string(inputContent), nil)
-		if err != nil {
-			return nil, fmt.Errorf("template execute %s: %w", input, err)
-		}
-
-		if cfg.IsDirectory {
-			// Directory output: format and emit per file
-			formatted, err := cfg.Agent.FormatMemory(out)
-			if err != nil {
-				return nil, fmt.Errorf("format memory for agent %s: %w", cfg.AgentName, err)
-			}
-			relPath := filepath.Join(cfg.RelPath, filepath.Base(input))
-			result.Files = append(result.Files, ProcessedFile{
-				relPath: relPath,
-				Content: formatted,
-			})
-		} else {
-			// File output: accumulate to concatenate later
-			concatParts = append(concatParts, out)
-		}
-	}
-
-	// If not directory, perform single formatting on concatenated content like command_processor
-	if !cfg.IsDirectory {
-		joined := strings.Join(concatParts, "\n\n")
-		formatted, err := cfg.Agent.FormatMemory(joined)
-		if err != nil {
-			return nil, fmt.Errorf("format memory for agent %s: %w", cfg.AgentName, err)
-		}
-		result.Files = append(result.Files, ProcessedFile{
-			relPath: cfg.RelPath,
-			Content: formatted,
-		})
-	}
-
-	return result, nil
+	strategy := memoryStrategy{p: p.BaseProcessor, agentName: cfg.AgentName}
+	return processGeneric(p.BaseProcessor, inputs, cfg, strategy)
 }
 
 // GetOutputPath returns the appropriate output path for memory tasks
