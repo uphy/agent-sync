@@ -44,7 +44,7 @@ Options for each task:
 | Setting | Type | Required | Description |
 |---------|------|----------|-------------|
 | `name` | String | No | Optional identifier for the task. If not provided, a default name is automatically generated: for project tasks, "{project-name}-{type}" (e.g., "my-project-memory"); for user tasks, "user-{type}" (e.g., "user-command") |
-| `type` | String | Yes | Type of task, either "command" or "memory" |
+| `type` | String | Yes | Type of task, one of "command", "memory", or "mode" |
 | `inputs` | String Array | Yes | File or directory paths relative to config directory. Supports glob patterns with exclusions |
 | `outputs` | Output Array | Yes | Defines the output agents and their paths |
 
@@ -55,7 +55,9 @@ Options for each output:
 | Setting | Type | Required | Description |
 |---------|------|----------|-------------|
 | `agent` | String | Yes | Target AI agent (e.g., "roo", "claude", "cline", "copilot") |
-| `outputPath` | String | No | Optional custom output path. If not specified, the agent's default path is used. The path format determines concatenation behavior: paths ending with "/" are treated as directories (non-concatenated outputs), while paths without a trailing "/" are treated as files (concatenated outputs) |
+| `outputPath` | String | No | Optional custom output path. If not specified, the agent's default path is used. The path format determines concatenation behavior: paths ending with "/" are treated as directories (non-concatenated, per-file outputs), while paths without a trailing "/" are treated as files (concatenated/aggregated into a single file). Applies to all task types: memory, command, and mode. For `type: mode` specifically: directory outputs (e.g., Claude Code subagents/modes) generate per-mode files, while single file outputs (e.g., Roo modes) aggregate all modes into one YAML file by default. |
+
+<!-- Duplicate Output Configuration section removed to avoid redundancy -->
 
 ## Navigation
 

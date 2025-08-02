@@ -13,6 +13,7 @@ Rather than maintaining separate files for each AI assistant, agent-sync allows 
 
 ## Key Features
 
+- **Multi-Agent Support**: Convert context (memory), commands (Roo slash commands, Claude commands, etc.), and modes (Claude Code subagents and Roo custom modes) to formats compatible with Claude, Roo, Cline, Copilot, and more
 - **Write Once, Deploy Everywhere**: Maintain a single source of truth for AI instructions instead of separate files for each assistant
 - **Multi-Agent Support**: Convert context (memory) and commands to formats compatible with Claude, Roo, Cline, Copilot, and more
 - **Template System**: Use powerful templating to dynamically generate content with agent-specific formatting

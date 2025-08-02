@@ -1,8 +1,5 @@
 ---
 description: Test command
-claude:
-  description: A test command for the default project
-  allowed-tools: search,edit
 ---
 
 # Test Command

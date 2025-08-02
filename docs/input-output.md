@@ -107,8 +107,10 @@ When no `outputPath` is specified, the following default paths are used. The pat
 |-------|-----------|-------------|------------------------|
 | Claude | memory | `CLAUDE.md` or `~/.claude/CLAUDE.md` | Concatenated (file path) |
 | Claude | command | `.claude/commands/` | Non-concatenated (directory path) |
+| Claude | mode | `.claude/agents/` or `~/.claude/agents/` | Non-concatenated (directory path, per-mode files) |
 | Roo | memory | `.roo/rules/` | Non-concatenated (directory path) |
-| Roo | command | `.roo/commands/` or `~/.roo/commands/` | Non-concatenated (directory path) |
+| Roo | command | `.roo/commands/` or `~/.roo/commands/` | Non-concatenated (directory path; Roo slash commands per file) |
+| Roo | mode | `.roomodes` or (user) VS Code globalStorage `.../rooveterinaryinc.roo-cline/settings/custom_modes.yaml` | Concatenated (single file aggregation) |
 | Cline | memory | `.clinerules/` or `~/Documents/Cline/Rules/` | Non-concatenated (directory path) |
 | Cline | command | `.clinerules/workflows/` or `~/Documents/Cline/Workflows/` | Non-concatenated (directory path) |
 | Copilot | memory | `.github/copilot-instructions.md` or `~/.vscode/copilot-instructions.md` | Concatenated (file path) |

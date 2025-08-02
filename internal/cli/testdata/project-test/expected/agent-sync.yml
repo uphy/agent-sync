@@ -1,0 +1,30 @@
+configVersion: "1.0"
+projects:
+  projectA:
+    outputDirs:
+      - build/projectA
+    tasks:
+      - name: memories
+        type: memory
+        inputs:
+          - projectA/memories/**
+        outputs:
+          - agent: claude
+          - agent: roo
+          - agent: cline
+          - agent: copilot
+      - name: commands
+        type: command
+        inputs:
+          - projectA/commands/**
+        outputs:
+          - agent: claude
+          - agent: roo
+          - agent: cline
+          - agent: copilot
+      - name: modes
+        type: mode
+        inputs:
+          - projectA/modes/**
+        outputs:
+          - agent: claude

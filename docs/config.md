@@ -17,7 +17,7 @@ The configuration documentation has been organized into several focused document
 
 - **[Configuration Reference](config-reference.md)** - Detailed configuration parameters and settings
 - **[Input and Output Processing](input-output.md)** - Input handling, output paths, and file processing
-- **[Task Types](task-types.md)** - Memory and command task types with agent-specific details
+- **[Task Types](task-types.md)** - Memory, command, and mode task types with agent-specific details
 - **[Template System](templates.md)** - Template functions and path resolution
 - **[Command Line Interface](cli.md)** - Command line options and usage
 - **[Troubleshooting](troubleshooting.md)** - Error handling and debugging

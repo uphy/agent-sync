@@ -46,6 +46,21 @@ projects:
           - agent: roo
             outputPath: ".roo/commands/"  # Roo slash commands output to directory with separate files
 
+      # Project-specific modes
+      - name: "Project Modes"
+        type: mode
+        inputs:
+          - ./projects/my-app/modes/*.md
+        outputs:
+          - agent: claude
+            outputPath: ".claude/agents/"   # Per-mode markdown files (directory)
+          - agent: roo
+            # For project scope you can rely on default aggregation into a single file:
+            # omit outputPath to use default ".roomodes", or specify explicitly for clarity
+            outputPath: ".roomodes"
+          - agent: roo
+            outputPath: ".roo/commands/"  # Roo slash commands output to directory with separate files
+
 # User-level global configuration
 user:
   tasks:

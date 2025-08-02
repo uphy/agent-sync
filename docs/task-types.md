@@ -7,7 +7,7 @@ title: Task Types
 
 # Task Types
 
-agent-sync supports the following two task types:
+agent-sync supports the following three task types:
 
 ## 1. Memory (`type: memory`)
 
@@ -46,6 +46,26 @@ Provides custom command definitions for AI agents. This creates shortcuts for pe
 | Copilot | Project | `.github/prompts/{filename}.prompt.md` | Project-specific Copilot prompt file |
 
 Note: For Claude, Cline, Copilot, and similar agents, `{filename}` is derived from the input file's basename (the filename without its directory path). For example, an input file named `my-project/commands/deploy.md` would result in an output file named `deploy.md` in the appropriate output directory.
+
+## 3. Mode (`type: mode`)
+
+Defines subagents/modes for compatible agents (Claude Code subagents and Roo custom modes). Frontmatter defines agent-specific mode metadata; the body is processed through the template engine.
+
+**Default output locations:**
+
+| Agent | Scope | Default Path | Description |
+|-------|-------|-------------|-------------|
+| Claude | User | `~/.claude/agents/` | User's global Claude modes; per-file markdown outputs (directory) |
+| Claude | Project | `.claude/agents/` | Project-specific Claude modes; per-file markdown outputs (directory) |
+| Roo | User | (platform-specific) VS Code globalStorage: `.../rooveterinaryinc.roo-cline/settings/custom_modes.yaml` | User's global Roo custom modes (single YAML aggregation) |
+| Roo | Project | `.roomodes` | Project-specific Roo custom modes (single YAML aggregation file) |
+
+Notes:
+- Directory path (trailing slash) = per-file outputs. File path (no trailing slash) = aggregation into a single file.
+- Roo modes default to aggregation into a single file: `.roomodes` for project scope, and `custom_modes.yaml` in VS Code globalStorage for user scope.
+- Claude modes default to per-file markdown outputs under `.claude/agents/` (project) or `~/.claude/agents/` (user).
+
+
 
 ## Agent-specific Command Frontmatter
 

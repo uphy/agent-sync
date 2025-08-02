@@ -1,0 +1,34 @@
+configVersion: "1.0"
+user:
+  home: "build/home" # Use the relative "home" directory for testing instead of actual user home
+  tasks:
+    - name: general-rules
+      type: memory
+      inputs:
+        - memories/general-rules.md
+        - "!memories/custom-location/**"
+      outputs:
+        - agent: claude
+        - agent: roo
+        - agent: cline
+    - name: quick-note
+      type: command
+      inputs:
+        - commands/**/*.md
+      outputs:
+        - agent: claude
+        - agent: roo
+        - agent: cline
+    - name: custom-location
+      type: memory
+      inputs:
+        - memories/custom-location/custom-location.md
+      outputs:
+        - agent: roo
+          outputPath: foo.md
+    - name: modes
+      type: mode
+      inputs:
+        - modes/**
+      outputs:
+        - agent: claude

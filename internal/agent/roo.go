@@ -45,6 +45,8 @@ func (r *Roo) FormatMemory(content string) (string, error) {
 
 // RooSlashMeta is a simple struct for Roo-specific metadata.
 type RooSlashMeta struct {
+	// Description: Optional Roo-specific description that overrides top-level Command.Description when provided
+	Description  string `yaml:"description,omitempty"`
 	ArgumentHint string `yaml:"argument-hint,omitempty"`
 }
 
@@ -59,31 +61,20 @@ func (r *Roo) FormatCommand(commands []model.Command) (string, error) {
 
 		body := strings.TrimLeft(cmd.Content, "\n")
 
-		// Use top-level description from Command.Description per user feedback.
-		desc := cmd.Description
-
-		// Emit body only if both fields are empty
-		if desc == "" && meta.ArgumentHint == "" {
-			outputs = append(outputs, body)
-			continue
+		// Determine description with Roo-specific override when provided.
+		// Priority: roo.description > top-level cmd.Description
+		if meta.Description == "" {
+			meta.Description = cmd.Description
 		}
-
-		// Build frontmatter map conditionally
-		fmMap := map[string]any{}
-		if desc != "" {
-			fmMap["description"] = desc
+		// Validation: require at least one description source
+		if meta.Description == "" {
+			return "", fmt.Errorf("Roo slash command requires a description: provide either top-level 'description' or 'roo.description'")
 		}
-		if meta.ArgumentHint != "" {
-			fmMap["roo"] = map[string]any{
-				"argument-hint": meta.ArgumentHint,
-			}
-		}
-
-		yml, err := frontmatter.Wrap(fmMap)
+		yamlWithFences, err := frontmatter.Wrap(meta)
 		if err != nil {
 			return "", fmt.Errorf("failed to render Roo slash command frontmatter: %w", err)
 		}
-		outputs = append(outputs, strings.TrimRight(yml, "\n")+"\n"+body)
+		outputs = append(outputs, yamlWithFences+body)
 	}
 	return strings.Join(outputs, "\n\n"), nil
 }
@@ -95,9 +86,6 @@ func (r *Roo) MemoryPath(userScope bool) string {
 
 // CommandPath returns the default path for Roo agent command files (directory, non-concatenated)
 func (r *Roo) CommandPath(userScope bool) string {
-	if userScope {
-		return "~/.roo/commands/"
-	}
 	return ".roo/commands/"
 }
 

@@ -13,5 +13,4 @@ This command would normally do something useful, but for testing purposes, it ju
 
 ## Example
 
-```
 /test-command

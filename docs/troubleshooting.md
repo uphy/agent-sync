@@ -85,16 +85,20 @@ This helps identify issues such as:
 Some default paths differ between operating systems:
 
 - **Windows**:
-  - Roo user commands: `%APPDATA%\Code\User\globalStorage\rooveterinaryinc.roo-cline\settings\custom_modes.yaml`
+  - Roo user commands (slash commands): `%APPDATA%\Code\User\globalStorage\rooveterinaryinc.roo-cline\settings\custom_modes.yaml` (for mode tasks)
   - Cline user memory: `%USERPROFILE%\Documents\Cline\Rules\`
 
 - **macOS**:
-  - Roo user commands: `~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml`
+  - Roo user modes (type: mode): `~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml`
   - Cline user memory: `~/Documents/Cline/Rules/`
 
 - **Linux**:
-  - Roo user commands: `~/.config/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml`
+  - Roo user modes (type: mode): `~/.config/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml`
   - Cline user memory: `~/Documents/Cline/Rules/`
+
+Note:
+- Roo “command” tasks generate Roo slash commands to `.roo/commands/` (project) or `~/.roo/commands/` (user) by default (directory, per-file).
+- Roo “mode” tasks aggregate to a single file by default: `.roomodes` for project scope, and `custom_modes.yaml` in the platform-specific VS Code globalStorage path for user scope.
 
 ## Troubleshooting Log Issues
 

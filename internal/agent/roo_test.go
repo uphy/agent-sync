@@ -103,29 +103,19 @@ func TestRoo_FormatCommand_FrontmatterCases(t *testing.T) {
 		}
 	})
 
-	t.Run("only roo.argument-hint", func(t *testing.T) {
+	t.Run("only roo.argument-hint (should error without any description)", func(t *testing.T) {
 		cmd := makeCmd(map[string]any{
 			"roo": map[string]any{
 				"argument-hint": "ARG HINT",
 			},
 		}, body)
 
-		out, err := r.FormatCommand([]model.Command{cmd})
-		if err != nil {
+		_, err := r.FormatCommand([]model.Command{cmd})
+		if err == nil {
+			t.Fatalf("expected error due to missing description, got nil")
+		}
+		if !strings.Contains(err.Error(), "requires a description") {
 			t.Fatalf("unexpected error: %v", err)
-		}
-
-		if !strings.HasPrefix(out, "---\n") {
-			t.Fatalf("expected frontmatter, got: %q", out)
-		}
-		if !strings.Contains(out, "roo:\n  argument-hint: ARG HINT") && !strings.Contains(out, "roo:\n    argument-hint: ARG HINT") {
-			t.Errorf("expected roo.argument-hint in frontmatter, got: %q", out)
-		}
-		if strings.Contains(out, "description:") {
-			t.Errorf("did not expect description in frontmatter")
-		}
-		if !strings.HasSuffix(out, "\n\n"+body) && !strings.HasSuffix(out, "\n"+body) {
-			t.Errorf("expected body appended after frontmatter, got: %q", out)
 		}
 	})
 
@@ -145,24 +135,20 @@ func TestRoo_FormatCommand_FrontmatterCases(t *testing.T) {
 		if !strings.Contains(out, "description: Desc") {
 			t.Errorf("expected description in frontmatter, got: %q", out)
 		}
-		if !strings.Contains(out, "roo:\n  argument-hint: HINT") && !strings.Contains(out, "roo:\n    argument-hint: HINT") {
+		if !strings.Contains(out, "argument-hint: HINT") {
 			t.Errorf("expected roo.argument-hint, got: %q", out)
 		}
 	})
 
-	t.Run("neither field present -> body only", func(t *testing.T) {
+	t.Run("neither description nor roo.argument-hint present -> should error", func(t *testing.T) {
 		cmd := makeCmd(map[string]any{}, body)
 
-		out, err := r.FormatCommand([]model.Command{cmd})
-		if err != nil {
+		_, err := r.FormatCommand([]model.Command{cmd})
+		if err == nil {
+			t.Fatalf("expected error due to missing description, got nil")
+		}
+		if !strings.Contains(err.Error(), "requires a description") {
 			t.Fatalf("unexpected error: %v", err)
-		}
-
-		if strings.HasPrefix(out, "---\n") {
-			t.Fatalf("did not expect frontmatter, got: %q", out)
-		}
-		if out != strings.TrimLeft(body, "\n") {
-			t.Errorf("expected body only, got: %q", out)
 		}
 	})
 }
