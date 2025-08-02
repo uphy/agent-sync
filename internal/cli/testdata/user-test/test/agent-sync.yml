@@ -26,3 +26,9 @@ user:
       outputs:
         - agent: roo
           outputPath: foo.md
+    - name: modes
+      type: mode
+      inputs:
+        - modes/**
+      outputs:
+        - agent: claude

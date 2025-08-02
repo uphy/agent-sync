@@ -223,7 +223,7 @@ func TestAgentDef(t *testing.T) {
 				}
 				return
 			}
-			diffReport, err := compareDirectories(expectedDir, buildDir)
+			diffReport, err := compareDirectories(filepath.Join(expectedDir, "build"), buildDir)
 			if err != nil {
 				t.Fatalf("Failed to compare directories: %v", err)
 			}

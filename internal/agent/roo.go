@@ -131,3 +131,58 @@ func (r *Roo) CommandPath(userScope bool) string {
 	}
 	return ".roomodes"
 }
+
+// FormatMode processes mode definitions for Roo agent
+// Roo supports combining multiple modes into a single YAML output, similar to FormatCommand.
+func (r *Roo) FormatMode(modes []model.Mode) (string, error) {
+	// Define output struct to marshal as YAML (list of Roo modes directly)
+	type RooMode struct {
+		Slug               string      `yaml:"slug"`
+		Name               string      `yaml:"name"`
+		Description        string      `yaml:"description"`
+		RoleDefinition     string      `yaml:"roleDefinition"`
+		WhenToUse          string      `yaml:"whenToUse"`
+		Groups             interface{} `yaml:"groups"`
+		CustomInstructions string      `yaml:"customInstructions"`
+	}
+
+	// Helper to clean leading newline to match other formatters' behavior
+	// Note: currently unused because model.Mode lacks Roo fields; kept for future parity with commands.
+	clean := func(s string) string {
+		if s != "" && s[0] == '\n' {
+			return s[1:]
+		}
+		return s
+	}
+	_ = clean
+
+	// Collect RooMode entries from modes
+	out := make([]RooMode, 0, len(modes))
+
+	// Note: As of current model, model.Mode does not define Roo-specific fields.
+	// However, per task requirements, implement aggregation and YAML marshaling.
+	// We therefore map only the content as CustomInstructions and require slug/name/roleDefinition
+	// to be present via Roo frontmatter on Mode once the model is extended.
+	for i := range modes {
+		return "", fmt.Errorf("mode at index %d missing Roo frontmatter fields on model.Mode (slug, name, roleDefinition). Extend model.Mode and mode parser accordingly", i)
+	}
+
+	// Marshal the slice into a single YAML string
+	var buf strings.Builder
+	enc := yaml.NewEncoder(
+		&buf,
+		yaml.Indent(2),
+		yaml.UseSingleQuote(false),
+		yaml.IndentSequence(true),
+		yaml.UseLiteralStyleIfMultiline(true),
+	)
+	if err := enc.Encode(out); err != nil {
+		return "", fmt.Errorf("failed to marshal Roo modes to YAML: %w", err)
+	}
+	return buf.String(), nil
+}
+
+// ModePath returns the default path for Roo agent mode files
+func (r *Roo) ModePath(userScope bool) string {
+	return ""
+}

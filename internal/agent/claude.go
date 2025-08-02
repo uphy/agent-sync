@@ -84,3 +84,41 @@ func (c *Claude) MemoryPath(userScope bool) string {
 func (c *Claude) CommandPath(userScope bool) string {
 	return ".claude/commands/"
 }
+
+// FormatMode processes mode definitions for Claude agent
+// Claude does not support combining multiple modes.
+func (c *Claude) FormatMode(modes []model.Mode) (string, error) {
+	// No modes: return empty string without error
+	if len(modes) == 0 {
+		return "", nil
+	}
+	// Multiple modes are not supported
+	if len(modes) > 1 {
+		return "", fmt.Errorf("claude agent does not support multiple modes")
+	}
+
+	mode := modes[0]
+
+	frontmatter := "---\n"
+	if mode.Claude != nil {
+		if mode.Claude.Name != "" {
+			frontmatter += fmt.Sprintf("name: %q\n", mode.Claude.Name)
+		}
+		if mode.Claude.Description != "" {
+			frontmatter += fmt.Sprintf("description: %q\n", mode.Claude.Description)
+		}
+		if len(mode.Claude.Tools) > 0 {
+			frontmatter += "tools:\n"
+			for _, tool := range mode.Claude.Tools {
+				frontmatter += fmt.Sprintf("  - %q\n", tool)
+			}
+		}
+	}
+	frontmatter += "---\n\n"
+	return frontmatter + mode.Content, nil
+}
+
+// ModePath returns the default path for Claude agent mode files
+func (c *Claude) ModePath(userScope bool) string {
+	return ".claude/agents/"
+}

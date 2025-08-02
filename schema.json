@@ -98,10 +98,11 @@
                 },
                 "type": {
                     "type": "string",
-                    "description": "Type of task, either 'command' or 'memory'",
+                    "description": "Type of task: 'command', 'memory', or 'mode'",
                     "enum": [
                         "command",
-                        "memory"
+                        "memory",
+                        "mode"
                     ]
                 },
                 "inputs": {

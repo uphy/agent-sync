@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -144,4 +145,23 @@ func homeDir() string {
 		return "."
 	}
 	return home
+}
+
+// FormatMode processes mode definitions for Copilot agent
+func (c *Copilot) FormatMode(modes []model.Mode) (string, error) {
+	// Copilot does not support multiple modes combined
+	if len(modes) > 1 {
+		return "", errors.New("copilot agent does not support multiple modes")
+	}
+	// No modes provided: return empty content with no error
+	if len(modes) == 0 {
+		return "", nil
+	}
+	// Single mode: return its content
+	return modes[0].Content, nil
+}
+
+// ModePath returns the default path for Copilot agent mode files
+func (c *Copilot) ModePath(userScope bool) string {
+	return ""
 }

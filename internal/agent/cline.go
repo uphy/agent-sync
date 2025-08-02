@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"errors"
 	"path/filepath"
 
 	"github.com/uphy/agent-sync/internal/model"
@@ -67,4 +68,23 @@ func (c *Cline) CommandPath(userScope bool) string {
 		return "Documents/Cline/Workflows/"
 	}
 	return ".clinerules/workflows/"
+}
+
+// FormatMode processes mode definitions for Cline agent
+func (c *Cline) FormatMode(modes []model.Mode) (string, error) {
+	// Cline does not support combining multiple modes
+	if len(modes) > 1 {
+		return "", errors.New("cline agent does not support multiple modes")
+	}
+	// No modes: return empty content without error
+	if len(modes) == 0 {
+		return "", nil
+	}
+	// Single mode: return its content as-is
+	return modes[0].Content, nil
+}
+
+// ModePath returns the default path for Cline agent mode files
+func (c *Cline) ModePath(userScope bool) string {
+	return ""
 }

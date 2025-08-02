@@ -27,4 +27,10 @@ type Agent interface {
 
 	// CommandPath returns the default path for command files based on user scope
 	CommandPath(userScope bool) string
+
+	// FormatMode processes mode definitions for this agent
+	FormatMode(modes []model.Mode) (string, error)
+
+	// ModePath returns the default path for mode files based on user scope
+	ModePath(userScope bool) string
 }

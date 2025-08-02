@@ -22,3 +22,9 @@ projects:
           - agent: roo
           - agent: cline
           - agent: copilot
+      - name: modes
+        type: mode
+        inputs:
+          - projectA/modes/**
+        outputs:
+          - agent: claude

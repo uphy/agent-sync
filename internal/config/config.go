@@ -62,11 +62,11 @@ func (u *UserConfig) SetDefaultNames() {
 	}
 }
 
-// Task represents a single generation task (command or memory)
+// Task represents a single generation task (command, memory, or mode)
 type Task struct {
 	// Name is an optional identifier for the task
 	Name string `yaml:"name,omitempty"`
-	// Type is either "command" or "memory"
+	// Type is either "command", "memory", or "mode"
 	Type string `yaml:"type"`
 	// Inputs are file or directory paths relative to config directory
 	Inputs []string `yaml:"inputs"`

@@ -100,6 +100,8 @@ func (p *Pipeline) newTaskProcessor(taskType string) (TaskProcessor, error) {
 		return NewMemoryProcessor(base), nil
 	case "command":
 		return NewCommandProcessor(base), nil
+	case "mode":
+		return NewModeProcessor(base), nil
 	default:
 		return nil, fmt.Errorf("unsupported task type %s", taskType)
 	}
