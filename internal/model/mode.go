@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/goccy/go-yaml"
+	"github.com/uphy/agent-sync/internal/frontmatter"
 )
 
 // Mode represents a subagent definition in an agent-agnostic way.
@@ -38,5 +39,54 @@ func (m *Mode) UnmarshalSection(key string, out interface{}) error {
 	if err := yaml.Unmarshal(b, out); err != nil {
 		return fmt.Errorf("failed to unmarshal section %q: %w", key, err)
 	}
+	return nil
+}
+
+// ParseMode parses a mode definition from file content into an agent-agnostic Mode.
+// It mirrors ParseCommand behavior for frontmatter handling, but preserves body
+// content exactly (no trimming) to maintain compatibility with existing tests.
+func ParseMode(path string, content []byte) (*Mode, error) {
+	// Parse frontmatter using frontmatter package (lenient)
+	fm, body, err := frontmatter.Parse(content)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse frontmatter: %w", err)
+	}
+
+	mode := &Mode{
+		Content: body,
+		Raw:     map[string]any{},
+	}
+
+	// Preserve frontmatter generically by deep-converting into map[string]any
+	if fm != nil {
+		yamlBytes, err := yaml.Marshal(fm)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal frontmatter: %w", err)
+		}
+		tmp := map[string]any{}
+		if err := yaml.Unmarshal(yamlBytes, &tmp); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal frontmatter to raw map: %w", err)
+		}
+		mode.Raw = tmp
+
+		// Extract common description from top-level if present
+		if v, ok := tmp["description"]; ok {
+			if s, ok := v.(string); ok {
+				mode.Description = s
+			}
+		}
+	}
+
+	// Minimal validation (agent-specific checks happen during formatting)
+	if err := mode.validate(); err != nil {
+		return nil, fmt.Errorf("mode validation failed: %w", err)
+	}
+
+	return mode, nil
+}
+
+// validate performs minimal, agent-agnostic validation.
+func (m *Mode) validate() error {
+	// Currently no required generic fields.
 	return nil
 }

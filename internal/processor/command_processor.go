@@ -7,7 +7,6 @@ import (
 
 	"github.com/uphy/agent-sync/internal/agent"
 	"github.com/uphy/agent-sync/internal/model"
-	"github.com/uphy/agent-sync/internal/parser"
 	"github.com/uphy/agent-sync/internal/template"
 )
 
@@ -37,7 +36,7 @@ func (p *CommandProcessor) Process(inputs []string, cfg *OutputConfig) (*TaskRes
 		if err != nil {
 			return nil, fmt.Errorf("read input file %s: %w", absInputFilePath, err)
 		}
-		cmd, err := parser.ParseCommandFromContent(absInputFilePath, inputContent)
+		cmd, err := model.ParseCommand(absInputFilePath, inputContent)
 		if err != nil {
 			return nil, fmt.Errorf("parse command from content %s: %w", absInputFilePath, err)
 		}

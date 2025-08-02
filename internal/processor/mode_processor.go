@@ -1,13 +1,11 @@
 package processor
 
 import (
-	"bytes"
 	"fmt"
 	"path/filepath"
 
 	"github.com/uphy/agent-sync/internal/agent"
 	"github.com/uphy/agent-sync/internal/model"
-	"github.com/uphy/agent-sync/internal/parser"
 	"github.com/uphy/agent-sync/internal/template"
 )
 
@@ -38,7 +36,7 @@ func (p *ModeProcessor) Process(inputs []string, cfg *OutputConfig) (*TaskResult
 		if err != nil {
 			return nil, fmt.Errorf("read input file %s: %w", absInputFilePath, err)
 		}
-		mode, err := parser.ParseMode(bytes.NewReader(inputContent))
+		mode, err := model.ParseMode(absInputFilePath, inputContent)
 		if err != nil {
 			return nil, fmt.Errorf("parse mode from content %s: %w", absInputFilePath, err)
 		}
