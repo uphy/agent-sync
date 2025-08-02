@@ -29,11 +29,10 @@ func TestClaude_FormatCommand(t *testing.T) {
 			name: "With description",
 			commands: []model.Command{
 				{
-					Claude: model.Claude{
-						Description: "Test description",
-					},
-					Content: "# Test Command\n\nThis is a test command with description.",
-					Path:    "test.md",
+					Description: "Test description",
+					Content:     "# Test Command\n\nThis is a test command with description.",
+					Path:        "test.md",
+					Raw:         map[string]any{}, // no claude section; falls back to top-level description
 				},
 			},
 			want: "---\ndescription: Test description\n---\n\n# Test Command\n\nThis is a test command with description.",
@@ -42,8 +41,10 @@ func TestClaude_FormatCommand(t *testing.T) {
 			name: "With allowed-tools",
 			commands: []model.Command{
 				{
-					Claude: model.Claude{
-						AllowedTools: "Bash(git status:*)",
+					Raw: map[string]any{
+						"claude": map[string]any{
+							"allowed-tools": "Bash(git status:*)",
+						},
 					},
 					Content: "# Test Command\n\nThis is a test command with allowed-tools.",
 					Path:    "test.md",
@@ -55,12 +56,14 @@ func TestClaude_FormatCommand(t *testing.T) {
 			name: "With both attributes",
 			commands: []model.Command{
 				{
-					Claude: model.Claude{
-						Description:  "Test description",
-						AllowedTools: "Bash(git status:*), Bash(git commit:*)",
+					Raw: map[string]any{
+						"claude": map[string]any{
+							"allowed-tools": "Bash(git status:*), Bash(git commit:*)",
+						},
 					},
-					Content: "# Test Command\n\nThis is a test command with both description and allowed-tools.",
-					Path:    "test.md",
+					Description: "Test description",
+					Content:     "# Test Command\n\nThis is a test command with both description and allowed-tools.",
+					Path:        "test.md",
 				},
 			},
 			want: "---\ndescription: Test description\nallowed-tools: Bash(git status:*), Bash(git commit:*)\n---\n\n# Test Command\n\nThis is a test command with both description and allowed-tools.",
@@ -69,15 +72,16 @@ func TestClaude_FormatCommand(t *testing.T) {
 			name: "Multiple commands",
 			commands: []model.Command{
 				{
-					Claude: model.Claude{
-						Description: "First command",
-					},
-					Content: "# First Command\n\nThis is the first command.",
-					Path:    "first.md",
+					Description: "First command",
+					Content:     "# First Command\n\nThis is the first command.",
+					Path:        "first.md",
+					Raw:         map[string]any{},
 				},
 				{
-					Claude: model.Claude{
-						AllowedTools: "Bash(ls:*)",
+					Raw: map[string]any{
+						"claude": map[string]any{
+							"allowed-tools": "Bash(ls:*)",
+						},
 					},
 					Content: "# Second Command\n\nThis is the second command.",
 					Path:    "second.md",

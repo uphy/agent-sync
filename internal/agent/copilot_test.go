@@ -107,11 +107,13 @@ func TestCopilot_FormatCommand(t *testing.T) {
 	t.Run("complete frontmatter", func(t *testing.T) {
 		cmd := model.Command{
 			Content: "Command content",
-			Copilot: model.Copilot{
-				Mode:        "edit",
-				Model:       "gpt-4",
-				Tools:       []string{"tool1", "tool2"},
-				Description: "Test description",
+			Raw: map[string]any{
+				"copilot": map[string]any{
+					"mode":        "edit",
+					"model":       "gpt-4",
+					"tools":       []string{"tool1", "tool2"},
+					"description": "Test description",
+				},
 			},
 		}
 		result, err := c.FormatCommand([]model.Command{cmd})
@@ -132,7 +134,7 @@ func TestCopilot_FormatCommand(t *testing.T) {
 		if !strings.Contains(result, "description: Test description") {
 			t.Errorf("Frontmatter missing description, got: %s", result)
 		}
-		// Ensure the copilot nested structure is not present
+		// Ensure the copilot nested structure is not present in the YAML keys
 		if strings.Contains(result, "copilot:") {
 			t.Errorf("Frontmatter should not contain nested 'copilot:' structure, got: %s", result)
 		}
@@ -146,9 +148,11 @@ func TestCopilot_FormatCommand(t *testing.T) {
 	t.Run("partial frontmatter", func(t *testing.T) {
 		cmd := model.Command{
 			Content: "Command content",
-			Copilot: model.Copilot{
-				Mode:  "edit",
-				Tools: []string{"tool1"},
+			Raw: map[string]any{
+				"copilot": map[string]any{
+					"mode":  "edit",
+					"tools": []string{"tool1"},
+				},
 			},
 		}
 		result, err := c.FormatCommand([]model.Command{cmd})
@@ -172,7 +176,7 @@ func TestCopilot_FormatCommand(t *testing.T) {
 			t.Errorf("Frontmatter should not include empty description, got: %s", result)
 		}
 
-		// Ensure the copilot nested structure is not present
+		// Ensure the copilot nested structure is not present in the YAML keys
 		if strings.Contains(result, "copilot:") {
 			t.Errorf("Frontmatter should not contain nested 'copilot:' structure, got: %s", result)
 		}

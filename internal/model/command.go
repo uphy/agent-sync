@@ -2,82 +2,49 @@ package model
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/uphy/agent-sync/internal/frontmatter"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
-// Command represents a command definition
+// Command represents a command definition in an agent-agnostic way.
+// Frontmatter keys are preserved in Raw.
+// Description is a common, top-level field used as a fallback by agents.
 type Command struct {
-	// Description is a top-level description that can be used by any agent
-	Description string `yaml:"description"`
-
-	// Roo contains the command properties from frontmatter
-	Roo Roo `yaml:"roo"`
-
-	// Claude contains Claude-specific properties from frontmatter
-	Claude Claude `yaml:"claude"`
-
-	// Copilot contains Copilot-specific properties from frontmatter
-	Copilot Copilot `yaml:"copilot"`
-
-	// Content is the main content of the command (not in frontmatter)
+	// Description is parsed from top-level frontmatter key "description".
+	// Agent-specific descriptions override this during formatting if present.
+	Description string `yaml:"-"`
+	// Raw contains the full frontmatter as a generic map. Agent-specific
+	// keys like "claude", "roo", "cline", "copilot" remain here.
+	Raw map[string]any `yaml:"-"`
+	// Content is the markdown body after frontmatter.
 	Content string `yaml:"-"`
-
 	// Path is the original file path (not in frontmatter)
 	Path string `yaml:"-"`
 }
 
-// Roo contains the command properties from frontmatter
-type Roo struct {
-	// Slug is the command identifier
-	Slug string `yaml:"slug"`
-
-	// Name is the display name of the command
-	Name string `yaml:"name"`
-
-	// Description is a brief description of the command
-	Description string `yaml:"description"`
-
-	// RoleDefinition describes what the command does
-	RoleDefinition string `yaml:"roleDefinition"`
-
-	// WhenToUse describes when to use the command
-	WhenToUse string `yaml:"whenToUse"`
-
-	// Groups are permission groups for the command
-	Groups any `yaml:"groups"`
+// UnmarshalSection marshals a sub-map from c.Raw[key] to YAML and unmarshals into out.
+// This mirrors model.Mode.UnmarshalSection and centralizes section extraction for all agents.
+func (c *Command) UnmarshalSection(key string, out interface{}) error {
+	if c.Raw == nil {
+		return fmt.Errorf("frontmatter is nil")
+	}
+	sec, ok := c.Raw[key]
+	if !ok {
+		return fmt.Errorf("frontmatter missing section %q", key)
+	}
+	b, err := yaml.Marshal(sec)
+	if err != nil {
+		return fmt.Errorf("failed to marshal section %q: %w", key, err)
+	}
+	if err := yaml.Unmarshal(b, out); err != nil {
+		return fmt.Errorf("failed to unmarshal section %q: %w", key, err)
+	}
+	return nil
 }
 
-// Claude contains the Claude-specific properties from frontmatter
-type Claude struct {
-	// Description is a brief description of the command
-	Description string `yaml:"description"`
-
-	// AllowedTools lists tools the command can use
-	AllowedTools string `yaml:"allowed-tools"`
-}
-
-// Copilot contains the Copilot-specific properties from frontmatter
-type Copilot struct {
-	// Mode is the chat mode (ask, edit, agent)
-	Mode string `yaml:"mode,omitempty"`
-
-	// Model is the AI model to use
-	Model string `yaml:"model,omitempty"`
-
-	// Tools are the available tools
-	Tools []string `yaml:"tools,omitempty"`
-
-	// Description is the prompt description
-	Description string `yaml:"description,omitempty"`
-}
-
-// ParseCommand parses a command definition from file content
+// ParseCommand parses a command definition from file content into an agent-agnostic Command.
 func ParseCommand(path string, content []byte) (*Command, error) {
 	// Parse frontmatter using frontmatter package
 	fm, textContent, err := frontmatter.Parse(content)
@@ -85,67 +52,51 @@ func ParseCommand(path string, content []byte) (*Command, error) {
 		return nil, fmt.Errorf("failed to parse frontmatter: %w", err)
 	}
 
-	// Standardize with parser package by trimming whitespace
+	// Normalize content by trimming surrounding whitespace
 	textContent = strings.Trim(textContent, "\n\t ")
 
-	// Create command model
 	cmd := &Command{
 		Path:    path,
 		Content: textContent,
+		Raw:     map[string]any{},
 	}
 
-	// Parse YAML directly into Command struct
+	// Preserve frontmatter generically.
+	// Extract a top-level description if present.
 	if len(fm) > 0 {
+		// marshal/unmarshal through YAML to deep-convert into map[string]any
 		yamlBytes, err := yaml.Marshal(fm)
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal frontmatter: %w", err)
 		}
+		tmp := map[string]any{}
+		if err := yaml.Unmarshal(yamlBytes, &tmp); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal frontmatter to raw map: %w", err)
+		}
+		cmd.Raw = tmp
 
-		if err := yaml.Unmarshal(yamlBytes, cmd); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal command: %w", err)
+		// pick common description from top-level if present
+		if v, ok := tmp["description"]; ok {
+			if s, ok := v.(string); ok {
+				cmd.Description = s
+			}
 		}
 	}
 
-	// Set defaults and validate
-	cmd.setDefaults()
+	// Only generic validation here; agent-specific checks happen in agent implementations.
 	if err := cmd.validate(); err != nil {
 		return nil, fmt.Errorf("command validation failed: %w", err)
 	}
-
 	return cmd, nil
 }
 
-// setDefaults sets default values for missing Command fields
-func (c *Command) setDefaults() {
-	if c.Roo.Slug == "" {
-		c.Roo.Slug = strings.TrimSuffix(filepath.Base(c.Path), filepath.Ext(c.Path))
-	}
-	if c.Roo.Name == "" {
-		c.Roo.Name = cases.Title(language.Und).String(c.Roo.Slug)
-	}
-
-	// Apply top-level description as fallback for agent-specific descriptions if they are empty
-	if c.Roo.Description == "" && c.Description != "" {
-		c.Roo.Description = c.Description
-	}
-	if c.Claude.Description == "" && c.Description != "" {
-		c.Claude.Description = c.Description
-	}
-	if c.Copilot.Description == "" && c.Description != "" {
-		c.Copilot.Description = c.Description
-	}
-}
-
-// validate validates that the command has all required fields
+// validate performs minimal, agent-agnostic validation.
+// Agent-specific required fields are validated in each agent's formatter.
 func (c *Command) validate() error {
-	// Minimum validation - ensure required fields have values
-	if c.Roo.Slug == "" {
-		return fmt.Errorf("command slug is required")
+	if c.Content == "" {
+		// Commands are allowed to have empty body; keep this non-fatal.
+		// Return nil to avoid breaking existing flows.
+		return nil
 	}
-
-	if c.Roo.Name == "" {
-		return fmt.Errorf("command name is required")
-	}
-
 	return nil
 }

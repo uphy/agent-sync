@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/goccy/go-yaml"
+	"github.com/uphy/agent-sync/internal/frontmatter"
 	"github.com/uphy/agent-sync/internal/model"
 )
 
@@ -55,36 +55,43 @@ func (c *Copilot) FormatCommand(commands []model.Command) (string, error) {
 
 	cmd := commands[0]
 
-	// Build frontmatter
-	frontmatterMap := map[string]interface{}{}
+	// Build frontmatter using UnmarshalSection("copilot") primarily,
+	// but also accept top-level fields for backward compatibility.
+	type copilotFm struct {
+		Mode        string   `yaml:"mode,omitempty"`
+		Model       string   `yaml:"model,omitempty"`
+		Tools       []string `yaml:"tools,omitempty"`
+		Description string   `yaml:"description,omitempty"`
+	}
+	var fm copilotFm
 
-	// Set each field directly at the top level
-	if cmd.Copilot.Mode != "" {
-		frontmatterMap["mode"] = cmd.Copilot.Mode
+	// 1) Try to read nested "copilot" section via Command.UnmarshalSection
+	if err := cmd.UnmarshalSection("copilot", &fm); err != nil && err.Error() != "frontmatter missing section \"copilot\"" {
+		// Only ignore "missing section" errors. Propagate other marshal/unmarshal failures.
+		return "", fmt.Errorf("copilot frontmatter parse error: %w", err)
 	}
 
-	if cmd.Copilot.Model != "" {
-		frontmatterMap["model"] = cmd.Copilot.Model
+	// 2) No top-level fallback for mode/model/tools to keep a single source of truth.
+	//    Only fallback Description from the common Command.Description field.
+
+	// Final fallback: common top-level description field on Command
+	if fm.Description == "" && cmd.Description != "" {
+		fm.Description = cmd.Description
 	}
 
-	if len(cmd.Copilot.Tools) > 0 {
-		frontmatterMap["tools"] = cmd.Copilot.Tools
+	// Emit frontmatter only when at least one field is present.
+	if fm.Mode == "" && fm.Model == "" && len(fm.Tools) == 0 && fm.Description == "" {
+		return cmd.Content, nil
 	}
 
-	if cmd.Copilot.Description != "" {
-		frontmatterMap["description"] = cmd.Copilot.Description
-	}
-
-	// Marshal to YAML
-	yamlBytes, err := yaml.Marshal(frontmatterMap)
+	// Marshal frontmatter using shared helper
+	yamlWithFences, err := frontmatter.Wrap(fm)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal frontmatter: %w", err)
+		return "", fmt.Errorf("failed to marshal copilot command frontmatter: %w", err)
 	}
-
-	frontmatter := fmt.Sprintf("---\n%s---\n\n", string(yamlBytes))
 
 	// Add content
-	return frontmatter + cmd.Content, nil
+	return yamlWithFences + cmd.Content, nil
 }
 
 // DefaultMemoryPath determines the default output path for memory tasks

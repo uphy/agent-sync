@@ -3,6 +3,7 @@ package frontmatter
 import (
 	"bytes"
 	"fmt"
+	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/uphy/agent-sync/internal/util"
@@ -76,4 +77,33 @@ func ParseFromFile(fs util.FileSystem, path string) (map[string]interface{}, str
 	}
 
 	return frontmatter, content, nil
+}
+
+// RenderYAML marshals v to YAML using a consistent goccy/go-yaml encoder configuration.
+// It returns the YAML string without any surrounding frontmatter fences.
+func RenderYAML(v any) (string, error) {
+	var sb strings.Builder
+	enc := yaml.NewEncoder(
+		&sb,
+		yaml.Indent(2),
+		yaml.UseSingleQuote(false),
+		yaml.IndentSequence(true),
+		yaml.UseLiteralStyleIfMultiline(true),
+	)
+	if err := enc.Encode(v); err != nil {
+		_ = enc.Close()
+		return "", err
+	}
+	_ = enc.Close()
+	return sb.String(), nil
+}
+
+// Wrap renders the given struct/value to YAML (via RenderYAML) and wraps it with '---' fences,
+// followed by two newlines, suitable for frontmatter headers.
+func Wrap(v any) (string, error) {
+	yml, err := RenderYAML(v)
+	if err != nil {
+		return "", err
+	}
+	return "---\n" + yml + "---\n\n", nil
 }

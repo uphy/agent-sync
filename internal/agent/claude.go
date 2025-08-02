@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/goccy/go-yaml"
+	"github.com/uphy/agent-sync/internal/frontmatter"
 	"github.com/uphy/agent-sync/internal/model"
 )
 
@@ -45,29 +46,35 @@ func (c *Claude) FormatCommand(commands []model.Command) (string, error) {
 	var formattedCommands []string
 
 	for _, cmd := range commands {
-		var formattedCmd string
+		var formattedCmd strings.Builder
+
+		// Extract Claude-specific frontmatter from generic Command.Raw
+		type claudeFm struct {
+			Description  string `yaml:"description,omitempty"`
+			AllowedTools string `yaml:"allowed-tools,omitempty"`
+		}
+		var fm claudeFm
+		if cmd.Raw != nil {
+			_ = cmd.UnmarshalSection("claude", &fm)
+		}
+		// Fallback to common description if not provided under claude
+		if fm.Description == "" && cmd.Description != "" {
+			fm.Description = cmd.Description
+		}
 
 		// Include frontmatter if Claude-specific attributes exist
-		hasFrontmatter := cmd.Claude.Description != "" || cmd.Claude.AllowedTools != ""
-
-		if hasFrontmatter {
-			formattedCmd = "---\n"
-
-			if cmd.Claude.Description != "" {
-				formattedCmd += fmt.Sprintf("description: %s\n", cmd.Claude.Description)
+		if fm.Description != "" || fm.AllowedTools != "" {
+			yamlWithFences, err := frontmatter.Wrap(fm)
+			if err != nil {
+				return "", fmt.Errorf("failed to marshal claude command frontmatter: %w", err)
 			}
-
-			if cmd.Claude.AllowedTools != "" {
-				formattedCmd += fmt.Sprintf("allowed-tools: %s\n", cmd.Claude.AllowedTools)
-			}
-
-			formattedCmd += "---\n\n"
+			formattedCmd.WriteString(yamlWithFences)
 		}
 
 		// Add the main content
-		formattedCmd += cmd.Content
+		formattedCmd.WriteString(cmd.Content)
 
-		formattedCommands = append(formattedCommands, formattedCmd)
+		formattedCommands = append(formattedCommands, formattedCmd.String())
 	}
 
 	return strings.Join(formattedCommands, "\n\n---\n\n"), nil

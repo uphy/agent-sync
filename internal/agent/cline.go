@@ -48,9 +48,8 @@ func (c *Cline) FormatCommand(commands []model.Command) (string, error) {
 		return "", nil
 	}
 
-	// Just return the raw markdown content for commands
-	// If there are multiple commands, we only use the first one
-	// since each command is processed separately (ShouldConcatenate returns false)
+	// Cline workflows are plain markdown; just return the first command's content.
+	// Agent-specific fields (if any) are not used for Cline.
 	return commands[0].Content, nil
 }
 

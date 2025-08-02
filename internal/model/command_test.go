@@ -1,6 +1,7 @@
 package model
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -19,23 +20,70 @@ func TestParseCommand_SetsPathAndContent(t *testing.T) {
 	}
 }
 
-func TestParseCommand_DefaultFieldsFromPath(t *testing.T) {
-	cmd, _ := ParseCommand("p", []byte{})
+func TestParseCommand_PreservesFrontmatterGenerically(t *testing.T) {
+	yml := []byte(`---
+description: top desc
+roo:
+  slug: deploy
+  name: Deploy
+  roleDefinition: Do deploy
+  whenToUse: When needed
+  groups: [dev, ops]
+claude:
+  allowed-tools: Bash(ls:*)
+---
+# Title
+Body`)
+	cmd, err := ParseCommand("commands/deploy.md", yml)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if cmd.Description != "top desc" {
+		t.Errorf("expected Description 'top desc', got %q", cmd.Description)
+	}
+	if cmd.Raw == nil {
+		t.Fatalf("expected Raw to be set")
+	}
+	// spot-check nested keys exist
+	if _, ok := cmd.Raw["roo"]; !ok {
+		t.Errorf("expected roo section present in Raw")
+	}
+	if _, ok := cmd.Raw["claude"]; !ok {
+		t.Errorf("expected claude section present in Raw")
+	}
+	if got, want := cmd.Path, "commands/deploy.md"; got != want {
+		t.Errorf("Path mismatch: got %q want %q", got, want)
+	}
+	if want := "# Title\nBody"; cmd.Content != want {
+		t.Errorf("content mismatch: got %q want %q", cmd.Content, want)
+	}
+}
 
-	// Now Slug is set from path and Name from Slug
-	if cmd.Roo.Slug != "p" {
-		t.Errorf("expected Slug to be 'p', got %q", cmd.Roo.Slug)
+func TestCommand_UnmarshalSection_ExtractsAgentSection(t *testing.T) {
+	yml := []byte(`---
+roo:
+  slug: review
+  name: Code Reviewer
+  roleDefinition: Review code
+---
+content`)
+	cmd, err := ParseCommand("x.md", yml)
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
 	}
-	if cmd.Roo.Name != "P" {
-		t.Errorf("expected Name to be 'P', got %q", cmd.Roo.Name)
+	var roo struct {
+		Slug           string `yaml:"slug"`
+		Name           string `yaml:"name"`
+		RoleDefinition string `yaml:"roleDefinition"`
 	}
-	if cmd.Roo.RoleDefinition != "" {
-		t.Errorf("expected RoleDefinition empty, got %q", cmd.Roo.RoleDefinition)
+	if err := cmd.UnmarshalSection("roo", &roo); err != nil {
+		t.Fatalf("unmarshal section error: %v", err)
 	}
-	if cmd.Roo.WhenToUse != "" {
-		t.Errorf("expected WhenToUse empty, got %q", cmd.Roo.WhenToUse)
-	}
-	if cmd.Roo.Groups != nil {
-		t.Errorf("expected Groups empty, got %v", cmd.Roo.Groups)
+	if !reflect.DeepEqual(roo, struct {
+		Slug           string `yaml:"slug"`
+		Name           string `yaml:"name"`
+		RoleDefinition string `yaml:"roleDefinition"`
+	}{"review", "Code Reviewer", "Review code"}) {
+		t.Errorf("unexpected roo section: %+v", roo)
 	}
 }

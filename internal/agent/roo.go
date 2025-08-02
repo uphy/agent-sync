@@ -3,9 +3,8 @@ package agent
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 
-	"github.com/goccy/go-yaml"
+	"github.com/uphy/agent-sync/internal/frontmatter"
 	"github.com/uphy/agent-sync/internal/model"
 )
 
@@ -45,20 +44,6 @@ func (r *Roo) FormatMemory(content string) (string, error) {
 
 // FormatCommand processes command definitions for Roo agent
 func (r *Roo) FormatCommand(commands []model.Command) (string, error) {
-	// Validate required fields for each command
-	for i, cmd := range commands {
-		if cmd.Roo.Slug == "" {
-			return "", fmt.Errorf("command at index %d missing required field 'slug'", i)
-		}
-		if cmd.Roo.Name == "" {
-			return "", fmt.Errorf("command at index %d missing required field 'name'", i)
-		}
-		if cmd.Roo.RoleDefinition == "" {
-			return "", fmt.Errorf("command at index %d missing required field 'roleDefinition'", i)
-		}
-		// Groups is validated separately during struct creation
-	}
-
 	// Define structs that match our desired YAML output structure
 	type CustomMode struct {
 		Slug               string `yaml:"slug"`
@@ -69,54 +54,72 @@ func (r *Roo) FormatCommand(commands []model.Command) (string, error) {
 		Groups             any    `yaml:"groups"`
 		CustomInstructions string `yaml:"customInstructions"`
 	}
-
 	type RooConfig struct {
 		CustomModes []CustomMode `yaml:"customModes"`
 	}
 
-	// Clean leading newlines if present
-	cleanContent := func(s string) string {
+	clean := func(s string) string {
 		if s != "" && s[0] == '\n' {
 			return s[1:]
 		}
 		return s
 	}
 
-	// Create and populate the config struct
 	config := RooConfig{
-		CustomModes: make([]CustomMode, len(commands)),
+		CustomModes: make([]CustomMode, 0, len(commands)),
 	}
 
 	for i, cmd := range commands {
-		customMode := CustomMode{
-			Slug:               cmd.Roo.Slug,
-			Name:               cmd.Roo.Name,
-			Description:        cleanContent(cmd.Roo.Description),
-			RoleDefinition:     cleanContent(cmd.Roo.RoleDefinition),
-			WhenToUse:          cleanContent(cmd.Roo.WhenToUse),
-			Groups:             cmd.Roo.Groups,
-			CustomInstructions: cleanContent(cmd.Content),
+		// Extract 'roo' section from generic frontmatter
+		var section struct {
+			Slug           string `yaml:"slug"`
+			Name           string `yaml:"name"`
+			Description    string `yaml:"description"`
+			RoleDefinition string `yaml:"roleDefinition"`
+			WhenToUse      string `yaml:"whenToUse"`
+			Groups         any    `yaml:"groups"`
 		}
-		if customMode.Groups == nil {
-			customMode.Groups = []string{}
+		if cmd.Raw != nil {
+			_ = cmd.UnmarshalSection("roo", &section)
 		}
-		config.CustomModes[i] = customMode
+
+		// Validation for required fields
+		if section.Slug == "" {
+			return "", fmt.Errorf("command at index %d missing required field 'slug'", i)
+		}
+		if section.Name == "" {
+			return "", fmt.Errorf("command at index %d missing required field 'name'", i)
+		}
+		if section.RoleDefinition == "" {
+			return "", fmt.Errorf("command at index %d missing required field 'roleDefinition'", i)
+		}
+
+		// Fallback description to common one when empty
+		if section.Description == "" && cmd.Description != "" {
+			section.Description = cmd.Description
+		}
+
+		cm := CustomMode{
+			Slug:               section.Slug,
+			Name:               section.Name,
+			Description:        clean(section.Description),
+			RoleDefinition:     clean(section.RoleDefinition),
+			WhenToUse:          clean(section.WhenToUse),
+			Groups:             section.Groups,
+			CustomInstructions: clean(cmd.Content),
+		}
+		if cm.Groups == nil {
+			cm.Groups = []string{}
+		}
+		config.CustomModes = append(config.CustomModes, cm)
 	}
 
-	// Encode to yaml.Node first
-	// Marshal the struct to YAML
-	var buf strings.Builder
-	encoder := yaml.NewEncoder(
-		&buf,
-		yaml.Indent(2),
-		yaml.UseSingleQuote(false),
-		yaml.IndentSequence(true),
-		yaml.UseLiteralStyleIfMultiline(true), // This ensures multi-line strings use literal style (|)
-	)
-	if err := encoder.Encode(config); err != nil {
+	// Marshal the struct to YAML using shared helper (no fences for Roo)
+	yml, err := frontmatter.RenderYAML(config)
+	if err != nil {
 		return "", fmt.Errorf("failed to marshal Roo commands to YAML: %w", err)
 	}
-	return buf.String(), nil
+	return yml, nil
 }
 
 // MemoryPath returns the default path for Roo agent memory files
@@ -197,19 +200,12 @@ func (r *Roo) FormatMode(modes []model.Mode) (string, error) {
 		})
 	}
 
-	// Marshal the slice into a single YAML string
-	var buf strings.Builder
-	enc := yaml.NewEncoder(
-		&buf,
-		yaml.Indent(2),
-		yaml.UseSingleQuote(false),
-		yaml.IndentSequence(true),
-		yaml.UseLiteralStyleIfMultiline(true),
-	)
-	if err := enc.Encode(out); err != nil {
+	// Marshal the slice into a single YAML string using shared helper (no fences)
+	yml, err := frontmatter.RenderYAML(out)
+	if err != nil {
 		return "", fmt.Errorf("failed to marshal Roo modes to YAML: %w", err)
 	}
-	return buf.String(), nil
+	return yml, nil
 }
 
 // ModePath returns the default path for Roo agent mode files
