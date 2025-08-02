@@ -137,34 +137,64 @@ func (r *Roo) CommandPath(userScope bool) string {
 func (r *Roo) FormatMode(modes []model.Mode) (string, error) {
 	// Define output struct to marshal as YAML (list of Roo modes directly)
 	type RooMode struct {
-		Slug               string      `yaml:"slug"`
-		Name               string      `yaml:"name"`
-		Description        string      `yaml:"description"`
-		RoleDefinition     string      `yaml:"roleDefinition"`
-		WhenToUse          string      `yaml:"whenToUse"`
-		Groups             interface{} `yaml:"groups"`
-		CustomInstructions string      `yaml:"customInstructions"`
+		Slug               string `yaml:"slug"`
+		Name               string `yaml:"name"`
+		Description        string `yaml:"description"`
+		RoleDefinition     string `yaml:"roleDefinition"`
+		WhenToUse          string `yaml:"whenToUse"`
+		Groups             any    `yaml:"groups"` // preserve user-provided structure as-is
+		CustomInstructions string `yaml:"customInstructions"`
 	}
 
-	// Helper to clean leading newline to match other formatters' behavior
-	// Note: currently unused because model.Mode lacks Roo fields; kept for future parity with commands.
 	clean := func(s string) string {
 		if s != "" && s[0] == '\n' {
 			return s[1:]
 		}
 		return s
 	}
-	_ = clean
 
-	// Collect RooMode entries from modes
 	out := make([]RooMode, 0, len(modes))
 
-	// Note: As of current model, model.Mode does not define Roo-specific fields.
-	// However, per task requirements, implement aggregation and YAML marshaling.
-	// We therefore map only the content as CustomInstructions and require slug/name/roleDefinition
-	// to be present via Roo frontmatter on Mode once the model is extended.
-	for i := range modes {
-		return "", fmt.Errorf("mode at index %d missing Roo frontmatter fields on model.Mode (slug, name, roleDefinition). Extend model.Mode and mode parser accordingly", i)
+	for i, m := range modes {
+		if m.Raw == nil {
+			return "", fmt.Errorf("mode at index %d missing frontmatter", i)
+		}
+		// Unmarshal the 'roo' section directly using model.Mode helper
+		var rm RooMode
+		if err := m.UnmarshalSection("roo", &rm); err != nil {
+			return "", fmt.Errorf("mode at index %d: %w", i, err)
+		}
+
+		// Apply fallbacks
+		if rm.Description == "" && m.Description != "" {
+			rm.Description = m.Description
+		}
+		rm.CustomInstructions = clean(m.Content)
+
+		// Validation for required fields
+		if rm.Slug == "" {
+			return "", fmt.Errorf("mode at index %d missing required field 'slug'", i)
+		}
+		if rm.Name == "" {
+			return "", fmt.Errorf("mode at index %d missing required field 'name'", i)
+		}
+		if rm.RoleDefinition == "" {
+			return "", fmt.Errorf("mode at index %d missing required field 'roleDefinition'", i)
+		}
+		// Ensure non-nil groups (preserve user structure)
+		if rm.Groups == nil {
+			rm.Groups = []string{}
+		}
+
+		out = append(out, RooMode{
+			Slug:               rm.Slug,
+			Name:               rm.Name,
+			Description:        clean(rm.Description),
+			RoleDefinition:     clean(rm.RoleDefinition),
+			WhenToUse:          clean(rm.WhenToUse),
+			Groups:             rm.Groups,
+			CustomInstructions: rm.CustomInstructions,
+		})
 	}
 
 	// Marshal the slice into a single YAML string

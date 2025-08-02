@@ -1,25 +1,42 @@
 package model
 
-// Mode represents a subagent definition
+import (
+	"fmt"
+
+	"github.com/goccy/go-yaml"
+)
+
+// Mode represents a subagent definition in an agent-agnostic way.
+// Frontmatter keys are preserved in Raw.
+// Description is a common, top-level field used as a fallback by agents.
 type Mode struct {
-	Claude  *ClaudeCodeMode `yaml:"claude"`
-	Roo     *RooMode        `yaml:"roo"`
+	// Description is parsed from top-level frontmatter key "description".
+	// Agent-specific descriptions override this during formatting if present.
+	Description string `yaml:"-"`
+	// Raw contains the full frontmatter as a generic map. Agent-specific
+	// keys like "claude", "roo", "cline", "copilot" remain here.
+	Raw map[string]any `yaml:"-"`
+	// Content is the markdown body after frontmatter.
 	Content string
 }
 
-// ClaudeCodeMode defines the properties for a Claude subagent
-type ClaudeCodeMode struct {
-	Name        string   `yaml:"name"`
-	Description string   `yaml:"description"`
-	Tools       []string `yaml:"tools,omitempty"`
-}
-
-// RooMode defines the properties for a Roo subagent (mode)
-type RooMode struct {
-	Slug           string   `yaml:"slug"`
-	Name           string   `yaml:"name"`
-	Description    string   `yaml:"description"`
-	RoleDefinition string   `yaml:"roleDefinition"`
-	WhenToUse      string   `yaml:"whenToUse"`
-	Groups         []string `yaml:"groups"`
+// UnmarshalSection marshals a sub-map from m.Raw[key] to YAML and unmarshals into out.
+// This centralizes section extraction for all agents (claude, roo, etc).
+// Note: Go methods cannot be generic, so out is an interface{}.
+func (m *Mode) UnmarshalSection(key string, out interface{}) error {
+	if m.Raw == nil {
+		return fmt.Errorf("frontmatter is nil")
+	}
+	sec, ok := m.Raw[key]
+	if !ok {
+		return fmt.Errorf("frontmatter missing section %q", key)
+	}
+	b, err := yaml.Marshal(sec)
+	if err != nil {
+		return fmt.Errorf("failed to marshal section %q: %w", key, err)
+	}
+	if err := yaml.Unmarshal(b, out); err != nil {
+		return fmt.Errorf("failed to unmarshal section %q: %w", key, err)
+	}
+	return nil
 }

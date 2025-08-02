@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/goccy/go-yaml"
 	"github.com/uphy/agent-sync/internal/model"
 )
 
@@ -99,22 +100,70 @@ func (c *Claude) FormatMode(modes []model.Mode) (string, error) {
 
 	mode := modes[0]
 
-	frontmatter := "---\n"
-	if mode.Claude != nil {
-		if mode.Claude.Name != "" {
-			frontmatter += fmt.Sprintf("name: %q\n", mode.Claude.Name)
-		}
-		if mode.Claude.Description != "" {
-			frontmatter += fmt.Sprintf("description: %q\n", mode.Claude.Description)
-		}
-		if len(mode.Claude.Tools) > 0 {
-			frontmatter += "tools:\n"
-			for _, tool := range mode.Claude.Tools {
-				frontmatter += fmt.Sprintf("  - %q\n", tool)
+	// Define ClaudeMode; tools are plain []string (no special normalization)
+	type ClaudeMode struct {
+		Name        string   `yaml:"name"`
+		Description string   `yaml:"description"`
+		Tools       []string `yaml:"tools,omitempty"`
+	}
+
+	var cm ClaudeMode
+	// Unmarshal section if present
+	if mode.Raw != nil {
+		_ = mode.UnmarshalSection("claude", &cm)
+	}
+
+	// Fallback to common description when empty
+	if cm.Description == "" && mode.Description != "" {
+		cm.Description = mode.Description
+	}
+
+	// Encode with goccy/go-yaml, then post-process to match expected quoting style
+	var sb strings.Builder
+	enc := yaml.NewEncoder(
+		&sb,
+		yaml.Indent(2),
+		yaml.UseSingleQuote(false),
+		yaml.IndentSequence(true),
+		yaml.UseLiteralStyleIfMultiline(true),
+	)
+	if err := enc.Encode(cm); err != nil {
+		return "", fmt.Errorf("failed to marshal claude mode frontmatter: %w", err)
+	}
+	yamlOut := strings.TrimRight(sb.String(), "\n") // avoid trailing blank line before closing ---
+
+	// Tests expect quoted scalars and quoted list items. goccy/yaml encoder
+	// doesn't force quotes for plain scalars, so patch them deterministically.
+	// Only touch the specific fields we emit: name, description, tools items.
+	var out strings.Builder
+	lines := strings.Split(yamlOut, "\n")
+	for i, line := range lines {
+		switch {
+		case strings.HasPrefix(line, "name: "):
+			val := strings.TrimSpace(strings.TrimPrefix(line, "name: "))
+			if val != "" && !strings.HasPrefix(val, "\"") && !strings.HasSuffix(val, "\"") {
+				line = "name: " + fmt.Sprintf("%q", val)
+			}
+		case strings.HasPrefix(line, "description: "):
+			val := strings.TrimSpace(strings.TrimPrefix(line, "description: "))
+			if val != "" && !strings.HasPrefix(val, "\"") && !strings.HasSuffix(val, "\"") {
+				line = "description: " + fmt.Sprintf("%q", val)
+			}
+		case strings.HasPrefix(strings.TrimLeft(line, " "), "- "):
+			// Quote list items under tools
+			trimmed := strings.TrimSpace(strings.TrimPrefix(strings.TrimLeft(line, " "), "- "))
+			if trimmed != "" && !strings.HasPrefix(trimmed, "\"") && !strings.HasSuffix(trimmed, "\"") {
+				indent := line[:len(line)-len(strings.TrimLeft(line, " "))]
+				line = indent + "- " + fmt.Sprintf("%q", trimmed)
 			}
 		}
+		out.WriteString(line)
+		if i < len(lines)-1 {
+			out.WriteByte('\n')
+		}
 	}
-	frontmatter += "---\n\n"
+
+	frontmatter := "---\n" + out.String() + "\n---\n\n"
 	return frontmatter + mode.Content, nil
 }
 

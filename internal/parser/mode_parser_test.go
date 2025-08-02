@@ -23,9 +23,14 @@ This is a test mode.
 	r := bytes.NewBufferString(input)
 	mode, err := ParseMode(r)
 	require.NoError(t, err)
-	assert.Equal(t, "Test Mode", mode.Claude.Name)
-	assert.Equal(t, "Test description", mode.Claude.Description)
-	assert.Equal(t, []string{"tool1", "tool2"}, mode.Claude.Tools)
+
+	// Raw should contain the "claude" map with the expected keys
+	claude, ok := mode.Raw["claude"].(map[string]interface{})
+	require.True(t, ok, "claude section should be a map[string]interface{}")
+	assert.Equal(t, "Test Mode", claude["name"])
+	assert.Equal(t, "Test description", claude["description"])
+	assert.ElementsMatch(t, []interface{}{"tool1", "tool2"}, claude["tools"].([]interface{}))
+
 	assert.Equal(t, "# Test Mode\nThis is a test mode.\n", mode.Content)
 }
 
@@ -37,6 +42,7 @@ This is a test mode without frontmatter.
 	mode, err := ParseMode(r)
 	require.NoError(t, err)
 	assert.Equal(t, &model.Mode{
+		Raw:     map[string]any{},
 		Content: input,
 	}, mode)
 }
@@ -58,6 +64,7 @@ func TestParseMode_Empty(t *testing.T) {
 	mode, err := ParseMode(r)
 	require.NoError(t, err)
 	assert.Equal(t, &model.Mode{
+		Raw:     map[string]any{},
 		Content: "",
 	}, mode)
 }

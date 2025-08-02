@@ -3,7 +3,6 @@ package parser
 import (
 	"io"
 
-	"github.com/goccy/go-yaml"
 	"github.com/uphy/agent-sync/internal/frontmatter"
 	"github.com/uphy/agent-sync/internal/model"
 	"github.com/uphy/agent-sync/internal/util"
@@ -17,30 +16,23 @@ func ParseModeWithPath(path string, r io.Reader) (*model.Mode, error) {
 		return nil, err
 	}
 
-	// Parse frontmatter and content
-	frontmatterData, body, err := frontmatter.Parse(content)
+	// Parse frontmatter and content (lenient)
+	fm, body, err := frontmatter.Parse(content)
 	if err != nil {
 		return nil, util.WrapError(err, "failed to parse frontmatter")
 	}
 
 	mode := &model.Mode{
+		Raw:     fm,
 		Content: body,
 	}
 
-	// If we have frontmatter, try to parse the claude section
-	if len(frontmatterData) > 0 {
-		if claudeSection, ok := frontmatterData["claude"]; ok {
-			// Convert to YAML bytes for unmarshaling
-			yamlData, err := yaml.Marshal(claudeSection)
-			if err != nil {
-				return nil, util.WrapError(err, "failed to marshal claude frontmatter")
+	// Extract common description from top-level frontmatter if present
+	if fm != nil {
+		if v, ok := fm["description"]; ok {
+			if s, ok := v.(string); ok {
+				mode.Description = s
 			}
-
-			var claudeMode model.ClaudeCodeMode
-			if err := yaml.Unmarshal(yamlData, &claudeMode); err != nil {
-				return nil, util.WrapError(err, "failed to unmarshal claude frontmatter into ClaudeCodeMode")
-			}
-			mode.Claude = &claudeMode
 		}
 	}
 
