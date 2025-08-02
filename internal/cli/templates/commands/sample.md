@@ -1,23 +1,13 @@
 ---
-roo:
-  slug: sample-command
-  name: Sample Command
-  description: A sample command template
-  roleDefinition: >-
-    This is a sample command template.
-  whenToUse: >-
-    When you need a starting point for creating a new command.
-  groups:
-    - read
-    - - edit
-      - fileRegex: \.md$
-        description: Markdown files only
-claude:
-  description: >-
-    This is a sample command template.
-  allowed-tools: Bash(*)
+description: Perform a sample action with optional argument
+argument-hint: "[target-file]"
 ---
 
 # Sample Command
 
-This is a sample command template.
+Provide details for the slash command behavior here.
+- Explain what the command does
+- Optionally describe expected arguments (e.g., a file path)
+
+You can use template helpers as usual, for example:
+{% raw %}{{ file "README.md" }}{% endraw %}

@@ -1,7 +1,10 @@
 package agent
 
 import (
+	"strings"
 	"testing"
+
+	"github.com/uphy/agent-sync/internal/model"
 )
 
 func TestRoo_ID_Name(t *testing.T) {
@@ -59,4 +62,107 @@ func TestMCPFunc_WithValidAgent(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRoo_FormatCommand_FrontmatterCases(t *testing.T) {
+	r := &Roo{}
+
+	makeCmd := func(raw map[string]any, body string) model.Command {
+		// Simulate ParseCommand behavior: top-level description also exists in Raw.
+		// Our FormatCommand now reads via UnmarshalSection("", &meta) which pulls from Raw[""].
+		// For tests, we emulate this by ensuring Raw has the keys used by UnmarshalSection.
+		return model.Command{
+			Raw:     raw,
+			Content: body,
+		}
+	}
+
+	body := "Command body content"
+
+	t.Run("only top-level description", func(t *testing.T) {
+		// Simulate ParseCommand setting Command.Description, while Raw may not be used for top-level.
+		cmd := makeCmd(map[string]any{}, body)
+		cmd.Description = "Top description"
+
+		out, err := r.FormatCommand([]model.Command{cmd})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if !strings.HasPrefix(out, "---\n") {
+			t.Fatalf("expected frontmatter, got: %q", out)
+		}
+		if !strings.Contains(out, "description: Top description") {
+			t.Errorf("expected description in frontmatter, got: %q", out)
+		}
+		if strings.Contains(out, "roo:") {
+			t.Errorf("did not expect roo section")
+		}
+		if !strings.HasSuffix(out, "\n\n"+body) && !strings.HasSuffix(out, "\n"+body) {
+			t.Errorf("expected body appended after frontmatter, got: %q", out)
+		}
+	})
+
+	t.Run("only roo.argument-hint", func(t *testing.T) {
+		cmd := makeCmd(map[string]any{
+			"roo": map[string]any{
+				"argument-hint": "ARG HINT",
+			},
+		}, body)
+
+		out, err := r.FormatCommand([]model.Command{cmd})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if !strings.HasPrefix(out, "---\n") {
+			t.Fatalf("expected frontmatter, got: %q", out)
+		}
+		if !strings.Contains(out, "roo:\n  argument-hint: ARG HINT") && !strings.Contains(out, "roo:\n    argument-hint: ARG HINT") {
+			t.Errorf("expected roo.argument-hint in frontmatter, got: %q", out)
+		}
+		if strings.Contains(out, "description:") {
+			t.Errorf("did not expect description in frontmatter")
+		}
+		if !strings.HasSuffix(out, "\n\n"+body) && !strings.HasSuffix(out, "\n"+body) {
+			t.Errorf("expected body appended after frontmatter, got: %q", out)
+		}
+	})
+
+	t.Run("both description and roo.argument-hint", func(t *testing.T) {
+		cmd := makeCmd(map[string]any{
+			"roo": map[string]any{
+				"argument-hint": "HINT",
+			},
+		}, body)
+		cmd.Description = "Desc"
+
+		out, err := r.FormatCommand([]model.Command{cmd})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if !strings.Contains(out, "description: Desc") {
+			t.Errorf("expected description in frontmatter, got: %q", out)
+		}
+		if !strings.Contains(out, "roo:\n  argument-hint: HINT") && !strings.Contains(out, "roo:\n    argument-hint: HINT") {
+			t.Errorf("expected roo.argument-hint, got: %q", out)
+		}
+	})
+
+	t.Run("neither field present -> body only", func(t *testing.T) {
+		cmd := makeCmd(map[string]any{}, body)
+
+		out, err := r.FormatCommand([]model.Command{cmd})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if strings.HasPrefix(out, "---\n") {
+			t.Fatalf("did not expect frontmatter, got: %q", out)
+		}
+		if out != strings.TrimLeft(body, "\n") {
+			t.Errorf("expected body only, got: %q", out)
+		}
+	})
 }

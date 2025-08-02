@@ -58,6 +58,8 @@ func (p *CommandProcessor) Process(inputs []string, cfg *OutputConfig) (*TaskRes
 // GetOutputPath returns the appropriate output path for command tasks
 func (p *CommandProcessor) GetOutputPath(agent agent.Agent, outputPath string) string {
 	if outputPath == "" {
+		// Default to agent-provided command path.
+		// For Roo, this now returns a directory path for non-concatenated outputs.
 		return agent.CommandPath(p.userScope)
 	}
 	return outputPath

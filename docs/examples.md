@@ -43,7 +43,8 @@ projects:
           # Directory path (trailing slash) = separate files
           - agent: claude
             outputPath: ".claude/commands/"  # Outputs to directory with separate files
-          - agent: roo  # Outputs to single file .roomodes (default)
+          - agent: roo
+            outputPath: ".roo/commands/"  # Roo slash commands output to directory with separate files
 
 # User-level global configuration
 user:
@@ -67,7 +68,8 @@ user:
       outputs:
         - agent: claude
           outputPath: "~/.claude/commands/"  # Directory path (trailing slash) = separate files
-        - agent: roo  # Default path for user commands (concatenated)
+        - agent: roo
+          outputPath: "~/.roo/commands/"  # Roo slash commands default to per-file directory outputs
 ```
 
 ## Simplified Configuration Example

@@ -3,6 +3,7 @@ package agent
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/uphy/agent-sync/internal/frontmatter"
 	"github.com/uphy/agent-sync/internal/model"
@@ -42,84 +43,49 @@ func (r *Roo) FormatMemory(content string) (string, error) {
 	return content, nil
 }
 
-// FormatCommand processes command definitions for Roo agent
+// RooSlashMeta is a simple struct for Roo-specific metadata.
+type RooSlashMeta struct {
+	ArgumentHint string `yaml:"argument-hint,omitempty"`
+}
+
+// FormatCommand processes command definitions for Roo agent (slash command markdown)
 func (r *Roo) FormatCommand(commands []model.Command) (string, error) {
-	// Define structs that match our desired YAML output structure
-	type CustomMode struct {
-		Slug               string `yaml:"slug"`
-		Name               string `yaml:"name"`
-		Description        string `yaml:"description"`
-		RoleDefinition     string `yaml:"roleDefinition"`
-		WhenToUse          string `yaml:"whenToUse"`
-		Groups             any    `yaml:"groups"`
-		CustomInstructions string `yaml:"customInstructions"`
+	// Concatenate multiple command files with a blank line between each output
+	var outputs []string
+	for _, cmd := range commands {
+		var meta RooSlashMeta
+		// Populate from roo section. Ignore error if section is missing.
+		_ = cmd.UnmarshalSection("roo", &meta) // roo: argument-hint
+
+		body := strings.TrimLeft(cmd.Content, "\n")
+
+		// Use top-level description from Command.Description per user feedback.
+		desc := cmd.Description
+
+		// Emit body only if both fields are empty
+		if desc == "" && meta.ArgumentHint == "" {
+			outputs = append(outputs, body)
+			continue
+		}
+
+		// Build frontmatter map conditionally
+		fmMap := map[string]any{}
+		if desc != "" {
+			fmMap["description"] = desc
+		}
+		if meta.ArgumentHint != "" {
+			fmMap["roo"] = map[string]any{
+				"argument-hint": meta.ArgumentHint,
+			}
+		}
+
+		yml, err := frontmatter.Wrap(fmMap)
+		if err != nil {
+			return "", fmt.Errorf("failed to render Roo slash command frontmatter: %w", err)
+		}
+		outputs = append(outputs, strings.TrimRight(yml, "\n")+"\n"+body)
 	}
-	type RooConfig struct {
-		CustomModes []CustomMode `yaml:"customModes"`
-	}
-
-	clean := func(s string) string {
-		if s != "" && s[0] == '\n' {
-			return s[1:]
-		}
-		return s
-	}
-
-	config := RooConfig{
-		CustomModes: make([]CustomMode, 0, len(commands)),
-	}
-
-	for i, cmd := range commands {
-		// Extract 'roo' section from generic frontmatter
-		var section struct {
-			Slug           string `yaml:"slug"`
-			Name           string `yaml:"name"`
-			Description    string `yaml:"description"`
-			RoleDefinition string `yaml:"roleDefinition"`
-			WhenToUse      string `yaml:"whenToUse"`
-			Groups         any    `yaml:"groups"`
-		}
-		if cmd.Raw != nil {
-			_ = cmd.UnmarshalSection("roo", &section)
-		}
-
-		// Validation for required fields
-		if section.Slug == "" {
-			return "", fmt.Errorf("command at index %d missing required field 'slug'", i)
-		}
-		if section.Name == "" {
-			return "", fmt.Errorf("command at index %d missing required field 'name'", i)
-		}
-		if section.RoleDefinition == "" {
-			return "", fmt.Errorf("command at index %d missing required field 'roleDefinition'", i)
-		}
-
-		// Fallback description to common one when empty
-		if section.Description == "" && cmd.Description != "" {
-			section.Description = cmd.Description
-		}
-
-		cm := CustomMode{
-			Slug:               section.Slug,
-			Name:               section.Name,
-			Description:        clean(section.Description),
-			RoleDefinition:     clean(section.RoleDefinition),
-			WhenToUse:          clean(section.WhenToUse),
-			Groups:             section.Groups,
-			CustomInstructions: clean(cmd.Content),
-		}
-		if cm.Groups == nil {
-			cm.Groups = []string{}
-		}
-		config.CustomModes = append(config.CustomModes, cm)
-	}
-
-	// Marshal the struct to YAML using shared helper (no fences for Roo)
-	yml, err := frontmatter.RenderYAML(config)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal Roo commands to YAML: %w", err)
-	}
-	return yml, nil
+	return strings.Join(outputs, "\n\n"), nil
 }
 
 // MemoryPath returns the default path for Roo agent memory files
@@ -127,12 +93,12 @@ func (r *Roo) MemoryPath(userScope bool) string {
 	return ".roo/rules/"
 }
 
-// CommandPath returns the default path for Roo agent command files
+// CommandPath returns the default path for Roo agent command files (directory, non-concatenated)
 func (r *Roo) CommandPath(userScope bool) string {
 	if userScope {
-		return "Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml"
+		return "~/.roo/commands/"
 	}
-	return ".roomodes"
+	return ".roo/commands/"
 }
 
 // FormatMode processes mode definitions for Roo agent
@@ -212,3 +178,5 @@ func (r *Roo) FormatMode(modes []model.Mode) (string, error) {
 func (r *Roo) ModePath(userScope bool) string {
 	return ""
 }
+
+// Legacy compatibility for slash commands removed: only top-level 'description' and 'roo.argument-hint' are supported.

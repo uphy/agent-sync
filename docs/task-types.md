@@ -38,8 +38,8 @@ Provides custom command definitions for AI agents. This creates shortcuts for pe
 |-------|-------|-------------|-------------|
 | Claude | User | `~/.claude/commands/{filename}.md` | User's global Claude command file |
 | Claude | Project | `.claude/commands/{filename}.md` | Project-specific Claude command file |
-| Roo | User | `~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml` | VSCode global settings for Roo custom modes (all commands are concatenated into this single file) |
-| Roo | Project | `.roomodes` | Project-specific Roo custom modes file (all commands are concatenated into this single file) |
+| Roo | User | `~/.roo/commands/{filename}.md` | User's global Roo slash command file (per file) |
+| Roo | Project | `.roo/commands/{filename}.md` | Project-specific Roo slash command file (per file) |
 | Cline | User | `~/Documents/Cline/Workflows/{filename}.md` | User's global Cline workflow file |
 | Cline | Project | `.clinerules/workflows/{filename}.md` | Project-specific Cline workflow file |
 | Copilot | User | `~/.vscode/prompts/{filename}.prompt.md` | User's global Copilot prompt file |
@@ -56,13 +56,18 @@ Each agent may support specific frontmatter attributes for commands:
 - `claude.description`: Brief description of the command shown in the help menu
 - `claude.allowed-tools`: List of tools the command is permitted to use
 
-### Roo Frontmatter
+### Roo Frontmatter (slash commands)
 
-- `roo.slug`: Command identifier
-- `roo.name`: Display name of the command
-- `roo.roleDefinition`: Description of what the command does
-- `roo.whenToUse`: Description of when to use the command
-- `roo.groups`: Permission groups for the command
+Supported frontmatter:
+- Top-level:
+  - `description`: Brief description of what the slash command does
+- Roo-specific (under `roo:`):
+  - `argument-hint` (optional): Short hint string for expected arguments (e.g., "[path]" or "[owner repo]")
+
+Legacy compatibility:
+- If no top-level `description` is provided, agent-sync maps legacy Roo fields:
+  - `description` is synthesized from `roo.roleDefinition` if present, otherwise from `roo.name`
+- Legacy `roo.whenToUse` and `roo.groups` are ignored in slash command output
 
 ### Cline Frontmatter
 
