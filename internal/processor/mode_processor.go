@@ -61,10 +61,10 @@ func (p *ModeProcessor) Process(inputs []string, cfg *OutputConfig) (*TaskResult
 				relPath: relPath,
 				Content: formatted,
 			})
+		} else {
+			// Store for potential concatenation
+			modes = append(modes, *mode)
 		}
-
-		// Store for potential concatenation
-		modes = append(modes, *mode)
 	}
 
 	// Handle file mode output (concatenated content via agent formatter)

@@ -21,54 +21,55 @@ func NewMemoryProcessor(base *BaseProcessor) *MemoryProcessor {
 }
 
 // Process implements the task processing for memory task type
+// Preserve external behavior (output shape, concatenation rules, default paths)
+// while aligning the internal flow with command_processor.go / mode_processor.go.
 func (p *MemoryProcessor) Process(inputs []string, cfg *OutputConfig) (*TaskResult, error) {
-	// Render templates for all input files
-	var renderedOutputs []string
+	concatParts := make([]string, 0, len(inputs))
+	result := &TaskResult{Files: []ProcessedFile{}}
+
 	for _, input := range inputs {
 		absInputPath := filepath.Join(p.absInputRoot, input)
+
+		// Read and parse the command
+		inputContent, err := p.fs.ReadFile(absInputPath)
+		if err != nil {
+			return nil, fmt.Errorf("read input file %s: %w", absInputPath, err)
+		}
+
 		adapter := NewFSAdapter(p.fs)
 		engine := template.NewEngine(adapter, cfg.AgentName, p.absInputRoot, p.registry)
-		out, err := engine.ExecuteFile(absInputPath, nil)
+		out, err := engine.Execute(absInputPath, string(inputContent), nil)
 		if err != nil {
 			return nil, fmt.Errorf("template execute %s: %w", input, err)
 		}
-		renderedOutputs = append(renderedOutputs, out)
-	}
 
-	result := &TaskResult{
-		Files: []ProcessedFile{},
-	}
-
-	// Process outputs for directory mode (individual files)
-	memories := make([]string, 0, len(inputs))
-	for i, input := range inputs {
-		memory, err := cfg.Agent.FormatMemory(renderedOutputs[i])
-		if err != nil {
-			return nil, fmt.Errorf("format memory for agent %s: %w", cfg.AgentName, err)
-		}
-
-		// If directory mode, add each input as a separate file
 		if cfg.IsDirectory {
+			// Directory output: format and emit per file
+			formatted, err := cfg.Agent.FormatMemory(out)
+			if err != nil {
+				return nil, fmt.Errorf("format memory for agent %s: %w", cfg.AgentName, err)
+			}
 			relPath := filepath.Join(cfg.RelPath, filepath.Base(input))
 			result.Files = append(result.Files, ProcessedFile{
 				relPath: relPath,
-				Content: memory,
+				Content: formatted,
 			})
+		} else {
+			// File output: accumulate to concatenate later
+			concatParts = append(concatParts, out)
 		}
-
-		// Save all memories for potential concatenation
-		memories = append(memories, memory)
 	}
 
-	// Process output for file mode (concatenated content)
+	// If not directory, perform single formatting on concatenated content like command_processor
 	if !cfg.IsDirectory {
-		memory, err := cfg.Agent.FormatMemory(strings.Join(memories, "\n\n"))
+		joined := strings.Join(concatParts, "\n\n")
+		formatted, err := cfg.Agent.FormatMemory(joined)
 		if err != nil {
 			return nil, fmt.Errorf("format memory for agent %s: %w", cfg.AgentName, err)
 		}
 		result.Files = append(result.Files, ProcessedFile{
 			relPath: cfg.RelPath,
-			Content: memory,
+			Content: formatted,
 		})
 	}
 

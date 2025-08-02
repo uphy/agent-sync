@@ -61,10 +61,10 @@ func (p *CommandProcessor) Process(inputs []string, cfg *OutputConfig) (*TaskRes
 				relPath: relPath,
 				Content: formattedCmd,
 			})
+		} else {
+			// Store commands for potential concatenation
+			cmds = append(cmds, *cmd)
 		}
-
-		// Store commands for potential concatenation
-		cmds = append(cmds, *cmd)
 	}
 
 	// Handle file mode output (concatenated content)
