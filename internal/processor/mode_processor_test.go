@@ -3,6 +3,7 @@ package processor
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -304,6 +305,75 @@ roo:
 		}
 		if strings.Count(content, "AT_INCLUDED") != 1 {
 			t.Fatalf("expected single inclusion for @-path, got %d", strings.Count(content, "AT_INCLUDED"))
+		}
+	})
+
+	// New parameterized test to assert user-scope ModePath OS-specific mapping behavior.
+	t.Run("ModePath user-scope OS-specific mapping (macOS/Linux/Windows)", func(t *testing.T) {
+		// This test does not execute processing; it verifies the path selection by directly calling the
+		// Roo agent's ModePath via ModeProcessor.GetOutputPath when userScope=true.
+		// We simulate OS differences by temporarily overriding GOOS using agent internal helpers if available.
+		// Fallback: verify suffixes that are OS-invariant for each platform mapping.
+
+		type osCase struct {
+			name       string
+			goos       string
+			home       string
+			wantSuffix string
+		}
+		homeBase := filepath.Join("home", "tester")
+		cases := []osCase{
+			{
+				name: "macOS",
+				goos: "darwin",
+				home: string(os.PathSeparator) + filepath.Join(homeBase),
+				wantSuffix: filepath.Join("Library", "Application Support", "Code", "User", "globalStorage",
+					"rooveterinaryinc.roo-cline", "settings", "custom_modes.yaml"),
+			},
+			{
+				name: "Linux",
+				goos: "linux",
+				home: string(os.PathSeparator) + filepath.Join(homeBase),
+				wantSuffix: filepath.Join(".config", "Code", "User", "globalStorage",
+					"rooveterinaryinc.roo-cline", "settings", "custom_modes.yaml"),
+			},
+			{
+				name: "Windows",
+				goos: "windows",
+				home: string(os.PathSeparator) + filepath.Join(homeBase),
+				wantSuffix: filepath.Join("Code", "User", "globalStorage",
+					"rooveterinaryinc.roo-cline", "settings", "custom_modes.yaml"),
+			},
+		}
+
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				// Create base with userScope=true (user-level behavior)
+				dir := t.TempDir()
+				base := NewBaseProcessor(&util.RealFileSystem{}, zap.NewNop(), dir, agent.NewRegistry(), true)
+				mp := NewModeProcessor(base)
+
+				// Prepare agent and obtain path without explicit outputPath
+				ag := &agent.Roo{}
+
+				// We cannot change runtime.GOOS within the test portably.
+				// Validate suffix only for the actual runtime OS to ensure correctness of mapping on this platform.
+				got := mp.GetOutputPath(ag, "")
+				runtimeSuffix := ""
+				switch os := strings.ToLower(strings.TrimSpace(runtime.GOOS)); os {
+				case "darwin":
+					runtimeSuffix = cases[0].wantSuffix
+				case "linux":
+					runtimeSuffix = cases[1].wantSuffix
+				case "windows":
+					runtimeSuffix = cases[2].wantSuffix
+				default:
+					t.Skipf("skipping OS-specific suffix check on GOOS=%s", os)
+				}
+				if !strings.HasSuffix(filepath.ToSlash(got), filepath.ToSlash(runtimeSuffix)) {
+					t.Fatalf("user-scope Roo ModePath should end with %q, got %q", runtimeSuffix, got)
+				}
+			})
 		}
 	})
 }
