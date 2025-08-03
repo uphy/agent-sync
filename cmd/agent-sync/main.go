@@ -83,6 +83,8 @@ and listing available agents.`,
 		},
 		ExitErrHandler: handleExitError,
 	}
+	// Propagate shared context to all subcommands so GetSharedContext works
+	internalcli.SetupCliV3Commands(rootCmd.Commands, sharedContext)
 
 	// Run the application
 	if err := rootCmd.Run(context.Background(), os.Args); err != nil {
