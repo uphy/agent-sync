@@ -19,7 +19,7 @@ These flags can be used with any command:
 | `--verbose, -v` | Enable verbose output |
 | `--log-file` | Log file path |
 | `--log-level` | Log level (debug, info, warn, error) |
-| `--debug` | Set log level to debug (shorthand for --log-level=debug) |
+| `--debug` | Set log level to debug (shorthand for --log-level=debug and enables console output same as --verbose) |
 
 ## Environment Variables
 
@@ -68,8 +68,14 @@ agent-sync init
 
 **Applying with debug logs:**
 ```bash
-agent-sync apply --debug --log-file apply.log
+# Shorthand: sets level=debug and enables console output (implies verbose)
+agent-sync apply --debug
+
+# Equivalent explicit form (debug level + console output)
+agent-sync apply --log-level debug --verbose
 ```
+
+Note: `--log-level debug` without `--verbose` does not enable console output; `--debug` implies verbose and will enable console output.
 
 **Dry run to preview changes:**
 ```bash

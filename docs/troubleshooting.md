@@ -31,7 +31,7 @@ agent-sync recognizes the following environment variables:
 ## Debugging Tips
 
 1. **Use `--dry-run`**: Preview what would be generated without writing files
-2. **Enable debug logging**: Use `--debug` or `--log-level=debug` for detailed logs
+2. **Enable debug logging**: Use `--debug` for a shorthand that sets level to debug and enables console output, or use `--log-level=debug --verbose` explicitly
 3. **Check output path formatting**: Remember that paths ending with `/` are treated as directories, while paths without are treated as files
 4. **Check file permissions**: Ensure you have read permissions for input files and write permissions for output directories
 5. **Examine template processing**: If you suspect issues with templates, try creating simpler templates first to isolate the problem
@@ -64,7 +64,10 @@ Example of using dry-run to debug configuration issues:
 agent-sync apply --dry-run
 
 # If you need more details, combine with debug logging
+# Shorthand (debug level + console output)
 agent-sync apply --dry-run --debug
+# Equivalent explicit form
+agent-sync apply --dry-run --log-level debug --verbose
 ```
 
 This helps identify issues such as:

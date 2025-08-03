@@ -69,7 +69,7 @@ and listing available agents.`,
 			},
 			&cli.BoolFlag{
 				Name:    "debug",
-				Usage:   "Set log level to debug (shorthand for --log-level=debug)",
+				Usage:   "Enable debug logging (shorthand for --log-level=debug and --verbose)",
 				Sources: cli.EnvVars("AGENT_SYNC_DEBUG"),
 			},
 		},
@@ -124,10 +124,15 @@ func initializeLogging(ctx context.Context, cmd *cli.Command) (context.Context, 
 		logConfig.Enabled = true
 	}
 
-	// Handle debug mode flag (takes precedence over log-level)
+	// Handle debug mode flag (takes precedence over log-level) and also force verbose console
 	if debugMode {
 		logLevel = "debug"
 		logConfig.Enabled = true
+		// Force console and verbose for shorthand behavior
+		logConfig.ConsoleOutput = true
+		logConfig.Verbose = true
+		// Also reflect in shared context for downstream usage
+		sharedContext.Debug = true
 	}
 
 	// Process log level
@@ -147,8 +152,9 @@ func initializeLogging(ctx context.Context, cmd *cli.Command) (context.Context, 
 		logConfig.ConsoleOutput = true
 	}
 
-	// Ensure console output is enabled for debug logs even when not in verbose mode
-	if logConfig.Level == log.DebugLevel || debugMode {
+	// Ensure console output is enabled for debug logs.
+	// Note: when debugMode shorthand is set, we already forced ConsoleOutput above.
+	if logConfig.Level == log.DebugLevel {
 		logConfig.ConsoleOutput = true
 	}
 

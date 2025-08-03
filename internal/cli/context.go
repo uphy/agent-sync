@@ -14,6 +14,10 @@ type Context struct {
 
 	// Output is used for user-facing console output
 	Output log.OutputWriter
+
+	// Debug indicates whether debug shorthand was requested.
+	// When true, logging should be forced to debug level and console verbose enabled.
+	Debug bool
 }
 
 // SetupCliV3Commands registers all commands for the urfave/cli/v3 version

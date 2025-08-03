@@ -21,7 +21,13 @@ This guide explains how to configure and use logging features in agent-sync.
 
 By default, agent-sync operates silently with no console output. To enable output, use one of these options:
 
-1. Use the `--verbose` flag to show output in your terminal:
+1. Use the `--debug` flag to both set the level to DEBUG and enable console output (shorthand for `--log-level=debug --verbose`):
+
+```bash
+agent-sync apply --debug
+```
+
+2. Use the `--verbose` flag to show output in your terminal at the configured/default level:
 
 ```bash
 agent-sync apply --verbose
@@ -31,7 +37,7 @@ The `--verbose` flag does two important things:
 - Enables the logging system (sets `Enabled = true`)
 - Sets console output to be displayed in your terminal
 
-2. Use the `--log-file` flag to save logs to a file:
+3. Use the `--log-file` flag to save logs to a file:
 
 ```bash
 agent-sync apply --log-file apply.log
@@ -46,7 +52,11 @@ When enabled, output includes visual indicators:
 **Troubleshooting DEBUG visibility:** If you don't see DEBUG logs when using `--verbose`, explicitly set the level and force console output:
 
 ```bash
+# Explicit form
 agent-sync apply --log-level debug --verbose
+
+# Or simply use the shorthand
+agent-sync apply --debug
 ```
 
 If running via a wrapper or CI where stdout may be filtered, ensure console output is enabled by configuration or environment variables. You can also set environment variables persistently:
@@ -72,13 +82,16 @@ You can configure logging behavior in two ways:
 These flags provide immediate control for a single command:
 
 ```bash
-# Increase logging detail
+# Quick: level=debug + console output on
+agent-sync apply --debug
+
+# Increase logging detail (level only; console remains off unless --verbose is added)
 agent-sync apply --log-level debug
 
 # Save logs to a file
 agent-sync apply --log-file ./logs/agent-sync.log
 
-# Display more detailed messages
+# Display more detailed messages (console on at configured/default level)
 agent-sync apply --verbose
 ```
 
@@ -131,6 +144,10 @@ When logging to a file, you can control:
 When something isn't working as expected:
 
 ```bash
+# Convenient shorthand
+agent-sync apply --debug --log-file debug.log
+
+# Equivalent explicit form
 agent-sync apply --log-level debug --log-file debug.log --verbose
 ```
 
@@ -187,7 +204,7 @@ For minimal output when running in scripts or automated environments, simply don
 
 2. **Missing detailed information**
    - Ensure log level is set to `debug`
-   - Enable verbose output with `--verbose`
+   - Enable console output with `--verbose`, or just use `--debug` (which implies verbose)
 
 3. **Too much log information**
    - Increase log level to `warn` or `error`
@@ -201,6 +218,10 @@ For minimal output when running in scripts or automated environments, simply don
 If you encounter issues with logging, try running with debug level to get more information:
 
 ```bash
+# Shorthand
+agent-sync --debug apply
+
+# Equivalent explicit form
 agent-sync --log-level debug --verbose apply
 ```
 
@@ -236,10 +257,11 @@ This command is valuable for developers who need to verify the logging system is
 
 | Option | CLI Flag | Env Variable | Description | Default |
 |--------|----------|--------------|-------------|---------|
-| Logging Enabled | `--verbose` | - | Enable/disable logging | `false` |
+| Logging Enabled | `--verbose` | - | Enable/disable logging (console output) | `false` |
+| Debug Shortcut | `--debug` | - | Set level=debug and enable console output (shorthand for `--log-level=debug --verbose`) | - |
 | Log Level | `--log-level` | `AGENT_SYNC_LOG_LEVEL` | Logging detail (debug, info, warn, error) | `info` |
 | Log File | `--log-file` | `AGENT_SYNC_LOG_FILE` | Path to save logs | - |
-| Verbose | `--verbose` | - | Show detailed messages | `false` |
+| Verbose | `--verbose` | - | Show detailed messages (console output) | `false` |
 
 ## Navigation
 

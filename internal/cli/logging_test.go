@@ -32,10 +32,10 @@ func TestInitializeLogging(t *testing.T) {
 			expectError:     false,
 		},
 		{
-			name:            "With debug flag",
+			name:            "With debug flag (shorthand forces verbose console)",
 			args:            []string{"app", "--debug"},
 			expectedLevel:   "debug",
-			expectedVerbose: false,
+			expectedVerbose: true,
 			expectError:     false,
 		},
 		{

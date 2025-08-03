@@ -13,6 +13,9 @@ import (
 
 // InitializeLogging sets up logging based on command-line flags and environment variables.
 // This function is designed to be used as the Before hook in urfave/cli applications.
+// Behavior:
+// - --debug acts as shorthand for --log-level=debug and --verbose (forces console + verbose)
+// - --log-level debug without --verbose sets level internally but does not enable console unless explicitly requested elsewhere
 func InitializeLogging(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	// Initialize logging configuration based on command line flags and environment variables
 	logConfig := log.DefaultConfig()
@@ -48,10 +51,14 @@ func InitializeLogging(ctx context.Context, cmd *cli.Command) (context.Context, 
 		logConfig.Enabled = true
 	}
 
-	// Handle debug mode flag (takes precedence over log-level)
+	// Handle debug mode flag (takes precedence over log-level) and force verbose console
 	if debugMode {
 		logLevel = "debug"
 		logConfig.Enabled = true
+		logConfig.ConsoleOutput = true
+		logConfig.Verbose = true
+		// reflect into shared context for downstream usage
+		sharedContext.Debug = true
 	}
 
 	// Process log level
@@ -71,8 +78,9 @@ func InitializeLogging(ctx context.Context, cmd *cli.Command) (context.Context, 
 		logConfig.ConsoleOutput = true
 	}
 
-	// Ensure console output is enabled for debug logs even when not in verbose mode
-	if logConfig.Level == log.DebugLevel || debugMode {
+	// Ensure console output is enabled for debug level only if level is debug.
+	// Note: when debugMode shorthand is active, ConsoleOutput already true above.
+	if logConfig.Level == log.DebugLevel {
 		logConfig.ConsoleOutput = true
 	}
 
