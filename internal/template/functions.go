@@ -130,12 +130,17 @@ func (e *Engine) resolveTemplatePath(patterns []string) ([]string, error) {
 			prefix = "!"
 		}
 
+		// Guard against absolute paths per template path rules
+		if filepath.IsAbs(path) {
+			return nil, fmt.Errorf("absolute paths are not allowed in template include/reference paths: %q", path)
+		}
+
 		if trimmed, ok := strings.CutPrefix(path, "@/"); ok {
 			// Handle "@/"-prefixed paths as relative to BasePath
-			resolvedPatterns[i] = prefix + filepath.Join(e.absTemplateBaseDir, trimmed)
+			resolvedPatterns[i] = prefix + util.JoinPath(e.absTemplateBaseDir, trimmed)
 		} else {
 			// Handle explicitly relative paths (./ or ../) relative to current file
-			resolvedPatterns[i] = prefix + filepath.Join(filepath.Dir(e.absCurrentFilePath), path)
+			resolvedPatterns[i] = prefix + util.JoinPath(filepath.Dir(e.absCurrentFilePath), path)
 		}
 	}
 	return e.FileResolver.Glob(resolvedPatterns)

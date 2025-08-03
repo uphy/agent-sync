@@ -74,7 +74,12 @@ func processGeneric[T any](
 
 	items := make([]T, 0, len(inputs))
 	for _, input := range inputs {
-		absInputPath := filepath.Join(p.absInputRoot, input)
+		var absInputPath string
+		if filepath.IsAbs(input) {
+			absInputPath = filepath.Clean(input)
+		} else {
+			absInputPath = util.JoinPath(p.absInputRoot, input)
+		}
 
 		// Read file
 		raw, err := p.fs.ReadFile(absInputPath)

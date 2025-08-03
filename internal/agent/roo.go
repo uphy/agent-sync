@@ -3,6 +3,7 @@ package agent
 import (
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/uphy/agent-sync/internal/frontmatter"
@@ -163,8 +164,29 @@ func (r *Roo) FormatMode(modes []model.Mode) (string, error) {
 }
 
 // ModePath returns the default path for Roo agent mode files
+// Project scope aggregates into a single file ".roomodes"
+// User scope aggregates into VS Code globalStorage custom_modes.yaml under the user's home directory
 func (r *Roo) ModePath(userScope bool) string {
-	return ""
+	if !userScope {
+		// Project scope: single aggregated file in project root
+		return ".roomodes"
+	}
+	// User scope: platform-specific VS Code globalStorage path (relative to home)
+	// macOS: ~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml
+	// Linux: ~/.config/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml
+	// Windows: %APPDATA%\Code\User\globalStorage\rooveterinaryinc.roo-cline\settings\custom_modes.yaml
+	switch os := runtime.GOOS; os {
+	case "darwin":
+		return filepath.Join("Library", "Application Support", "Code", "User", "globalStorage", "rooveterinaryinc.roo-cline", "settings", "custom_modes.yaml")
+	case "linux":
+		return filepath.Join(".config", "Code", "User", "globalStorage", "rooveterinaryinc.roo-cline", "settings", "custom_modes.yaml")
+	case "windows":
+		// Return a relative path under APPDATA; pipeline will resolve against home for user scope
+		return filepath.Join("AppData", "Roaming", "Code", "User", "globalStorage", "rooveterinaryinc.roo-cline", "settings", "custom_modes.yaml")
+	default:
+		// Fallback to Linux-like path
+		return filepath.Join(".config", "Code", "User", "globalStorage", "rooveterinaryinc.roo-cline", "settings", "custom_modes.yaml")
+	}
 }
 
 // Legacy compatibility for slash commands removed: only top-level 'description' and 'roo.argument-hint' are supported.

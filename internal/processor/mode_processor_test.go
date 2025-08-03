@@ -78,10 +78,12 @@ Body 2
 
 		cfg := &OutputConfig{
 			Agent:       &agent.Roo{},
-			RelPath:     "", // let GetOutputPath decide default
+			RelPath:     "",
 			IsDirectory: false,
 			AgentName:   "roo",
 		}
+		// Fill default RelPath like production pipeline would
+		cfg.RelPath = mp.GetOutputPath(cfg.Agent, cfg.RelPath)
 
 		result, err := mp.Process([]string{in1, in2}, cfg)
 		if err != nil {
@@ -113,10 +115,11 @@ Body 2
 
 		cfg := &OutputConfig{
 			Agent:       &agent.Roo{},
-			RelPath:     "", // default
+			RelPath:     "",
 			IsDirectory: false,
 			AgentName:   "roo",
 		}
+		cfg.RelPath = mp.GetOutputPath(cfg.Agent, cfg.RelPath)
 
 		result, err := mp.Process([]string{in1}, cfg)
 		if err != nil {
@@ -133,6 +136,174 @@ Body 2
 		}
 		if !strings.Contains(result.Files[0].Content, "slug: code-reviewer") {
 			t.Fatalf("aggregated YAML missing expected slug content, got:\n%s", result.Files[0].Content)
+		}
+	})
+
+	// New tests for template path resolution in mode processing
+
+	t.Run("relative include resolves without duplication", func(t *testing.T) {
+		dir := t.TempDir()
+		// config/base path
+		base := NewBaseProcessor(&util.RealFileSystem{}, zap.NewNop(), dir, agent.NewRegistry(), false)
+		mp := NewModeProcessor(base)
+
+		// Create fragment under modes/frags/part.md
+		fragsDir := filepath.Join(dir, "modes", "frags")
+		if err := os.MkdirAll(fragsDir, 0o755); err != nil {
+			t.Fatalf("mkdir frags: %v", err)
+		}
+		fragPath := filepath.Join(fragsDir, "part.md")
+		if err := os.WriteFile(fragPath, []byte("INCLUDED_PART"), 0o644); err != nil {
+			t.Fatalf("write frag: %v", err)
+		}
+
+		// Mode file includes via relative path "./frags/part.md"
+		modeBody := `---
+roo:
+  slug: rel-include
+  name: Rel Include
+  description: Test
+  roleDefinition: Test
+  whenToUse: Test
+  groups: []
+---
+{{ include "./frags/part.md" }}
+`
+		modePath := filepath.Join(dir, "modes", "rel.md")
+		if err := os.WriteFile(modePath, []byte(modeBody), 0o644); err != nil {
+			t.Fatalf("write mode: %v", err)
+		}
+
+		cfg := &OutputConfig{
+			Agent:       &agent.Roo{},
+			RelPath:     "",
+			IsDirectory: false,
+			AgentName:   "roo",
+		}
+		cfg.RelPath = mp.GetOutputPath(cfg.Agent, cfg.RelPath)
+
+		result, err := mp.Process([]string{modePath}, cfg)
+		if err != nil {
+			t.Fatalf("process error: %v", err)
+		}
+		if result == nil || len(result.Files) != 1 {
+			t.Fatalf("expected aggregated file")
+		}
+		content := result.Files[0].Content
+		// Ensure included content appears and only once (simple duplication guard)
+		if !strings.Contains(content, "INCLUDED_PART") {
+			t.Fatalf("expected included content")
+		}
+		if strings.Count(content, "INCLUDED_PART") != 1 {
+			t.Fatalf("expected single inclusion, got %d", strings.Count(content, "INCLUDED_PART"))
+		}
+	})
+
+	t.Run("absolute include path is rejected", func(t *testing.T) {
+		dir := t.TempDir()
+		base := NewBaseProcessor(&util.RealFileSystem{}, zap.NewNop(), dir, agent.NewRegistry(), false)
+		mp := NewModeProcessor(base)
+
+		// Create an absolute path to include
+		fragAbs := filepath.Join(dir, "absFrag.md")
+		if err := os.WriteFile(fragAbs, []byte("ABS"), 0o644); err != nil {
+			t.Fatalf("write abs frag: %v", err)
+		}
+
+		modeBody := `---
+roo:
+  slug: abs-include
+  name: Abs Include
+  description: Test
+  roleDefinition: Test
+  whenToUse: Test
+  groups: []
+---
+{{ include "` + filepath.ToSlash(fragAbs) + `" }}
+`
+		modePath := filepath.Join(dir, "modes", "abs.md")
+		if err := os.MkdirAll(filepath.Dir(modePath), 0o755); err != nil {
+			t.Fatalf("mkdir modes: %v", err)
+		}
+		if err := os.WriteFile(modePath, []byte(modeBody), 0o644); err != nil {
+			t.Fatalf("write mode: %v", err)
+		}
+
+		cfg := &OutputConfig{
+			Agent:       &agent.Roo{},
+			RelPath:     "",
+			IsDirectory: false,
+			AgentName:   "roo",
+		}
+		cfg.RelPath = mp.GetOutputPath(cfg.Agent, cfg.RelPath)
+
+		_, err := mp.Process([]string{modePath}, cfg)
+		if err == nil {
+			t.Fatalf("expected error for absolute include path")
+		}
+		wantSub := "absolute paths are not allowed in template include/reference paths"
+		if !strings.Contains(err.Error(), wantSub) {
+			t.Fatalf("expected error to contain %q, got %v", wantSub, err)
+		}
+	})
+
+	t.Run("@-prefix include resolves from config base without duplication", func(t *testing.T) {
+		dir := t.TempDir()
+		// BasePath = dir (config directory)
+		base := NewBaseProcessor(&util.RealFileSystem{}, zap.NewNop(), dir, agent.NewRegistry(), false)
+		mp := NewModeProcessor(base)
+
+		// Put shared fragment under config base at shared/part.md
+		sharedDir := filepath.Join(dir, "shared")
+		if err := os.MkdirAll(sharedDir, 0o755); err != nil {
+			t.Fatalf("mkdir shared: %v", err)
+		}
+		sharedFrag := filepath.Join(sharedDir, "part.md")
+		if err := os.WriteFile(sharedFrag, []byte("AT_INCLUDED"), 0o644); err != nil {
+			t.Fatalf("write shared frag: %v", err)
+		}
+
+		// Mode file that includes "@/shared/part.md" from a different subdir
+		modeBody := `---
+roo:
+  slug: at-include
+  name: At Include
+  description: Test
+  roleDefinition: Test
+  whenToUse: Test
+  groups: []
+---
+{{ include "@/shared/part.md" }}
+`
+		modePath := filepath.Join(dir, "modes", "at.md")
+		if err := os.MkdirAll(filepath.Dir(modePath), 0o755); err != nil {
+			t.Fatalf("mkdir modes: %v", err)
+		}
+		if err := os.WriteFile(modePath, []byte(modeBody), 0o644); err != nil {
+			t.Fatalf("write mode: %v", err)
+		}
+
+		cfg := &OutputConfig{
+			Agent:       &agent.Roo{},
+			RelPath:     "",
+			IsDirectory: false,
+			AgentName:   "roo",
+		}
+		cfg.RelPath = mp.GetOutputPath(cfg.Agent, cfg.RelPath)
+
+		result, err := mp.Process([]string{modePath}, cfg)
+		if err != nil {
+			t.Fatalf("process error: %v", err)
+		}
+		if result == nil || len(result.Files) != 1 {
+			t.Fatalf("expected aggregated file")
+		}
+		content := result.Files[0].Content
+		if !strings.Contains(content, "AT_INCLUDED") {
+			t.Fatalf("expected @-included content")
+		}
+		if strings.Count(content, "AT_INCLUDED") != 1 {
+			t.Fatalf("expected single inclusion for @-path, got %d", strings.Count(content, "AT_INCLUDED"))
 		}
 	})
 }
