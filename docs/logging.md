@@ -43,7 +43,25 @@ When enabled, output includes visual indicators:
 - `ℹ` General information
 - `✗` Error messages (red)
 
-**Note:** There is a known issue where DEBUG level logs may not appear even when logging is enabled with the `--verbose` flag. This issue is under investigation.
+**Troubleshooting DEBUG visibility:** If you don't see DEBUG logs when using `--verbose`, explicitly set the level and force console output:
+
+```bash
+agent-sync apply --log-level debug --verbose
+```
+
+If running via a wrapper or CI where stdout may be filtered, ensure console output is enabled by configuration or environment variables. You can also set environment variables persistently:
+
+```bash
+export AGENT_SYNC_LOG_LEVEL=debug
+```
+
+If you still do not see DEBUG logs:
+1) Verify logging is actually enabled (either `--verbose` flag or a non-empty `--log-file`)
+2) Prefer `--log-level debug --verbose` on the same command to guarantee the log level and console sink
+3) If running in terminals that suppress ANSI or buffer stdout, add `--log-file debug.log` and inspect the file
+4) On macOS, if messages are missing in integrated terminals, try running from a standalone shell
+
+This behavior results from output sinks and level configuration rather than a product bug.
 
 ## Configuration Methods
 

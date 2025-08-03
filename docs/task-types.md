@@ -57,13 +57,26 @@ Defines subagents/modes for compatible agents (Claude Code subagents and Roo cus
 |-------|-------|-------------|-------------|
 | Claude | User | `~/.claude/agents/` | User's global Claude modes; per-file markdown outputs (directory) |
 | Claude | Project | `.claude/agents/` | Project-specific Claude modes; per-file markdown outputs (directory) |
-| Roo | User | (platform-specific) VS Code globalStorage: `.../rooveterinaryinc.roo-cline/settings/custom_modes.yaml` | User's global Roo custom modes (single YAML aggregation) |
+| Roo | User | VS Code globalStorage: platform-specific `custom_modes.yaml` (see OS-specific paths below) | User's global Roo custom modes (single YAML aggregation) |
 | Roo | Project | `.roomodes` | Project-specific Roo custom modes (single YAML aggregation file) |
 
 Notes:
 - Directory path (trailing slash) = per-file outputs. File path (no trailing slash) = aggregation into a single file.
 - Roo modes default to aggregation into a single file: `.roomodes` for project scope, and `custom_modes.yaml` in VS Code globalStorage for user scope.
 - Claude modes default to per-file markdown outputs under `.claude/agents/` (project) or `~/.claude/agents/` (user).
+
+Roo mode output path details:
+- Project scope example (aggregation):
+  - `.roomodes` in the project root (single YAML file aggregating all modes)
+- User scope examples (aggregation to VS Code globalStorage custom_modes.yaml):
+  - macOS: `~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml`
+  - Linux: `~/.config/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml`
+  - Windows: `%APPDATA%\Code\User\globalStorage\rooveterinaryinc.roo-cline\settings\custom_modes.yaml`
+
+Trailing slash rule examples:
+- Directory (per-file): `".claude/agents/"` → each input mode becomes its own file
+- File (aggregation): `".roomodes"` → all input modes aggregated into one YAML file
+- For Roo modes, the defaults are aggregation-oriented (no trailing slash).
 
 
 

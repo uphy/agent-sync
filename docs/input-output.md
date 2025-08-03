@@ -92,9 +92,16 @@ The `outputPath` can be specified as either relative or absolute:
 - Absolute paths (starting with `/` on Unix or drive letters on Windows) are used as-is
 - Relative paths are resolved relative to each output directory
 
+Trailing slash rule and aggregation examples:
+- Directory (per-file outputs): `.claude/agents/` → each input mode becomes its own markdown file
+- File (aggregation): `.roomodes` → all input Roo modes aggregated into one YAML file
+- Memory per-file example: `.roo/rules/` → each input memory becomes its own file
+- Concatenated memory example: `.roo/rules/combined.md` → all input memories concatenated into one file
+
 For example:
 - `.roo/rules/` - Treated as a directory, each source file becomes a separate output file
 - `.roo/rules/combined.md` - Treated as a file, all source files are concatenated into one file
+- `.roomodes` - Treated as a single file aggregating all Roo modes in project scope
 - `/absolute/path/rules/` - Absolute path to a directory for separate output files
 
 If `outputPath` is not specified, the agent's default path is used (see "Default Output Path Behavior" sections below).
@@ -110,7 +117,7 @@ When no `outputPath` is specified, the following default paths are used. The pat
 | Claude | mode | `.claude/agents/` or `~/.claude/agents/` | Non-concatenated (directory path, per-mode files) |
 | Roo | memory | `.roo/rules/` | Non-concatenated (directory path) |
 | Roo | command | `.roo/commands/` or `~/.roo/commands/` | Non-concatenated (directory path; Roo slash commands per file) |
-| Roo | mode | `.roomodes` or (user) VS Code globalStorage `.../rooveterinaryinc.roo-cline/settings/custom_modes.yaml` | Concatenated (single file aggregation) |
+| Roo | mode | `.roomodes` (project; aggregation) or (user) VS Code globalStorage `custom_modes.yaml` (aggregation). User-scope OS-specific locations: macOS `~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml`, Linux `~/.config/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml`, Windows `%APPDATA%\Code\User\globalStorage\rooveterinaryinc.roo-cline\settings\custom_modes.yaml` | Concatenated (single file aggregation) |
 | Cline | memory | `.clinerules/` or `~/Documents/Cline/Rules/` | Non-concatenated (directory path) |
 | Cline | command | `.clinerules/workflows/` or `~/Documents/Cline/Workflows/` | Non-concatenated (directory path) |
 | Copilot | memory | `.github/copilot-instructions.md` or `~/.vscode/copilot-instructions.md` | Concatenated (file path) |
