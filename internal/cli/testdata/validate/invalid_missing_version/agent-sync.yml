@@ -1,0 +1,10 @@
+# Missing required configVersion on purpose
+outputDirs:
+  - .
+tasks:
+  - type: memory
+    inputs:
+      - "memories/*.md"
+    outputs:
+      - agent: roo
+        outputPath: ".roo/rules/"

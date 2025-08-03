@@ -1,0 +1,381 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "agent-sync Configuration Schema",
+    "description": "Schema for agent-sync configuration files",
+    "type": "object",
+    "properties": {
+        "configVersion": {
+            "type": "string",
+            "description": "Schema version of the configuration file",
+            "examples": [
+                "1.0"
+            ]
+        },
+        "projects": {
+            "type": "object",
+            "description": "Map of named project configurations where keys are project identifiers and values are project configuration objects",
+            "additionalProperties": {
+                "$ref": "#/definitions/ProjectConfig"
+            }
+        },
+        "user": {
+            "$ref": "#/definitions/UserConfig",
+            "description": "Global user-level configuration"
+        },
+        "outputDirs": {
+            "type": "array",
+            "description": "Output directories for simplified configuration format",
+            "items": {
+                "type": "string"
+            }
+        },
+        "tasks": {
+            "type": "array",
+            "description": "Generation tasks for simplified configuration format",
+            "items": {
+                "$ref": "#/definitions/Task"
+            }
+        }
+    },
+    "allOf": [
+        {
+            "required": [
+                "configVersion"
+            ]
+        }
+    ],
+    "definitions": {
+        "ProjectConfig": {
+            "type": "object",
+            "properties": {
+                "outputDirs": {
+                    "type": "array",
+                    "description": "Output directories where generated files will be placed. Supports tilde (~) expansion for home directory. Both absolute and relative paths are supported; relative paths are resolved relative to the configuration file directory and converted to absolute paths internally",
+                    "items": {
+                        "type": "string"
+                    },
+                    "minItems": 1
+                },
+                "tasks": {
+                    "type": "array",
+                    "description": "List of generation tasks for this project",
+                    "items": {
+                        "$ref": "#/definitions/Task"
+                    },
+                    "minItems": 1
+                }
+            },
+            "required": [
+                "outputDirs",
+                "tasks"
+            ]
+        },
+        "UserConfig": {
+            "type": "object",
+            "properties": {
+                "tasks": {
+                    "type": "array",
+                    "description": "List of generation tasks for user scope",
+                    "items": {
+                        "$ref": "#/definitions/Task"
+                    }
+                },
+                "home": {
+                    "type": "string",
+                    "description": "Optional override for the user's home directory, primarily for debugging purposes"
+                }
+            },
+            "required": [
+                "tasks"
+            ]
+        },
+        "Task": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Optional identifier for the task. If not provided, a default name is automatically generated: for project tasks, '{project-name}-{type}' (e.g., 'my-project-memory'); for user tasks, 'user-{type}' (e.g., 'user-command')"
+                },
+                "type": {
+                    "type": "string",
+                    "description": "Type of task: 'command', 'memory', or 'mode'",
+                    "enum": [
+                        "command",
+                        "memory",
+                        "mode"
+                    ]
+                },
+                "inputs": {
+                    "type": "array",
+                    "description": "File or directory paths relative to config directory (where agent-sync.yml is located). Supports glob patterns with exclusions",
+                    "items": {
+                        "type": "string"
+                    },
+                    "minItems": 1
+                },
+                "outputs": {
+                    "type": "array",
+                    "description": "Defines the output agents and their paths",
+                    "items": {
+                        "$ref": "#/definitions/Output"
+                    },
+                    "minItems": 1
+                }
+            },
+            "required": [
+                "type",
+                "inputs",
+                "outputs"
+            ]
+        },
+        "Output": {
+            "type": "object",
+            "properties": {
+                "agent": {
+                    "type": "string",
+                    "description": "Target AI agent",
+                    "enum": [
+                        "roo",
+                        "claude",
+                        "cline",
+                        "copilot"
+                    ]
+                },
+                "outputPath": {
+                    "type": "string",
+                    "description": "Optional custom output path. If not specified, the agent's default path is used. Can be specified as relative or absolute paths; relative paths are resolved relative to each output directory. The path format determines concatenation behavior: paths ending with '/' are treated as directories (non-concatenated outputs), while paths without a trailing '/' are treated as files (concatenated outputs)"
+                },
+                "concat": {
+                    "type": "boolean",
+                    "description": "When true, concatenates inputs into one output file; when false, preserves individual input files in the output directory"
+                }
+            },
+            "required": [
+                "agent"
+            ]
+        },
+        "FrontmatterClaude": {
+            "type": "object",
+            "properties": {
+                "claude.description": {
+                    "type": "string",
+                    "description": "Brief description of the command shown in the help menu"
+                },
+                "claude.allowed-tools": {
+                    "type": "array",
+                    "description": "List of tools the command is permitted to use",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "FrontmatterRoo": {
+            "type": "object",
+            "properties": {
+                "roo.slug": {
+                    "type": "string",
+                    "description": "Command identifier"
+                },
+                "roo.name": {
+                    "type": "string",
+                    "description": "Display name of the command"
+                },
+                "roo.roleDefinition": {
+                    "type": "string",
+                    "description": "Description of what the command does"
+                },
+                "roo.whenToUse": {
+                    "type": "string",
+                    "description": "Description of when to use the command"
+                },
+                "roo.groups": {
+                    "type": "array",
+                    "description": "Permission groups for the command",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "DefaultPathsMemory": {
+            "type": "object",
+            "properties": {
+                "claude": {
+                    "type": "object",
+                    "properties": {
+                        "user": {
+                            "type": "string",
+                            "description": "User's global Claude memory file",
+                            "const": "~/.claude/CLAUDE.md"
+                        },
+                        "project": {
+                            "type": "string",
+                            "description": "Project-specific Claude memory file",
+                            "const": "CLAUDE.md"
+                        }
+                    }
+                },
+                "roo": {
+                    "type": "object",
+                    "properties": {
+                        "user": {
+                            "type": "string",
+                            "description": "User's global Roo memory file",
+                            "const": "~/.roo/rules/{filename}.md"
+                        },
+                        "project": {
+                            "type": "string",
+                            "description": "Project-specific Roo memory file",
+                            "const": ".roo/rules/{filename}.md"
+                        }
+                    }
+                },
+                "cline": {
+                    "type": "object",
+                    "properties": {
+                        "user": {
+                            "type": "string",
+                            "description": "User's global Cline memory file",
+                            "const": "~/Documents/Cline/Rules/{filename}.md"
+                        },
+                        "project": {
+                            "type": "string",
+                            "description": "Project-specific Cline memory file",
+                            "const": ".clinerules/{filename}.md"
+                        }
+                    }
+                }
+            }
+        },
+        "DefaultPathsCommand": {
+            "type": "object",
+            "properties": {
+                "claude": {
+                    "type": "object",
+                    "properties": {
+                        "user": {
+                            "type": "string",
+                            "description": "User's global Claude command file",
+                            "const": "~/.claude/commands/{filename}.md"
+                        },
+                        "project": {
+                            "type": "string",
+                            "description": "Project-specific Claude command file",
+                            "const": ".claude/commands/{filename}.md"
+                        }
+                    }
+                },
+                "roo": {
+                    "type": "object",
+                    "properties": {
+                        "user": {
+                            "type": "string",
+                            "description": "VSCode global settings for Roo custom modes",
+                            "const": "~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.yaml"
+                        },
+                        "project": {
+                            "type": "string",
+                            "description": "Project-specific Roo custom modes file",
+                            "const": ".roomodes"
+                        }
+                    }
+                },
+                "cline": {
+                    "type": "object",
+                    "properties": {
+                        "user": {
+                            "type": "string",
+                            "description": "User's global Cline workflow file",
+                            "const": "~/Documents/Cline/Workflows/{filename}.md"
+                        },
+                        "project": {
+                            "type": "string",
+                            "description": "Project-specific Cline workflow file",
+                            "const": ".clinerules/workflows/{filename}.md"
+                        }
+                    }
+                }
+            }
+        },
+        "DefaultConcatenation": {
+            "type": "object",
+            "properties": {
+                "claude": {
+                    "type": "object",
+                    "properties": {
+                        "memory": {
+                            "type": "boolean",
+                            "description": "Default concatenation behavior for Claude memory",
+                            "const": true
+                        },
+                        "command": {
+                            "type": "boolean",
+                            "description": "Default concatenation behavior for Claude command",
+                            "const": false
+                        }
+                    }
+                },
+                "roo": {
+                    "type": "object",
+                    "properties": {
+                        "memory": {
+                            "type": "boolean",
+                            "description": "Default concatenation behavior for Roo memory",
+                            "const": false
+                        },
+                        "command": {
+                            "type": "boolean",
+                            "description": "Default concatenation behavior for Roo command",
+                            "const": true
+                        }
+                    }
+                },
+                "cline": {
+                    "type": "object",
+                    "properties": {
+                        "memory": {
+                            "type": "boolean",
+                            "description": "Default concatenation behavior for Cline memory",
+                            "const": false
+                        },
+                        "command": {
+                            "type": "boolean",
+                            "description": "Default concatenation behavior for Cline command",
+                            "const": false
+                        }
+                    }
+                }
+            }
+        },
+        "TemplateFunctions": {
+            "type": "object",
+            "properties": {
+                "file": {
+                    "description": "Formats a file reference according to the output agent",
+                    "example": "file \"path/to/file\""
+                },
+                "include": {
+                    "description": "Includes content from another file with template processing",
+                    "example": "include \"path/to/file\""
+                },
+                "reference": {
+                    "description": "References another file without template processing",
+                    "example": "reference \"path/to/file\""
+                },
+                "mcp": {
+                    "description": "Formats an MCP command for the output agent",
+                    "example": "mcp \"agent\" \"command\" \"arg1\" \"arg2\""
+                },
+                "agent": {
+                    "description": "Returns the current output agent identifier",
+                    "example": "agent"
+                },
+                "ifAGENT": {
+                    "description": "Conditionally includes content only for the specified agent",
+                    "example": "ifAGENT \"agent-name\" \"content\""
+                }
+            }
+        }
+    }
+}

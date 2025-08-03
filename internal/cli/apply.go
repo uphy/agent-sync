@@ -4,6 +4,7 @@ import (
 	"context"
 	"path/filepath"
 
+	"github.com/uphy/agent-sync/internal/config"
 	"github.com/uphy/agent-sync/internal/log"
 	"github.com/uphy/agent-sync/internal/processor"
 	"github.com/urfave/cli/v3"
@@ -63,6 +64,12 @@ func NewApplyCommand() *cli.Command {
 			// Initialize manager with context components
 			absConfigPath, err := filepath.Abs(configPath)
 			if err != nil {
+				return err
+			}
+
+			// Always validate config against embedded JSON Schema before applying
+			if err := config.ValidateConfigFile(absConfigPath); err != nil {
+				// Let the global handler format error output
 				return err
 			}
 
