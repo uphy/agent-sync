@@ -131,8 +131,20 @@ Body 2
 		}
 
 		gotRel := result.Files[0].relPath
-		wantSuffix := filepath.Join("Library", "Application Support", "Code", "User", "globalStorage", "rooveterinaryinc.roo-cline", "settings", "custom_modes.yaml")
-		if !strings.HasSuffix(gotRel, wantSuffix) {
+		var wantSuffix string
+		switch strings.ToLower(strings.TrimSpace(runtime.GOOS)) {
+		case "darwin":
+			wantSuffix = filepath.Join("Library", "Application Support", "Code", "User", "globalStorage", "rooveterinaryinc.roo-cline", "settings", "custom_modes.yaml")
+		case "linux":
+			wantSuffix = filepath.Join(".config", "Code", "User", "globalStorage", "rooveterinaryinc.roo-cline", "settings", "custom_modes.yaml")
+		case "windows":
+			// Windows uses AppData\Roaming by default in our mapping
+			wantSuffix = filepath.Join("AppData", "Roaming", "Code", "User", "globalStorage", "rooveterinaryinc.roo-cline", "settings", "custom_modes.yaml")
+		default:
+			// Fallback to Linux-like path
+			wantSuffix = filepath.Join(".config", "Code", "User", "globalStorage", "rooveterinaryinc.roo-cline", "settings", "custom_modes.yaml")
+		}
+		if !strings.HasSuffix(filepath.ToSlash(gotRel), filepath.ToSlash(wantSuffix)) {
 			t.Fatalf("expected user-scope aggregated path to end with %q, got %q", wantSuffix, gotRel)
 		}
 		if !strings.Contains(result.Files[0].Content, "slug: code-reviewer") {
