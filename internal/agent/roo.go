@@ -97,11 +97,13 @@ func (r *Roo) FormatMode(modes []model.Mode) (string, error) {
 	type RooMode struct {
 		Slug               string `yaml:"slug"`
 		Name               string `yaml:"name"`
-		Description        string `yaml:"description"`
 		RoleDefinition     string `yaml:"roleDefinition"`
 		WhenToUse          string `yaml:"whenToUse"`
 		Groups             any    `yaml:"groups"` // preserve user-provided structure as-is
 		CustomInstructions string `yaml:"customInstructions"`
+	}
+	type RooModes struct {
+		CustomModes []RooMode `yaml:"customModes"`
 	}
 
 	clean := func(s string) string {
@@ -124,9 +126,6 @@ func (r *Roo) FormatMode(modes []model.Mode) (string, error) {
 		}
 
 		// Apply fallbacks
-		if rm.Description == "" && m.Description != "" {
-			rm.Description = m.Description
-		}
 		rm.CustomInstructions = clean(m.Content)
 
 		// Validation for required fields
@@ -147,7 +146,6 @@ func (r *Roo) FormatMode(modes []model.Mode) (string, error) {
 		out = append(out, RooMode{
 			Slug:               rm.Slug,
 			Name:               rm.Name,
-			Description:        clean(rm.Description),
 			RoleDefinition:     clean(rm.RoleDefinition),
 			WhenToUse:          clean(rm.WhenToUse),
 			Groups:             rm.Groups,
@@ -156,7 +154,7 @@ func (r *Roo) FormatMode(modes []model.Mode) (string, error) {
 	}
 
 	// Marshal the slice into a single YAML string using shared helper (no fences)
-	yml, err := frontmatter.RenderYAML(out)
+	yml, err := frontmatter.RenderYAML(RooModes{CustomModes: out})
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal Roo modes to YAML: %w", err)
 	}

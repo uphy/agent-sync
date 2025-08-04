@@ -28,3 +28,4 @@ projects:
           - projectA/modes/**
         outputs:
           - agent: claude
+          - agent: roo
